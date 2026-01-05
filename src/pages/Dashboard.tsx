@@ -16,6 +16,8 @@ const Dashboard = () => {
   });
 
 const fetchStats = async () => {
+    if (!supabase) return;
+    
     const [projects, costs, invoices, pipeline] = await Promise.all([
       supabase.from("projects").select("*", { count: "exact" }).eq("status", "active"),
       supabase.from("construction_costs").select("cost_amount"),
@@ -35,6 +37,8 @@ const fetchStats = async () => {
 
   useEffect(() => {
     const checkAuth = async () => {
+      if (!supabase) return;
+      
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         navigate("/management-login");
