@@ -267,7 +267,7 @@ const Careers = () => {
                 >
                   <input type="hidden" name="_subject" value="New Career Application - Estate Nest Capital" />
                   <input type="hidden" name="_next" value="https://estatenest.capital/thank-you" />
-
+                  <input type="hidden" name="form-type" value="careers" />
                   <div className="grid md:grid-cols-2 gap-4">
                     <input
                       name="name"
