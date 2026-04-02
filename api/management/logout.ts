@@ -1,10 +1,11 @@
 import { clearSessionCookie } from "../_lib/auth";
 
-export default async function handler(req: any, res: any) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ message: "Method not allowed" });
-  }
-
-  res.setHeader("Set-Cookie", clearSessionCookie());
-  return res.status(200).json({ ok: true });
+export async function POST() {
+  return new Response(JSON.stringify({ ok: true }), {
+    status: 200,
+    headers: {
+      "Set-Cookie": clearSessionCookie(),
+      "Content-Type": "application/json",
+    },
+  });
 }
