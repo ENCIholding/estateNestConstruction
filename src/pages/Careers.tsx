@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Badge from "@/components/ui/badge";
@@ -5,6 +6,8 @@ import { Building2, MapPin, Clock, DollarSign } from "lucide-react";
 import careersTeamImage from "@/assets/careers-team.jpg";
 
 const Careers = () => {
+  const [selectedJobTitle, setSelectedJobTitle] = useState("Estimator");
+
   const careerOpenings = [
     {
       title: "Office Receptionist",
@@ -12,13 +15,14 @@ const Careers = () => {
       location: "Edmonton, AB",
       type: "Full-Time",
       salary: "$40,000 - $50,000",
-      description: "Manage front desk operations, handle client communications, schedule appointments, and provide administrative support to the construction team.",
+      description:
+        "Manage front desk operations, handle client communications, schedule appointments, and provide administrative support to the construction team.",
       requirements: [
         "2+ years experience in office administration",
         "Excellent communication and organizational skills",
         "Proficiency in Microsoft Office Suite",
-        "Professional demeanor and customer service focus"
-      ]
+        "Professional demeanor and customer service focus",
+      ],
     },
     {
       title: "Project Manager",
@@ -26,14 +30,15 @@ const Careers = () => {
       location: "Edmonton, AB",
       type: "Full-Time",
       salary: "$75,000 - $95,000",
-      description: "Oversee residential and commercial construction projects from planning through completion. Coordinate trades, manage budgets, and ensure on-time delivery.",
+      description:
+        "Oversee residential and commercial construction projects from planning through completion. Coordinate trades, manage budgets, and ensure on-time delivery.",
       requirements: [
         "PMP certification or equivalent project management credential",
         "5+ years construction project management experience",
         "Strong knowledge of Alberta Building Code",
         "Experience with Procore or similar project management software",
-        "Excellent leadership and problem-solving skills"
-      ]
+        "Excellent leadership and problem-solving skills",
+      ],
     },
     {
       title: "Accounting Specialist",
@@ -41,14 +46,15 @@ const Careers = () => {
       location: "Edmonton, AB",
       type: "Full-Time",
       salary: "$55,000 - $70,000",
-      description: "Handle accounts payable/receivable, project cost tracking, vendor payments, and financial reporting for construction projects.",
+      description:
+        "Handle accounts payable/receivable, project cost tracking, vendor payments, and financial reporting for construction projects.",
       requirements: [
         "CPA designation or working towards certification",
         "3+ years accounting experience, preferably in construction",
         "Knowledge of construction accounting and job costing",
         "Proficiency in QuickBooks or similar accounting software",
-        "Strong attention to detail and analytical skills"
-      ]
+        "Strong attention to detail and analytical skills",
+      ],
     },
     {
       title: "Site Supervisor",
@@ -56,14 +62,15 @@ const Careers = () => {
       location: "Edmonton, AB",
       type: "Full-Time",
       salary: "$65,000 - $80,000",
-      description: "Supervise daily on-site construction activities, coordinate trades, ensure safety compliance, and maintain quality standards.",
+      description:
+        "Supervise daily on-site construction activities, coordinate trades, ensure safety compliance, and maintain quality standards.",
       requirements: [
         "5+ years site supervision experience in residential/commercial construction",
         "Strong knowledge of construction methods and safety protocols",
         "Valid driver's license and reliable transportation",
         "OHS certification and safety training",
-        "Excellent communication and team leadership skills"
-      ]
+        "Excellent communication and team leadership skills",
+      ],
     },
     {
       title: "Estimator",
@@ -71,14 +78,15 @@ const Careers = () => {
       location: "Edmonton, AB",
       type: "Full-Time",
       salary: "$60,000 - $80,000",
-      description: "Prepare detailed cost estimates for construction projects, analyze drawings and specifications, and coordinate with vendors and subcontractors.",
+      description:
+        "Prepare detailed cost estimates for construction projects, analyze drawings and specifications, and coordinate with vendors and subcontractors.",
       requirements: [
         "3+ years experience in construction estimating",
         "Proficiency in estimating software and Excel",
         "Strong understanding of construction methods and materials",
         "Ability to read and interpret architectural drawings",
-        "Excellent analytical and mathematical skills"
-      ]
+        "Excellent analytical and mathematical skills",
+      ],
     },
     {
       title: "Marketing Coordinator",
@@ -86,26 +94,35 @@ const Careers = () => {
       location: "Edmonton, AB (Hybrid)",
       type: "Full-Time",
       salary: "$45,000 - $60,000",
-      description: "Develop and execute marketing strategies, manage social media presence, create content for projects, and support business development initiatives.",
+      description:
+        "Develop and execute marketing strategies, manage social media presence, create content for projects, and support business development initiatives.",
       requirements: [
         "2+ years marketing experience, preferably in real estate or construction",
         "Strong social media and digital marketing skills",
         "Content creation and graphic design abilities",
         "Excellent written and verbal communication",
-        "Knowledge of real estate market trends"
-      ]
-    }
+        "Knowledge of real estate market trends",
+      ],
+    },
   ];
+
+  const handleApplyNow = (jobTitle: string) => {
+    setSelectedJobTitle(jobTitle);
+
+    const applySection = document.getElementById("apply");
+    if (applySection) {
+      applySection.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="bg-enc-text-primary text-white py-6">
         <div className="container mx-auto px-6">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold">ESTATE NEST CAPITAL</h1>
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               className="text-white hover:text-enc-orange hover:bg-white/10"
               onClick={() => window.history.back()}
             >
@@ -115,15 +132,13 @@ const Careers = () => {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="container mx-auto px-6 py-20">
         <div className="max-w-6xl mx-auto">
-          {/* Hero Image Section */}
           <div className="relative rounded-3xl overflow-hidden mb-16 shadow-2xl">
             <div className="aspect-[21/9] w-full">
-              <img 
-                src={careersTeamImage} 
-                alt="Estate Nest Capital diverse professional team - modern construction careers in Edmonton Alberta" 
+              <img
+                src={careersTeamImage}
+                alt="Estate Nest Capital diverse professional team - modern construction careers in Edmonton Alberta"
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
@@ -141,12 +156,11 @@ const Careers = () => {
           <div className="text-center mb-16">
             <div className="w-24 h-1 bg-gradient-warm mx-auto mb-8"></div>
             <p className="text-xl text-enc-text-secondary max-w-3xl mx-auto">
-              We're looking for talented professionals who share our passion for construction excellence, innovation, 
-              and delivering exceptional results. Join Edmonton's premier construction and development company.
+              We&apos;re looking for talented professionals who share our passion for construction excellence, innovation,
+              and delivering exceptional results. Join Edmonton&apos;s premier construction and development company.
             </p>
           </div>
 
-          {/* Company Culture */}
           <Card className="mb-12 card-hover">
             <CardHeader>
               <CardTitle className="text-2xl text-enc-text-primary">Why Work With Us?</CardTitle>
@@ -184,10 +198,9 @@ const Careers = () => {
             </CardContent>
           </Card>
 
-          {/* Job Openings */}
           <div className="space-y-6">
             <h2 className="text-3xl font-bold text-enc-text-primary mb-8">Current Openings</h2>
-            
+
             {careerOpenings.map((job, index) => (
               <Card key={index} className="card-hover">
                 <CardHeader>
@@ -209,16 +222,19 @@ const Careers = () => {
                         </Badge>
                       </div>
                     </div>
-                    <Button className="bg-gradient-warm text-white hover:shadow-glow whitespace-nowrap">
+
+                    <Button
+                      className="bg-gradient-warm text-white hover:shadow-glow whitespace-nowrap"
+                      onClick={() => handleApplyNow(job.title)}
+                    >
                       Apply Now
                     </Button>
                   </div>
                 </CardHeader>
+
                 <CardContent className="space-y-4">
                   <div>
-                    <p className="text-enc-text-secondary leading-relaxed">
-                      {job.description}
-                    </p>
+                    <p className="text-enc-text-secondary leading-relaxed">{job.description}</p>
                   </div>
                   <div>
                     <h4 className="font-semibold text-enc-text-primary mb-2">Requirements:</h4>
@@ -233,25 +249,117 @@ const Careers = () => {
             ))}
           </div>
 
-          {/* Application Info */}
+          <section id="apply" className="mt-20">
+            <Card className="card-hover border-0 shadow-xl">
+              <CardHeader className="text-center">
+                <CardTitle className="text-3xl text-enc-text-primary">Apply for a Position</CardTitle>
+                <p className="text-enc-text-secondary max-w-2xl mx-auto">
+                  Complete the form below and upload your resume. We review all applications and will contact qualified candidates.
+                </p>
+              </CardHeader>
+
+              <CardContent>
+                <form
+                  action="https://formspree.io/f/xojpnvbz"
+                  method="POST"
+                  encType="multipart/form-data"
+                  className="max-w-3xl mx-auto space-y-6"
+                >
+                  <input type="hidden" name="_subject" value="New Career Application - Estate Nest Capital" />
+                  <input type="hidden" name="_next" value="https://estatenest.capital/thank-you" />
+
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <input
+                      name="name"
+                      type="text"
+                      placeholder="Full Name"
+                      required
+                      className="w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-enc-orange"
+                    />
+
+                    <input
+                      name="email"
+                      type="email"
+                      placeholder="Email Address"
+                      required
+                      className="w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-enc-orange"
+                    />
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <input
+                      name="phone"
+                      type="tel"
+                      placeholder="Phone Number"
+                      required
+                      className="w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-enc-orange"
+                    />
+
+                    <select
+                      name="job-title"
+                      value={selectedJobTitle}
+                      onChange={(e) => setSelectedJobTitle(e.target.value)}
+                      className="w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-enc-orange"
+                    >
+                      {careerOpenings.map((job) => (
+                        <option key={job.title} value={job.title}>
+                          {job.title}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <textarea
+                    name="message"
+                    placeholder="Tell us briefly why you are a fit for this role..."
+                    rows={5}
+                    className="w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-enc-orange"
+                  ></textarea>
+
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-enc-text-primary">
+                      Upload Resume (PDF, DOC, DOCX)
+                    </label>
+                    <input
+                      name="resume"
+                      type="file"
+                      accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                      required
+                      className="w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground file:mr-4 file:rounded-lg file:border-0 file:bg-gradient-warm file:px-4 file:py-2 file:text-white hover:file:shadow-glow"
+                    />
+                    <p className="text-xs text-enc-text-secondary">
+                      Upload one resume file in PDF or Word format.
+                    </p>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    className="w-full bg-gradient-warm text-white hover:shadow-glow py-6 text-base font-semibold"
+                  >
+                    Submit Application
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </section>
+
           <Card className="mt-12 card-hover">
             <CardContent className="py-12 text-center">
-              <h3 className="text-2xl font-bold text-enc-text-primary mb-4">How to Apply</h3>
+              <h3 className="text-2xl font-bold text-enc-text-primary mb-4">Need Help Before Applying?</h3>
               <p className="text-lg text-enc-text-secondary mb-6 max-w-2xl mx-auto">
-                To apply for any position, please send your resume and cover letter to our HR department. 
-                We review all applications and will contact qualified candidates for interviews.
+                If you have questions about a position or want to connect before applying, contact our team directly.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button 
+                <Button
                   className="bg-gradient-warm text-white hover:shadow-glow"
-                  onClick={() => window.location.href = "mailto:hello@estatenest.capital?subject=Career Application"}
+                  onClick={() => (window.location.href = "mailto:hello@estatenest.capital?subject=Careers Inquiry")}
                 >
-                  Email Your Application
+                  Email Careers Team
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="border-enc-orange text-enc-orange hover:bg-enc-orange hover:text-white"
-                  onClick={() => window.location.href = "/#appointment"}
+                  onClick={() => (window.location.href = "/#appointment")}
                 >
                   Schedule Interview
                 </Button>
