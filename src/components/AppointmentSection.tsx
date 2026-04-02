@@ -130,7 +130,6 @@ const AppointmentSection = () => {
                   <div className="flex items-start gap-4">
                     <Mail className="w-5 h-5 text-enc-orange mt-1" />
                     <div>
-                    <div>
   <h3 className="font-semibold text-enc-text-primary">Email</h3>
   <a
     href="mailto:hello@estatenest.capital"
