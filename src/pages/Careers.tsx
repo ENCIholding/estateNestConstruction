@@ -359,7 +359,10 @@ const Careers = () => {
                 <Button
                   variant="outline"
                   className="border-enc-orange text-enc-orange hover:bg-enc-orange hover:text-white"
-                  onClick={() => (window.location.href = "/#appointment")}
+                  onClick={() =>
+  (window.location.href =
+    "https://www.estatenest.capital/#appointment")
+}
                 >
                   Schedule Interview
                 </Button>
