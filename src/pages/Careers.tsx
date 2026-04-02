@@ -250,99 +250,109 @@ const Careers = () => {
           </div>
 
           <section id="apply" className="mt-20">
-            <Card className="card-hover border-0 shadow-xl">
-              <CardHeader className="text-center">
-                <CardTitle className="text-3xl text-enc-text-primary">Apply for a Position</CardTitle>
-                <p className="text-enc-text-secondary max-w-2xl mx-auto">
-                  Complete the form below and upload your resume. We review all applications and will contact qualified candidates.
-                </p>
-              </CardHeader>
+  <Card className="card-hover border-0 shadow-xl">
+    <CardHeader className="text-center">
+      <CardTitle className="text-3xl text-enc-text-primary">
+        Apply for a Position
+      </CardTitle>
+      <p className="text-enc-text-secondary max-w-2xl mx-auto">
+        Complete the form below and submit your application. We review all applications and will contact qualified candidates.
+      </p>
+    </CardHeader>
 
-              <CardContent>
-                <form
-                  action="https://formspree.io/f/xojpnvbz"
-                  method="POST"
-                  encType="multipart/form-data"
-                  className="max-w-3xl mx-auto space-y-6"
-                >
-                  <input type="hidden" name="_subject" value="New Career Application - Estate Nest Capital" />
-                  <input type="hidden" name="_next" value="https://estatenest.capital/thank-you" />
-                  <input type="hidden" name="form-type" value="careers" />
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <input
-                      name="name"
-                      type="text"
-                      placeholder="Full Name"
-                      required
-                      className="w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-enc-orange"
-                    />
+    <CardContent>
+      <form
+        action="https://formspree.io/f/xojpnvbz"
+        method="POST"
+        encType="multipart/form-data"
+        className="max-w-3xl mx-auto space-y-6"
+      >
+        <input
+          type="hidden"
+          name="_subject"
+          value="New Career Application - Estate Nest Capital"
+        />
+        <input
+          type="hidden"
+          name="_next"
+          value="https://estatenest.capital/thank-you"
+        />
+        <input type="hidden" name="form-type" value="careers" />
 
-                    <input
-                      name="email"
-                      type="email"
-                      placeholder="Email Address"
-                      required
-                      className="w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-enc-orange"
-                    />
-                  </div>
+        <div className="grid md:grid-cols-2 gap-4">
+          <input
+            name="name"
+            type="text"
+            placeholder="Full Name"
+            required
+            className="w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-enc-orange"
+          />
 
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <input
-                      name="phone"
-                      type="tel"
-                      placeholder="Phone Number"
-                      required
-                      className="w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-enc-orange"
-                    />
+          <input
+            name="email"
+            type="email"
+            placeholder="Email Address"
+            required
+            className="w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-enc-orange"
+          />
+        </div>
 
-                    <select
-                      name="job-title"
-                      value={selectedJobTitle}
-                      onChange={(e) => setSelectedJobTitle(e.target.value)}
-                      className="w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-enc-orange"
-                    >
-                      {careerOpenings.map((job) => (
-                        <option key={job.title} value={job.title}>
-                          {job.title}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+        <div className="grid md:grid-cols-2 gap-4">
+          <input
+            name="phone"
+            type="tel"
+            placeholder="Phone Number"
+            required
+            className="w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-enc-orange"
+          />
 
-                  <textarea
-                    name="message"
-                    placeholder="Tell us briefly why you are a fit for this role..."
-                    rows={5}
-                    className="w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-enc-orange"
-                  ></textarea>
+          <select
+            name="job-title"
+            value={selectedJobTitle}
+            onChange={(e) => setSelectedJobTitle(e.target.value)}
+            className="w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-enc-orange"
+          >
+            {careerOpenings.map((job) => (
+              <option key={job.title} value={job.title}>
+                {job.title}
+              </option>
+            ))}
+          </select>
+        </div>
 
- <div className="space-y-2">
-  <label className="block text-sm font-medium text-enc-text-primary">
-    Resume Submission
-  </label>
+        <textarea
+          name="message"
+          placeholder="Tell us briefly why you are a fit for this role..."
+          rows={5}
+          className="w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-enc-orange"
+        ></textarea>
 
-  <p className="text-sm text-enc-text-secondary">
-    Complete the form below and submit your application. We review all applications and will contact qualified candidates. Please email your resume separately using the address below.{" "}
-    <a
-      href="mailto:hello@estatenest.capital?subject=Resume Submission - Careers"
-      className="underline hover:text-enc-orange"
-    >
-      hello@estatenest.capital
-    </a>
-  </p>
-</div>     
-                </div>
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-enc-text-primary">
+            Resume Submission
+          </label>
 
-                  <Button
-                    type="submit"
-                    className="w-full bg-gradient-warm text-white hover:shadow-glow py-6 text-base font-semibold"
-                  >
-                    Submit Application
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-          </section>
+          <p className="text-sm text-enc-text-secondary">
+            Please email your resume separately using the address below.{" "}
+            <a
+              href="mailto:hello@estatenest.capital?subject=Resume Submission - Careers"
+              className="underline hover:text-enc-orange"
+            >
+              hello@estatenest.capital
+            </a>
+          </p>
+        </div>
+
+        <Button
+          type="submit"
+          className="w-full bg-gradient-warm text-white hover:shadow-glow py-6 text-base font-semibold"
+        >
+          Submit Application
+        </Button>
+      </form>
+    </CardContent>
+  </Card>
+</section>
 
           <Card className="mt-12 card-hover">
             <CardContent className="py-12 text-center">
