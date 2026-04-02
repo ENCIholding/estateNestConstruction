@@ -1,10 +1,9 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import  Input from "@/components/ui/input";
-import Label  from "@/components/ui/label";
+import Input from "@/components/ui/input";
+import Label from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ArrowLeft, Shield } from "lucide-react";
 
@@ -15,75 +14,58 @@ const ManagementLogin = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-  // Supabase not configured yet → skip auth check
-  if (!supabase) return;
+    const checkSession = async () => {
+      try {
+        const response = await fetch("/api/management/session", {
+          credentials: "include",
+        });
 
-  supabase.auth.getSession().then(({ data: { session } }) => {
-    if (session) {
-      navigate("/dashboard");
-    }
-  });
-}, [navigate]);
+        if (response.ok) {
+          navigate("/dashboard");
+        }
+      } catch {
+        // Ignore. User is not logged in yet.
+      }
+    };
 
+    checkSession();
+  }, [navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (username !== "ENCIKD" || password !== "ENCIKD$$") {
-      toast.error("Invalid credentials");
-      return;
-    }
-
     setLoading(true);
-    
-   try {
-  if (!supabase) {
-    toast.error("Authentication service not configured");
-    return;
-  }
 
-  const email = "admin@estatenest.capital";
-  const password = "ENCIKD$$2024SECURE";
-
-  const { error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
-
-  if (error) {
-    // If user doesn't exist, create account
-    if (error.message.toLowerCase().includes("invalid login")) {
-      const { error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`,
+    try {
+      const response = await fetch("/api/management/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
+        credentials: "include",
+        body: JSON.stringify({
+          username,
+          password,
+        }),
       });
 
-      if (signUpError) {
-        throw signUpError;
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Login failed");
       }
 
-      toast.success("Welcome! Redirecting to dashboard...");
+      toast.success("Login successful");
       navigate("/dashboard");
-    } else {
-      throw error;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("Login failed");
+      }
+    } finally {
+      setLoading(false);
     }
-  } else {
-    toast.success("Login successful!");
-    navigate("/dashboard");
-  }
-} catch (error: unknown) {
-  if (error instanceof Error) {
-    toast.error(error.message);
-  } else {
-    toast.error("Login failed");
-  }
-} finally {
-  setLoading(false);
-}}
-
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
@@ -105,6 +87,7 @@ const ManagementLogin = () => {
               This area is for Estate Nest Capital Inc. management only.
             </CardDescription>
           </CardHeader>
+
           <CardContent className="pt-6">
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
@@ -119,6 +102,7 @@ const ManagementLogin = () => {
                   placeholder="Enter username"
                 />
               </div>
+
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <Input
@@ -131,6 +115,7 @@ const ManagementLogin = () => {
                   placeholder="Enter password"
                 />
               </div>
+
               <div className="flex gap-2">
                 <Button
                   type="button"
@@ -142,6 +127,7 @@ const ManagementLogin = () => {
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   Back to Site
                 </Button>
+
                 <Button type="submit" className="flex-1" disabled={loading}>
                   {loading ? "Signing In..." : "Sign In"}
                 </Button>
