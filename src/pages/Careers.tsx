@@ -316,21 +316,22 @@ const Careers = () => {
                     className="w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-enc-orange"
                   ></textarea>
 
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-enc-text-primary">
-                      Upload Resume (PDF, DOC, DOCX)
-                    </label>
-                    <input
-                      name="resume"
-                      type="file"
-                      accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                      required
-                      className="w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground file:mr-4 file:rounded-lg file:border-0 file:bg-gradient-warm file:px-4 file:py-2 file:text-white hover:file:shadow-glow"
-                    />
-                    <p className="text-xs text-enc-text-secondary">
-                      Upload one resume file in PDF or Word format.
-                    </p>
-                  </div>
+ <div className="space-y-2">
+  <label className="block text-sm font-medium text-enc-text-primary">
+    Resume Submission
+  </label>
+
+  <p className="text-sm text-enc-text-secondary">
+    Complete the form below and submit your application. We review all applications and will contact qualified candidates. Please email your resume separately using the address below.{" "}
+    <a
+      href="mailto:hello@estatenest.capital?subject=Resume Submission - Careers"
+      className="underline hover:text-enc-orange"
+    >
+      hello@estatenest.capital
+    </a>
+  </p>
+</div>     
+                </div>
 
                   <Button
                     type="submit"
