@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Input  from "@/components/ui/input";
-import Label  from "@/components/ui/label";
+import Input from "@/components/ui/input";
+import Label from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
-import Popover,{  PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import Select,{  SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import Popover, { PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import Select, { SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CalendarIcon, Clock, Phone, Mail } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -15,6 +15,7 @@ import { toast } from "@/hooks/use-toast";
 const AppointmentSection = () => {
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [selectedTime, setSelectedTime] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -23,13 +24,18 @@ const AppointmentSection = () => {
   });
 
   const timeSlots = [
-    "9:00 AM", "10:00 AM", "11:00 AM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM"
+    "9:00 AM",
+    "10:00 AM",
+    "11:00 AM",
+    "1:00 PM",
+    "2:00 PM",
+    "3:00 PM",
+    "4:00 PM"
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Basic validation
+
     if (!formData.name || !formData.email || !formData.phone || !selectedDate || !selectedTime) {
       toast({
         title: "Missing Information",
@@ -39,54 +45,65 @@ const AppointmentSection = () => {
       return;
     }
 
-    // Create email body
-    const emailBody = `
-New Appointment Request
+    setIsSubmitting(true);
 
-Name: ${formData.name}
-Email: ${formData.email}
-Phone: ${formData.phone}
-Date: ${format(selectedDate, "PPP")}
-Time: ${selectedTime}
+    try {
+      const payload = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        preferredDate: format(selectedDate, "PPP"),
+        preferredTime: selectedTime,
+        message: formData.message,
+        _subject: `Appointment Request - ${formData.name}`
+      };
 
-Message: ${formData.message}
-    `.trim();
+      const response = await fetch("https://formspree.io/f/xojpnvbz", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
 
-    // Create mailto link
-    const mailtoLink = `mailto:hello@estatenest.capital?subject=Appointment Request - ${formData.name}&body=${encodeURIComponent(emailBody)}`;
-    
-    // Open email client
-    window.location.href = mailtoLink;
-    
-    // Show success message
-    toast({
-      title: "Appointment Request Sent",
-      description: "Your email client has been opened. Please send the email to complete your appointment request.",
-    });
-    
-    // Reset form
-    setFormData({
-      name: "",
-      email: "",
-      phone: "",
-      message: ""
-    });
-    setSelectedDate(undefined);
-    setSelectedTime("");
+      if (!response.ok) {
+        throw new Error("Failed to submit appointment request.");
+      }
+
+      toast({
+        title: "Appointment Request Sent",
+        description: "Your appointment request has been submitted successfully. We’ll contact you within 24 hours."
+      });
+
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+        message: ""
+      });
+      setSelectedDate(undefined);
+      setSelectedTime("");
+    } catch (error) {
+      toast({
+        title: "Submission Failed",
+        description: "Something went wrong while sending your request. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [field]: value
     }));
   };
 
   return (
-    <section 
-      id="appointment"
-      className="py-20 bg-muted/30"
-    >
+    <section id="appointment" className="py-20 bg-muted/30">
       <div className="container mx-auto px-6">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold mb-6">
@@ -117,7 +134,7 @@ Message: ${formData.message}
                       <p className="text-enc-text-secondary">hello@estatenest.capital</p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-start gap-4">
                     <Phone className="w-5 h-5 text-enc-orange mt-1" />
                     <div>
@@ -125,7 +142,7 @@ Message: ${formData.message}
                       <p className="text-enc-text-secondary">780-860-3191</p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-start gap-4">
                     <Clock className="w-5 h-5 text-enc-orange mt-1" />
                     <div>
@@ -201,6 +218,7 @@ Message: ${formData.message}
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button
+                            type="button"
                             variant="outline"
                             className={cn(
                               "w-full justify-start text-left font-normal",
@@ -252,11 +270,12 @@ Message: ${formData.message}
                     />
                   </div>
 
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-gradient-warm text-white hover:shadow-glow"
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full bg-gradient-warm text-white hover:shadow-glow disabled:opacity-70"
                   >
-                    Send Appointment Request
+                    {isSubmitting ? "Sending..." : "Send Appointment Request"}
                   </Button>
 
                   <p className="text-xs text-enc-text-secondary text-center">
