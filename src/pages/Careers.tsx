@@ -363,7 +363,7 @@ const Careers = () => {
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button
                   className="bg-gradient-warm text-white hover:shadow-glow"
-                  onClick={() => (window.location.href = "mailto:hello@estatenest.capital?subject=Careers Inquiry")}
+                  onClick={() => window.location.href = "https://www.estatenest.capital/#appointment"}
                 >
                   Email Careers Team
                 </Button>
