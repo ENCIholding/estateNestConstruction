@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+
+Disallow: /management-login
+Disallow: /api/
+Disallow: /private/
+Disallow: /.git/
+Disallow: /node_modules/
+Disallow: /src/
+
+Sitemap: https://www.estatenest.capital/sitemap.xml
