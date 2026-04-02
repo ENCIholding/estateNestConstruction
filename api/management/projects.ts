@@ -1,14 +1,11 @@
 import { getCookie, getSessionCookieName, verifySessionToken } from "../_lib/auth";
 
-export default async function handler(req: any, res: any) {
-  const token = getCookie(req, getSessionCookieName());
+export async function GET(request: Request) {
+  const cookieHeader = request.headers.get("cookie") || "";
+  const token = getCookie({ headers: { cookie: cookieHeader } }, getSessionCookieName());
 
   if (!verifySessionToken(token)) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-
-  if (req.method !== "GET") {
-    return res.status(405).json({ message: "Method not allowed" });
+    return new Response(JSON.stringify({ message: "Unauthorized" }), { status: 401 });
   }
 
   const appId = process.env.BASE44_APP_ID;
@@ -16,7 +13,7 @@ export default async function handler(req: any, res: any) {
   const apiBase = process.env.BASE44_API_BASE;
 
   if (!appId || !apiKey || !apiBase) {
-    return res.status(500).json({ message: "Base44 environment is not configured" });
+    return new Response(JSON.stringify({ message: "Base44 not configured" }), { status: 500 });
   }
 
   try {
@@ -28,8 +25,9 @@ export default async function handler(req: any, res: any) {
     });
 
     const data = await response.json();
-    return res.status(response.status).json(data);
+    return new Response(JSON.stringify(data), { status: response.status });
+
   } catch (error) {
-    return res.status(500).json({ message: "Failed to fetch projects", error });
+    return new Response(JSON.stringify({ message: "Fetch failed", error }), { status: 500 });
   }
 }
