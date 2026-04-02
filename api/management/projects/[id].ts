@@ -1,28 +1,26 @@
 import { getCookie, getSessionCookieName, verifySessionToken } from "../../_lib/auth";
 
-export default async function handler(req: any, res: any) {
-  const token = getCookie(req, getSessionCookieName());
+export async function PUT(request: Request, { params }: any) {
+  const cookieHeader = request.headers.get("cookie") || "";
+  const token = getCookie({ headers: { cookie: cookieHeader } }, getSessionCookieName());
 
   if (!verifySessionToken(token)) {
-    return res.status(401).json({ message: "Unauthorized" });
+    return new Response(JSON.stringify({ message: "Unauthorized" }), { status: 401 });
   }
 
-  if (req.method !== "PUT") {
-    return res.status(405).json({ message: "Method not allowed" });
-  }
+  const { id } = params;
 
   const appId = process.env.BASE44_APP_ID;
   const apiKey = process.env.BASE44_API_KEY;
   const apiBase = process.env.BASE44_API_BASE;
-  const { id } = req.query;
 
   if (!appId || !apiKey || !apiBase) {
-    return res.status(500).json({ message: "Base44 environment is not configured" });
+    return new Response(JSON.stringify({ message: "Base44 not configured" }), { status: 500 });
   }
 
-  const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body || {};
-
   try {
+    const body = await request.json();
+
     const response = await fetch(`${apiBase}/api/apps/${appId}/entities/Project/${id}`, {
       method: "PUT",
       headers: {
@@ -33,8 +31,9 @@ export default async function handler(req: any, res: any) {
     });
 
     const data = await response.json();
-    return res.status(response.status).json(data);
+    return new Response(JSON.stringify(data), { status: response.status });
+
   } catch (error) {
-    return res.status(500).json({ message: "Failed to update project", error });
+    return new Response(JSON.stringify({ message: "Update failed", error }), { status: 500 });
   }
 }
