@@ -1,9 +1,15 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import Input from "@/components/ui/input";
-import Label from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { toast } from "sonner";
 import { ArrowLeft, Shield } from "lucide-react";
 
@@ -11,8 +17,10 @@ const ManagementLogin = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-    const navigate = useNavigate();
-  const BASE44_REDIRECT_URL = "https://app.base44.com/apps/696fbfb78bf049ebdc290950/editor/preview";
+  const navigate = useNavigate();
+
+  const BASE44_REDIRECT_URL =
+    "https://app.base44.com/apps/696fbfb78bf049ebdc290950/editor/preview";
 
   useEffect(() => {
     const checkSession = async () => {
@@ -21,8 +29,9 @@ const ManagementLogin = () => {
           credentials: "include",
         });
 
-                if (response.ok) {
-          window.location.href = BASE44_REDIRECT_URL;
+        if (response.ok) {
+          const data = await response.json();
+          window.location.href = data.redirectTo || BASE44_REDIRECT_URL;
           return;
         }
       } catch {
@@ -31,7 +40,7 @@ const ManagementLogin = () => {
     };
 
     checkSession();
-  }, [navigate]);
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,7 +66,7 @@ const ManagementLogin = () => {
       }
 
       toast.success("Login successful");
-      window.location.href = BASE44_REDIRECT_URL;
+      window.location.href = data.redirectTo || BASE44_REDIRECT_URL;
       return;
     } catch (error: unknown) {
       if (error instanceof Error) {
@@ -75,17 +84,22 @@ const ManagementLogin = () => {
       <div className="w-full max-w-md space-y-6">
         <div className="text-center space-y-2">
           <div className="flex justify-center mb-4">
-            <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
               <Shield className="h-8 w-8 text-primary" />
             </div>
           </div>
           <h1 className="text-3xl font-bold">Estate Nest Capital Inc.</h1>
-          <p className="text-sm text-muted-foreground">Internal Management Dashboard</p>
+          <p className="text-sm text-muted-foreground">
+            Internal Management Dashboard
+          </p>
         </div>
 
         <Card className="border-amber-200 shadow-lg">
           <CardHeader className="bg-gradient-to-r from-amber-50 to-orange-50 space-y-1">
-            <CardTitle className="text-xl">⚠️ Restricted Access</CardTitle>
+            <CardTitle className="text-xl flex items-center gap-2">
+              <Shield className="h-5 w-5 text-amber-600" />
+              Restricted Access
+            </CardTitle>
             <CardDescription className="text-sm">
               This area is for Estate Nest Capital Inc. management only.
             </CardDescription>
@@ -141,7 +155,8 @@ const ManagementLogin = () => {
 
         <Card className="border-muted">
           <CardContent className="pt-6 text-sm text-center text-muted-foreground">
-            Please return to the main site. Thank you for your cooperation and understanding.
+            Please return to the main site. Thank you for your cooperation and
+            understanding.
           </CardContent>
         </Card>
       </div>
