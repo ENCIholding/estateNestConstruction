@@ -4,7 +4,7 @@ export async function PUT(request: Request, { params }: any) {
   const cookieHeader = request.headers.get("cookie") || "";
   const token = getCookie({ headers: { cookie: cookieHeader } }, getSessionCookieName());
 
-  if (!(await verifySessionToken(token))) {
+  if (!verifySessionToken(token)) {
     return new Response(JSON.stringify({ message: "Unauthorized" }), { status: 401 });
   }
 
