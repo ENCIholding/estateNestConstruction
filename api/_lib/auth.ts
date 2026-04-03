@@ -1,3 +1,5 @@
+import crypto from "node:crypto";
+
 const COOKIE_NAME = "enci_mgmt_session";
 const SESSION_HOURS = 8;
 
@@ -9,82 +11,30 @@ function getSecret() {
   return secret;
 }
 
-function toBase64Url(bytes: Uint8Array) {
-  let binary = "";
-  for (const byte of bytes) {
-    binary += String.fromCharCode(byte);
-  }
-
-  return btoa(binary)
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/g, "");
+function sign(payload: string) {
+  return crypto
+    .createHmac("sha256", getSecret())
+    .update(payload)
+    .digest("base64url");
 }
 
-function fromBase64Url(value: string) {
-  const base64 = value
-    .replace(/-/g, "+")
-    .replace(/_/g, "/")
-    .padEnd(Math.ceil(value.length / 4) * 4, "=");
-
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-
-  return bytes;
-}
-
-function encodePayload(payload: string) {
-  return toBase64Url(new TextEncoder().encode(payload));
-}
-
-function decodePayload(encodedPayload: string) {
-  return new TextDecoder().decode(fromBase64Url(encodedPayload));
-}
-
-async function sign(payload: string) {
-  const secret = new TextEncoder().encode(getSecret());
-
-  const key = await crypto.subtle.importKey(
-    "raw",
-    secret,
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"]
-  );
-
-  const signature = await crypto.subtle.sign(
-    "HMAC",
-    key,
-    new TextEncoder().encode(payload)
-  );
-
-  return toBase64Url(new Uint8Array(signature));
-}
-
-export async function createSessionToken(username: string) {
+export function createSessionToken(username: string) {
   const payload = JSON.stringify({
     u: username,
     exp: Date.now() + SESSION_HOURS * 60 * 60 * 1000,
   });
 
-  const encodedPayload = encodePayload(payload);
-  const signature = await sign(payload);
-
-  return `${encodedPayload}.${signature}`;
+  return `${Buffer.from(payload).toString("base64url")}.${sign(payload)}`;
 }
 
-export async function verifySessionToken(token?: string | null) {
+export function verifySessionToken(token?: string | null) {
   if (!token) return false;
 
   const [encodedPayload, signature] = token.split(".");
   if (!encodedPayload || !signature) return false;
 
-  const payload = decodePayload(encodedPayload);
-  const expectedSignature = await sign(payload);
+  const payload = Buffer.from(encodedPayload, "base64url").toString("utf8");
+  const expectedSignature = sign(payload);
 
   if (signature !== expectedSignature) return false;
 
