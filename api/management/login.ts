@@ -24,13 +24,18 @@ export async function POST(request: Request) {
 
     const token = createSessionToken(username);
 
-    return new Response(JSON.stringify({ ok: true }), {
-      status: 200,
-      headers: {
-        "Set-Cookie": buildSessionCookie(token),
-        "Content-Type": "application/json",
-      },
-    });
+    const redirectUrl =
+  process.env.BASE44_EDITOR_URL ||
+  process.env.BASE44_PUBLIC_APP_URL ||
+  "/";
+
+return new Response(null, {
+  status: 302,
+  headers: {
+    "Set-Cookie": buildSessionCookie(token),
+    "Location": redirectUrl,
+  },
+});
 
   } catch (err) {
     return new Response(
