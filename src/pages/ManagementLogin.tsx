@@ -11,7 +11,8 @@ const ManagementLogin = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+    const navigate = useNavigate();
+  const BASE44_REDIRECT_URL = "https://app.base44.com/apps/696fbfb78bf049ebdc290950/editor/preview";
 
   useEffect(() => {
     const checkSession = async () => {
@@ -20,8 +21,9 @@ const ManagementLogin = () => {
           credentials: "include",
         });
 
-        if (response.ok) {
-          navigate("/dashboard");
+                if (response.ok) {
+          window.location.href = BASE44_REDIRECT_URL;
+          return;
         }
       } catch {
         // Ignore. User is not logged in yet.
@@ -55,7 +57,8 @@ const ManagementLogin = () => {
       }
 
       toast.success("Login successful");
-      navigate("/dashboard");
+      window.location.href = BASE44_REDIRECT_URL;
+      return;
     } catch (error: unknown) {
       if (error instanceof Error) {
         toast.error(error.message);
