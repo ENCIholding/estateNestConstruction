@@ -1,13 +1,13 @@
 {
   "compilerOptions": {
-    "types": ["node"],
-    "moduleResolution": "node",
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "skipLibCheck": true
-
+    "target": "ESNext",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "skipLibCheck": true,
     "types": ["vite/client", "node"],
-
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
