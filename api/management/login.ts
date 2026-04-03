@@ -22,7 +22,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const token = createSessionToken(username);
+    const token = await createSessionToken(username);
 
        return new Response(JSON.stringify({ ok: true }), {
       status: 200,
