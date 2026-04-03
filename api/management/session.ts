@@ -1,49 +1,31 @@
+import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { getCookie, getSessionCookieName, verifySessionToken } from "../_lib/auth";
 
-export async function GET(request: Request) {
+export default function handler(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== "GET") {
+    res.setHeader("Allow", "GET");
+    return res.status(405).json({ message: "Method not allowed" });
+  }
+
   try {
-    const token = getCookie(request, getSessionCookieName());
+    const token = getCookie(req, getSessionCookieName());
 
     if (!verifySessionToken(token)) {
-      return new Response(
-        JSON.stringify({ authenticated: false }),
-        {
-          status: 401,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      return res.status(401).json({ authenticated: false });
     }
 
-    return new Response(
-      JSON.stringify({
-        authenticated: true,
-        redirectTo:
-          process.env.BASE44_EDITOR_URL ||
-          process.env.BASE44_PUBLIC_APP_URL ||
-          "/",
-      }),
-      {
-        status: 200,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    return res.status(200).json({
+      authenticated: true,
+      redirectTo:
+        process.env.BASE44_EDITOR_URL ||
+        process.env.BASE44_PUBLIC_APP_URL ||
+        "/",
+    });
   } catch (error) {
-    return new Response(
-      JSON.stringify({
-        authenticated: false,
-        message: "Session check failed",
-        error: error instanceof Error ? error.message : String(error),
-      }),
-      {
-        status: 500,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    return res.status(500).json({
+      authenticated: false,
+      message: "Session check failed",
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 }
