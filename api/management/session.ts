@@ -8,7 +8,7 @@ export async function GET(request: Request) {
       getSessionCookieName()
     );
 
-    const isValid = await verifySessionToken(token);
+    const isValid = verifySessionToken(token);
 
     if (!isValid) {
       return new Response(
