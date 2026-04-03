@@ -2,15 +2,9 @@ import { getCookie, getSessionCookieName, verifySessionToken } from "../_lib/aut
 
 export async function GET(request: Request) {
   try {
-    const cookieHeader = request.headers.get("cookie") || "";
-    const token = getCookie(
-      { headers: { cookie: cookieHeader } },
-      getSessionCookieName()
-    );
+    const token = getCookie(request, getSessionCookieName());
 
-    const isValid = verifySessionToken(token);
-
-    if (!isValid) {
+    if (!verifySessionToken(token)) {
       return new Response(
         JSON.stringify({ authenticated: false }),
         {
@@ -45,7 +39,7 @@ export async function GET(request: Request) {
         error: error instanceof Error ? error.message : String(error),
       }),
       {
-        status: 401,
+        status: 500,
         headers: {
           "Content-Type": "application/json",
         },
