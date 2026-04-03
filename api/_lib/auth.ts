@@ -46,8 +46,8 @@ export function verifySessionToken(token?: string | null) {
 
 export function getCookie(req: any, name: string) {
   const cookieHeader =
-    req?.headers?.get?.("cookie") ||
     req?.headers?.cookie ||
+    req?.headers?.get?.("cookie") ||
     "";
 
   const cookies = cookieHeader.split(";").map((c: string) => c.trim());
