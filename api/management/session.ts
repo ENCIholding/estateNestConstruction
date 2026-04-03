@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getCookie, getSessionCookieName, verifySessionToken } from "../_lib/auth";
+import { getCookie, getSessionCookieName, verifySessionToken } from "../_lib/auth.js";
 
 export default function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "GET") {
