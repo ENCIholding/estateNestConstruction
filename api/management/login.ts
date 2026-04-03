@@ -1,67 +1,42 @@
+import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { buildSessionCookie, createSessionToken } from "../_lib/auth";
 
-export async function POST(request: Request) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== "POST") {
+    res.setHeader("Allow", "POST");
+    return res.status(405).json({ message: "Method not allowed" });
+  }
+
   try {
-    const body = await request.json();
-    const { username, password } = body;
+    const { username, password } =
+      typeof req.body === "string" ? JSON.parse(req.body) : req.body || {};
 
     const validUsername = process.env.MANAGEMENT_USERNAME;
     const validPassword = process.env.MANAGEMENT_PASSWORD;
 
     if (!validUsername || !validPassword) {
-      return new Response(
-        JSON.stringify({ message: "Management login not configured" }),
-        {
-          status: 500,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      return res.status(500).json({ message: "Management login not configured" });
     }
 
     if (username !== validUsername || password !== validPassword) {
-      return new Response(
-        JSON.stringify({ message: "Invalid credentials" }),
-        {
-          status: 401,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      return res.status(401).json({ message: "Invalid credentials" });
     }
 
     const token = createSessionToken(username);
 
-    return new Response(
-      JSON.stringify({
-        ok: true,
-        redirectTo:
-          process.env.BASE44_EDITOR_URL ||
-          process.env.BASE44_PUBLIC_APP_URL ||
-          "/",
-      }),
-      {
-        status: 200,
-        headers: {
-          "Set-Cookie": buildSessionCookie(token),
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    res.setHeader("Set-Cookie", buildSessionCookie(token));
+
+    return res.status(200).json({
+      ok: true,
+      redirectTo:
+        process.env.BASE44_EDITOR_URL ||
+        process.env.BASE44_PUBLIC_APP_URL ||
+        "/",
+    });
   } catch (error) {
-    return new Response(
-      JSON.stringify({
-        message: "Server error",
-        error: error instanceof Error ? error.message : String(error),
-      }),
-      {
-        status: 500,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    return res.status(500).json({
+      message: "Server error",
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 }
