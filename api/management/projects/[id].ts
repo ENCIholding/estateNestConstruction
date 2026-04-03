@@ -1,5 +1,4 @@
-import { getCookie, getSessionCookieName, verifySessionToken } from "../../_lib/auth";
-
+import { getCookie, getSessionCookieName, verifySessionToken } from "../../_lib/auth.js";
 export async function PUT(request: Request, { params }: any) {
   const cookieHeader = request.headers.get("cookie") || "";
   const token = getCookie({ headers: { cookie: cookieHeader } }, getSessionCookieName());
