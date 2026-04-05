@@ -1,59 +1,103 @@
 import crypto from "node:crypto";
 
+/**
+ * CONFIG
+ */
 const COOKIE_NAME = "enci_mgmt_session";
 const SESSION_HOURS = 8;
 
-function getSecret() {
+/**
+ * GET SECRET
+ */
+function getSecret(): string {
   const secret = process.env.MANAGEMENT_SESSION_SECRET;
+
   if (!secret) {
     throw new Error("MANAGEMENT_SESSION_SECRET is missing");
   }
+
   return secret;
 }
 
-function sign(payload: string) {
+/**
+ * SIGN PAYLOAD
+ */
+function sign(payload: string): string {
   return crypto
     .createHmac("sha256", getSecret())
     .update(payload)
     .digest("base64url");
 }
 
-export function createSessionToken(username: string) {
+/**
+ * CREATE TOKEN
+ */
+export function createSessionToken(username: string): string {
   const payload = JSON.stringify({
     u: username,
     exp: Date.now() + SESSION_HOURS * 60 * 60 * 1000,
   });
 
-  return `${Buffer.from(payload).toString("base64url")}.${sign(payload)}`;
+  const encoded = Buffer.from(payload).toString("base64url");
+
+  return `${encoded}.${sign(payload)}`;
 }
 
-export function verifySessionToken(token?: string | null) {
-  if (!token) return false;
+/**
+ * VERIFY TOKEN
+ */
+export function verifySessionToken(token?: string | null): boolean {
+  try {
+    if (!token) return false;
 
-  const [encodedPayload, signature] = token.split(".");
-  if (!encodedPayload || !signature) return false;
+    const parts = token.split(".");
+    if (parts.length !== 2) return false;
 
-  const payload = Buffer.from(encodedPayload, "base64url").toString("utf8");
-  const expectedSignature = sign(payload);
+    const [encodedPayload, signature] = parts;
 
-  if (signature !== expectedSignature) return false;
+    const payload = Buffer.from(encodedPayload, "base64url").toString("utf8");
 
-  const parsed = JSON.parse(payload) as { u: string; exp: number };
-  if (!parsed.exp || parsed.exp < Date.now()) return false;
+    const expectedSignature = sign(payload);
 
-  return true;
+    if (signature !== expectedSignature) return false;
+
+    const parsed = JSON.parse(payload) as {
+      u: string;
+      exp: number;
+    };
+
+    if (!parsed.exp || parsed.exp < Date.now()) return false;
+
+    return true;
+  } catch {
+    return false;
+  }
 }
 
-export function getCookie(req: any, name: string) {
-  const cookieHeader =
-    req?.headers?.cookie ||
-    req?.headers?.get?.("cookie") ||
-    "";
+/**
+ * EXTRACT COOKIE
+ */
+export function getCookie(
+  req: { headers?: any } | Request,
+  name: string
+): string | null {
+  let cookieHeader = "";
 
-  const cookies = cookieHeader.split(";").map((c: string) => c.trim());
+  // Node (API routes)
+  if ("headers" in req && typeof req.headers === "object") {
+    cookieHeader =
+      req.headers.cookie ||
+      req.headers.get?.("cookie") ||
+      "";
+  }
+
+  if (!cookieHeader) return null;
+
+  const cookies = cookieHeader.split(";");
 
   for (const cookie of cookies) {
-    const [key, ...rest] = cookie.split("=");
+    const [key, ...rest] = cookie.trim().split("=");
+
     if (key === name) {
       return rest.join("=");
     }
@@ -62,14 +106,37 @@ export function getCookie(req: any, name: string) {
   return null;
 }
 
-export function getSessionCookieName() {
+/**
+ * COOKIE NAME
+ */
+export function getSessionCookieName(): string {
   return COOKIE_NAME;
 }
 
-export function buildSessionCookie(token: string) {
-  return `${COOKIE_NAME}=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${SESSION_HOURS * 60 * 60}`;
+/**
+ * BUILD COOKIE
+ */
+export function buildSessionCookie(token: string): string {
+  return [
+    `${COOKIE_NAME}=${token}`,
+    "Path=/",
+    "HttpOnly",
+    "Secure",
+    "SameSite=Lax",
+    `Max-Age=${SESSION_HOURS * 60 * 60}`,
+  ].join("; ");
 }
 
-export function clearSessionCookie() {
-  return `${COOKIE_NAME}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`;
+/**
+ * CLEAR COOKIE
+ */
+export function clearSessionCookie(): string {
+  return [
+    `${COOKIE_NAME}=`,
+    "Path=/",
+    "HttpOnly",
+    "Secure",
+    "SameSite=Lax",
+    "Max-Age=0",
+  ].join("; ");
 }
