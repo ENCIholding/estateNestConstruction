@@ -13,6 +13,7 @@ import ManagementReports from "./pages/ManagementReports";
 import ManagementSchedule from "./pages/ManagementSchedule";
 import ManagementGanttChart from "./pages/ManagementGanttChart";
 import ManagementBudgetCosts from "./pages/ManagementBudgetCosts";
+import ManagementChangeOrders from "./pages/ManagementChangeOrders";
 import NotFound from "./pages/NotFound";
 
 export default function App() {
@@ -32,6 +33,7 @@ export default function App() {
         <Route path="/management/schedule" element={<ManagementSchedule />} />
         <Route path="/management/gantt-chart" element={<ManagementGanttChart />} />
         <Route path="/management/budget-costs" element={<ManagementBudgetCosts />} />
+        <Route path="/management/change-orders" element={<ManagementChangeOrders />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
