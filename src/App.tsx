@@ -18,6 +18,7 @@ import ManagementClientInvoices from "./pages/ManagementClientInvoices";
 import ManagementClientSelections from "./pages/ManagementClientSelections";
 import ManagementCompliance from "./pages/ManagementCompliance";
 import ManagementEstimator from "@/pages/ManagementEstimator";
+import ManagementMasterDatabase from "@/pages/ManagementMasterDatabase";
 import NotFound from "./pages/NotFound";
 
 export default function App() {
@@ -42,6 +43,7 @@ export default function App() {
         <Route path="/management/client-selections" element={<ManagementClientSelections />} />
         <Route path="/management/compliance" element={<ManagementCompliance />} />
         <Route path="/management/estimator" element={<ManagementEstimator />} />
+        <Route path="/management/master-database" element={<ManagementMasterDatabase />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
