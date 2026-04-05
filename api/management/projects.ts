@@ -1,33 +1,27 @@
-import { getCookie, getSessionCookieName, verifySessionToken } from "../_lib/auth.js";
+import { getCookie, getSessionCookieName, verifySessionToken } from "./_lib/auth";
+import { getAllProjects } from "./_lib/projects";
 
 export async function GET(request: Request) {
   const cookieHeader = request.headers.get("cookie") || "";
-  const token = getCookie({ headers: { cookie: cookieHeader } }, getSessionCookieName());
+  const token = getCookie(
+    { headers: { cookie: cookieHeader } },
+    getSessionCookieName()
+  );
 
   if (!verifySessionToken(token)) {
-    return new Response(JSON.stringify({ message: "Unauthorized" }), { status: 401 });
-  }
-
-  const appId = process.env.BASE44_APP_ID;
-  const apiKey = process.env.BASE44_API_KEY;
-  const apiRoot = process.env.BASE44_API_ROOT;
-
-  if (!appId || !apiKey || !apiRoot) {
-    return new Response(JSON.stringify({ message: "Base44 not configured" }), { status: 500 });
-  }
-
-  try {
-    const response = await fetch(`${apiRoot}/api/apps/${appId}/entities/Project`, {
+    return new Response(JSON.stringify({ message: "Unauthorized" }), {
+      status: 401,
       headers: {
-        api_key: apiKey,
         "Content-Type": "application/json",
       },
     });
+  }
 
-    const data = await response.json();
+  try {
+    const projects = await getAllProjects();
 
-    return new Response(JSON.stringify(data), {
-      status: response.status,
+    return new Response(JSON.stringify(projects), {
+      status: 200,
       headers: {
         "Content-Type": "application/json",
       },
@@ -38,7 +32,12 @@ export async function GET(request: Request) {
         message: "Fetch failed",
         error: error instanceof Error ? error.message : String(error),
       }),
-      { status: 500 }
+      {
+        status: 500,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
     );
   }
 }
