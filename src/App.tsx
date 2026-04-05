@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Index } from "./pages/Index";
 import BuilderProfile from "./pages/BuilderProfile";
 import InvestorRelations from "./pages/InvestorRelations";
@@ -27,6 +27,7 @@ import NotFound from "./pages/NotFound";
 
 export default function App() {
   return (
+    <SpeedInsights />
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Index />} />
