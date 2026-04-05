@@ -6,6 +6,7 @@ import InvestorRelations from "./pages/InvestorRelations";
 import Careers from "./pages/Careers";
 import ManagementLogin from "./pages/ManagementLogin";
 import ManagementDashboard from "./pages/ManagementDashboard";
+import ManagementProjects from "./pages/ManagementProjects";
 import NotFound from "./pages/NotFound";
 
 export default function App() {
@@ -18,6 +19,7 @@ export default function App() {
         <Route path="/careers" element={<Careers />} />
         <Route path="/management-login" element={<ManagementLogin />} />
         <Route path="/management-dashboard" element={<ManagementDashboard />} />
+        <Route path="/management/projects" element={<ManagementProjects />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
