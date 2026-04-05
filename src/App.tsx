@@ -19,6 +19,7 @@ import ManagementClientSelections from "./pages/ManagementClientSelections";
 import ManagementCompliance from "./pages/ManagementCompliance";
 import ManagementEstimator from "@/pages/ManagementEstimator";
 import ManagementMasterDatabase from "@/pages/ManagementMasterDatabase";
+import ManagementMobileTasks from "@/pages/ManagementMobileTasks";
 import NotFound from "./pages/NotFound";
 
 export default function App() {
@@ -44,6 +45,7 @@ export default function App() {
         <Route path="/management/compliance" element={<ManagementCompliance />} />
         <Route path="/management/estimator" element={<ManagementEstimator />} />
         <Route path="/management/master-database" element={<ManagementMasterDatabase />} />
+        <Route path="/management/mobile-tasks" element={<ManagementMobileTasks />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
