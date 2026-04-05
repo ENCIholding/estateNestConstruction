@@ -5,7 +5,7 @@ import BuilderProfile from "./pages/BuilderProfile";
 import InvestorRelations from "./pages/InvestorRelations";
 import Careers from "./pages/Careers";
 import ManagementLogin from "./pages/ManagementLogin.tsx";
-import ManagementDashboard from "./pages/ManagementDashboard";
+import ManagementDashboard from "./pages/ManagementDashboard.tsx";
 import NotFound from "./pages/NotFound";
 
 export default function App() {
