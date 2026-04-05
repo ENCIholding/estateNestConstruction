@@ -17,12 +17,12 @@ import ManagementChangeOrders from "./pages/ManagementChangeOrders";
 import ManagementClientInvoices from "./pages/ManagementClientInvoices";
 import ManagementClientSelections from "./pages/ManagementClientSelections";
 import ManagementCompliance from "./pages/ManagementCompliance";
-import ManagementEstimator from "@/pages/ManagementEstimator";
-import ManagementMasterDatabase from "@/pages/ManagementMasterDatabase";
-import ManagementMobileTasks from "@/pages/ManagementMobileTasks";
-import ManagementProjectDetails from "@/pages/ManagementProjectDetails";
-import ManagementVendorDetails from "@/pages/ManagementVendorDetails.tsx";
-import ManagementVendorBills from "@/pages/ManagementVendorBills.tsx";
+import ManagementEstimator from "./pages/ManagementEstimator";
+import ManagementMasterDatabase from "./pages/ManagementMasterDatabase";
+import ManagementMobileTasks from "./pages/ManagementMobileTasks";
+import ManagementProjectDetails from "./pages/ManagementProjectDetails";
+import ManagementVendorDetails from "./pages/ManagementVendorDetails";
+import ManagementVendorBills from "./pages/ManagementVendorBills";
 import NotFound from "./pages/NotFound";
 
 export default function App() {
@@ -50,8 +50,8 @@ export default function App() {
         <Route path="/management/master-database" element={<ManagementMasterDatabase />} />
         <Route path="/management/mobile-tasks" element={<ManagementMobileTasks />} />
         <Route path="/management/project-details" element={<ManagementProjectDetails />} />
-        <Route path="/management/Vendor-Details" element={<ManagementVendorDetails.tsx />} />
-        <Route path="/management/Vendor-Bills" element={<ManagementVendorBills.tsx />} />
+        <Route path="/management/vendor-details" element={<ManagementVendorDetails />} />
+        <Route path="/management/vendor-bills" element={<ManagementVendorBills />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
