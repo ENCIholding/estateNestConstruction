@@ -20,7 +20,9 @@ import ManagementCompliance from "./pages/ManagementCompliance";
 import ManagementEstimator from "@/pages/ManagementEstimator";
 import ManagementMasterDatabase from "@/pages/ManagementMasterDatabase";
 import ManagementMobileTasks from "@/pages/ManagementMobileTasks";
-import ManagementMobileTasks from "@/pages/ManagementProjectDetails";
+import ManagementProjectDetails from "@/pages/ManagementProjectDetails";
+import ManagementVendorDetails from "@/pages/ManagementVendorDetails.tsx";
+import ManagementVendorBills from "@/pages/ManagementVendorBills.tsx";
 import NotFound from "./pages/NotFound";
 
 export default function App() {
@@ -47,7 +49,9 @@ export default function App() {
         <Route path="/management/estimator" element={<ManagementEstimator />} />
         <Route path="/management/master-database" element={<ManagementMasterDatabase />} />
         <Route path="/management/mobile-tasks" element={<ManagementMobileTasks />} />
-        <Route path="/management/mobile-tasks" element={<ManagementProjectDetails />} />
+        <Route path="/management/project-details" element={<ManagementProjectDetails />} />
+        <Route path="/management/Vendor-Details" element={<ManagementVendorDetails.tsx />} />
+        <Route path="/management/Vendor-Bills" element={<ManagementVendorBills.tsx />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
