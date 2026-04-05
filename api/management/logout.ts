@@ -1,4 +1,4 @@
-import { clearSessionCookie } from "../_lib/auth.js";
+import { clearSessionCookie } from "./_lib/auth";
 
 export default function handler(req: any, res: any) {
   if (req.method !== "POST") {
@@ -7,5 +7,9 @@ export default function handler(req: any, res: any) {
   }
 
   res.setHeader("Set-Cookie", clearSessionCookie());
-  return res.status(200).json({ ok: true });
+
+  return res.status(200).json({
+    ok: true,
+    message: "Logged out successfully",
+  });
 }
