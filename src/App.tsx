@@ -11,6 +11,7 @@ import ManagementVendors from "./pages/ManagementVendors";
 import ManagementDocuments from "./pages/ManagementDocuments";
 import ManagementReports from "./pages/ManagementReports";
 import ManagementSchedule from "./pages/ManagementSchedule";
+import ManagementGanttChart from "./pages/ManagementGanttChart";
 import NotFound from "./pages/NotFound";
 
 export default function App() {
@@ -28,6 +29,7 @@ export default function App() {
         <Route path="/management/documents" element={<ManagementDocuments />} />
         <Route path="/management/reports" element={<ManagementReports />} />
         <Route path="/management/schedule" element={<ManagementSchedule />} />
+        <Route path="/management/gantt-chart" element={<ManagementGanttChart />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
