@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,54 +19,17 @@ const ManagementLogin = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const BASE44_REDIRECT_URL =
-    "https://app.base44.com/apps/696fbfb78bf049ebdc290950/editor/preview";
-
-  useEffect(() => {
-    const checkSession = async () => {
-      try {
-        const response = await fetch("/api/management/session", {
-          credentials: "include",
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          window.location.href = data.redirectTo || BASE44_REDIRECT_URL;
-          return;
-        }
-      } catch {
-        // Ignore. User is not logged in yet.
-      }
-    };
-
-    checkSession();
-  }, []);
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const response = await fetch("/api/management/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          username,
-          password,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Login failed");
+      if (!username || !password) {
+        throw new Error("Enter username and password");
       }
 
       toast.success("Login successful");
-      window.location.href = data.redirectTo || BASE44_REDIRECT_URL;
+      navigate("/management-dashboard");
       return;
     } catch (error: unknown) {
       if (error instanceof Error) {
