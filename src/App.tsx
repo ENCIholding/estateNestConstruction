@@ -8,6 +8,7 @@ import ManagementLogin from "./pages/ManagementLogin";
 import ManagementDashboard from "./pages/ManagementDashboard";
 import ManagementProjects from "./pages/ManagementProjects";
 import ManagementVendors from "./pages/ManagementVendors";
+import ManagementDocuments from "./pages/ManagementDocuments";
 import NotFound from "./pages/NotFound";
 
 export default function App() {
@@ -22,6 +23,7 @@ export default function App() {
         <Route path="/management-dashboard" element={<ManagementDashboard />} />
         <Route path="/management/projects" element={<ManagementProjects />} />
         <Route path="/management/vendors" element={<ManagementVendors />} />
+        <Route path="/management/documents" element={<ManagementDocuments />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
