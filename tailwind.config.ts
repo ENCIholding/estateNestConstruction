@@ -3,16 +3,11 @@ import tailwindAnimate from "tailwindcss-animate";
 
 const config = {
   darkMode: "class",
-
   content: [
-    "./pages/**/*.{ts,tsx}",
-    "./components/**/*.{ts,tsx}",
-    "./app/**/*.{ts,tsx}",
-    "./src/**/*.{ts,tsx}",
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
   ],
-
   prefix: "",
-
   theme: {
     container: {
       center: true,
@@ -21,7 +16,6 @@ const config = {
         "2xl": "1400px",
       },
     },
-
     extend: {
       colors: {
         border: "hsl(var(--border))",
@@ -87,11 +81,9 @@ const config = {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
           primary: "hsl(var(--sidebar-primary))",
-          "primary-foreground":
-            "hsl(var(--sidebar-primary-foreground))",
+          "primary-foreground": "hsl(var(--sidebar-primary-foreground))",
           accent: "hsl(var(--sidebar-accent))",
-          "accent-foreground":
-            "hsl(var(--sidebar-accent-foreground))",
+          "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
@@ -127,14 +119,12 @@ const config = {
           to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
+          from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
         "gradient-shift": {
-          "0%, 100%": { "background-position": "0% 50%" },
-          "50%": { "background-position": "100% 50%" },
+          "0%, 100%": { backgroundPosition: "0% 50%" },
+          "50%": { backgroundPosition: "100% 50%" },
         },
         float: {
           "0%, 100%": { transform: "translateY(0px)" },
@@ -142,12 +132,10 @@ const config = {
         },
         "pulse-glow": {
           "0%, 100%": {
-            boxShadow:
-              "0 0 20px hsl(var(--enc-orange) / 0.3)",
+            boxShadow: "0 0 20px hsl(var(--enc-orange) / 0.3)",
           },
           "50%": {
-            boxShadow:
-              "0 0 40px hsl(var(--enc-orange) / 0.6)",
+            boxShadow: "0 0 40px hsl(var(--enc-orange) / 0.6)",
           },
         },
       },
@@ -155,15 +143,12 @@ const config = {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "gradient-shift":
-          "gradient-shift 3s ease-in-out infinite",
+        "gradient-shift": "gradient-shift 3s ease-in-out infinite",
         float: "float 6s ease-in-out infinite",
-        "pulse-glow":
-          "pulse-glow 2s ease-in-out infinite",
+        "pulse-glow": "pulse-glow 2s ease-in-out infinite",
       },
     },
   },
-
   plugins: [tailwindAnimate],
 } satisfies Config;
 
