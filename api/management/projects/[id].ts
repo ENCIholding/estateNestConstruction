@@ -1,38 +1,52 @@
 import { getCookie, getSessionCookieName, verifySessionToken } from "../../_lib/auth.js";
-export async function PUT(request: Request, { params }: any) {
+import { updateProjectById } from "../../_lib/projects.js";
+
+type RouteContext = {
+  params: {
+    id: string;
+  };
+};
+
+export async function PUT(request: Request, { params }: RouteContext) {
   const cookieHeader = request.headers.get("cookie") || "";
   const token = getCookie({ headers: { cookie: cookieHeader } }, getSessionCookieName());
 
   if (!verifySessionToken(token)) {
-    return new Response(JSON.stringify({ message: "Unauthorized" }), { status: 401 });
+    return new Response(JSON.stringify({ message: "Unauthorized" }), {
+      status: 401,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
   }
 
   const { id } = params;
 
-  const appId = process.env.BASE44_APP_ID;
-  const apiKey = process.env.BASE44_API_KEY;
-  const apiRoot = process.env.BASE44_API_ROOT;
-
-  if (!appId || !apiKey || !apiRoot) {
-    return new Response(JSON.stringify({ message: "Base44 not configured" }), { status: 500 });
+  if (!id) {
+    return new Response(JSON.stringify({ message: "Project id is required" }), {
+      status: 400,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
   }
 
   try {
     const body = await request.json();
 
-    const response = await fetch(`${apiRoot}/api/apps/${appId}/entities/Project/${id}`, {
-      method: "PUT",
-      headers: {
-        api_key: apiKey,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-    });
+    const updatedProject = await updateProjectById(id, body);
 
-    const data = await response.json();
+    if (!updatedProject) {
+      return new Response(JSON.stringify({ message: "Project not found" }), {
+        status: 404,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    }
 
-    return new Response(JSON.stringify(data), {
-      status: response.status,
+    return new Response(JSON.stringify(updatedProject), {
+      status: 200,
       headers: {
         "Content-Type": "application/json",
       },
@@ -43,7 +57,12 @@ export async function PUT(request: Request, { params }: any) {
         message: "Update failed",
         error: error instanceof Error ? error.message : String(error),
       }),
-      { status: 500 }
+      {
+        status: 500,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
     );
   }
 }
