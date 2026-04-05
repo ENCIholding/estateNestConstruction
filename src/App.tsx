@@ -14,6 +14,7 @@ import ManagementSchedule from "./pages/ManagementSchedule";
 import ManagementGanttChart from "./pages/ManagementGanttChart";
 import ManagementBudgetCosts from "./pages/ManagementBudgetCosts";
 import ManagementChangeOrders from "./pages/ManagementChangeOrders";
+import ManagementClientInvoices from "./pages/ManagementClientInvoices";
 import NotFound from "./pages/NotFound";
 
 export default function App() {
@@ -34,6 +35,7 @@ export default function App() {
         <Route path="/management/gantt-chart" element={<ManagementGanttChart />} />
         <Route path="/management/budget-costs" element={<ManagementBudgetCosts />} />
         <Route path="/management/change-orders" element={<ManagementChangeOrders />} />
+        import ManagementClientInvoices from "./pages/ManagementClientInvoices";
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
