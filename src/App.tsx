@@ -10,6 +10,7 @@ import ManagementProjects from "./pages/ManagementProjects";
 import ManagementVendors from "./pages/ManagementVendors";
 import ManagementDocuments from "./pages/ManagementDocuments";
 import ManagementReports from "./pages/ManagementReports";
+import ManagementSchedule from "./pages/ManagementSchedule";
 import NotFound from "./pages/NotFound";
 
 export default function App() {
@@ -26,6 +27,7 @@ export default function App() {
         <Route path="/management/vendors" element={<ManagementVendors />} />
         <Route path="/management/documents" element={<ManagementDocuments />} />
         <Route path="/management/reports" element={<ManagementReports />} />
+        <Route path="/management/schedule" element={<ManagementSchedule />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
