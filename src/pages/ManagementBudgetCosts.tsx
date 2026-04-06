@@ -46,7 +46,7 @@ import {
   TrendingUp,
   TrendingDown,
 } from "lucide-react";
-import BudgetItemForm from "@/components/budget/BudgetItemForm";
+import ManagementBudgetItemForm from "@/components/budget/ManagementBudgetItemForm";
 import { format, isPast } from "date-fns";
 
 type User = {
@@ -176,12 +176,16 @@ export default function ManagementBudgetCosts() {
   };
 
   const filteredItems = useMemo(() => {
-    const lowerSearch = search.toLowerCase();
+    const lowerSearch = search.toLowerCase().trim();
 
     return budgetItems.filter((item) => {
       const matchesSearch =
-        item.category_name?.toLowerCase().includes(lowerSearch) ||
-        item.description?.toLowerCase().includes(lowerSearch);
+        lowerSearch === ""
+          ? true
+          : item.category_name?.toLowerCase().includes(lowerSearch) ||
+            item.description?.toLowerCase().includes(lowerSearch) ||
+            vendorMap[item.vendor_id || ""]?.company_name?.toLowerCase().includes(lowerSearch) ||
+            projectMap[item.project_id || ""]?.project_name?.toLowerCase().includes(lowerSearch);
 
       const matchesProject =
         projectFilter === "all" || item.project_id === projectFilter;
@@ -191,7 +195,7 @@ export default function ManagementBudgetCosts() {
 
       return Boolean(matchesSearch) && matchesProject && matchesStatus;
     });
-  }, [budgetItems, search, projectFilter, statusFilter]);
+  }, [budgetItems, search, projectFilter, statusFilter, vendorMap, projectMap]);
 
   const totalEstimated = filteredItems.reduce(
     (sum, item) => sum + (item.estimated_cost || 0),
@@ -218,7 +222,7 @@ export default function ManagementBudgetCosts() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold text-slate-900">
@@ -477,21 +481,21 @@ export default function ManagementBudgetCosts() {
         </div>
       )}
 
-      {showForm && (
-        <BudgetItemForm
-          item={editingItem}
-          projects={projects}
-          vendors={vendors}
-          open={showForm}
-          onClose={() => {
-            setShowForm(false);
-            setEditingItem(null);
-          }}
-          onSaved={() => {
-            queryClient.invalidateQueries({ queryKey: ["budgetItems"] });
-          }}
-        />
-      )}
+      <ManagementBudgetItemForm
+        item={editingItem}
+        projects={projects}
+        vendors={vendors}
+        open={showForm}
+        onClose={() => {
+          setShowForm(false);
+          setEditingItem(null);
+        }}
+        onSaved={() => {
+          queryClient.invalidateQueries({ queryKey: ["budgetItems"] });
+          setShowForm(false);
+          setEditingItem(null);
+        }}
+      />
 
       <AlertDialog open={!!deleteItem} onOpenChange={() => setDeleteItem(null)}>
         <AlertDialogContent>
