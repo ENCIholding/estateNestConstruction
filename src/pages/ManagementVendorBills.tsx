@@ -44,7 +44,7 @@ import {
   Trash2,
   FileText,
 } from "lucide-react";
-import VendorBillForm from "@/components/invoices/VendorBillForm";
+import ManagementVendorBillForm from "@/components/invoices/ManagementVendorBillForm";
 import { format } from "date-fns";
 
 type User = {
@@ -361,7 +361,7 @@ export default function ManagementVendorBills() {
         <div className="text-center py-12 text-slate-500">No bills found</div>
       )}
 
-      <VendorBillForm
+      <ManagementVendorBillForm
         bill={editingBill}
         vendors={vendors}
         projects={projects}
