@@ -172,25 +172,24 @@ export default function ManagementVendorBills() {
   };
 
   const filteredBills = useMemo(() => {
-    const lowerSearch = search.toLowerCase();
+    const lowerSearch = search.toLowerCase().trim();
 
     return bills.filter((bill) => {
       const vendor = bill.vendor_id ? vendorMap[bill.vendor_id] : undefined;
+      const project = bill.project_id ? projectMap[bill.project_id] : undefined;
 
       const matchesSearch =
-        search.trim() === ""
+        lowerSearch === ""
           ? true
-          : !!vendor?.company_name?.toLowerCase().includes(lowerSearch);
+          : !!vendor?.company_name?.toLowerCase().includes(lowerSearch) ||
+            !!project?.project_name?.toLowerCase().includes(lowerSearch);
 
-      const matchesVendor =
-        vendorFilter === "all" || bill.vendor_id === vendorFilter;
-
-      const matchesStatus =
-        statusFilter === "all" || bill.status === statusFilter;
+      const matchesVendor = vendorFilter === "all" || bill.vendor_id === vendorFilter;
+      const matchesStatus = statusFilter === "all" || bill.status === statusFilter;
 
       return matchesSearch && matchesVendor && matchesStatus;
     });
-  }, [bills, vendorMap, search, vendorFilter, statusFilter]);
+  }, [bills, vendorMap, projectMap, search, vendorFilter, statusFilter]);
 
   if (isLoading) {
     return (
@@ -201,7 +200,7 @@ export default function ManagementVendorBills() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold text-slate-900">
@@ -211,18 +210,16 @@ export default function ManagementVendorBills() {
         </div>
 
         {canEdit && (
-          <div className="flex gap-2">
-            <Button
-              onClick={() => {
-                setEditingBill(null);
-                setShowForm(true);
-              }}
-              className="bg-slate-900 hover:bg-slate-800"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Record
-            </Button>
-          </div>
+          <Button
+            onClick={() => {
+              setEditingBill(null);
+              setShowForm(true);
+            }}
+            className="bg-slate-900 hover:bg-slate-800"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Record
+          </Button>
         )}
       </div>
 
@@ -364,21 +361,21 @@ export default function ManagementVendorBills() {
         <div className="text-center py-12 text-slate-500">No bills found</div>
       )}
 
-      {showForm && (
-        <VendorBillForm
-          bill={editingBill}
-          vendors={vendors}
-          projects={projects}
-          open={showForm}
-          onClose={() => {
-            setShowForm(false);
-            setEditingBill(null);
-          }}
-          onSaved={() => {
-            queryClient.invalidateQueries({ queryKey: ["vendorBills"] });
-          }}
-        />
-      )}
+      <VendorBillForm
+        bill={editingBill}
+        vendors={vendors}
+        projects={projects}
+        open={showForm}
+        onClose={() => {
+          setShowForm(false);
+          setEditingBill(null);
+        }}
+        onSaved={() => {
+          queryClient.invalidateQueries({ queryKey: ["vendorBills"] });
+          setShowForm(false);
+          setEditingBill(null);
+        }}
+      />
 
       <AlertDialog open={!!deleteBill} onOpenChange={() => setDeleteBill(null)}>
         <AlertDialogContent>
