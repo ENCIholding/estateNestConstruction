@@ -49,7 +49,7 @@ import {
   ExternalLink,
   Eye,
 } from "lucide-react";
-import VendorForm from "@/components/vendors/VendorForm";
+import ManagementVendorForm from "@/components/vendors/ManagementVendorForm";
 import { format, isPast, addDays } from "date-fns";
 
 type User = {
@@ -127,7 +127,7 @@ function normalizeWhatsAppPhone(phone?: string) {
   return digits.startsWith("1") ? digits : `1${digits}`;
 }
 
-export default function ManagementVendorBills() {
+export default function ManagementVendors() {
   const [search, setSearch] = useState("");
   const [tradeFilter, setTradeFilter] = useState("all");
   const [showForm, setShowForm] = useState(false);
@@ -437,7 +437,7 @@ export default function ManagementVendorBills() {
       )}
 
       {showForm && (
-        <VendorForm
+        <ManagementVendorForm
           vendor={editingVendor}
           open={showForm}
           onClose={() => {
@@ -446,6 +446,8 @@ export default function ManagementVendorBills() {
           }}
           onSaved={() => {
             queryClient.invalidateQueries({ queryKey: ["vendors"] });
+            setShowForm(false);
+            setEditingVendor(null);
           }}
         />
       )}
