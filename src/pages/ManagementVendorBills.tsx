@@ -184,8 +184,11 @@ export default function ManagementVendorBills() {
           : !!vendor?.company_name?.toLowerCase().includes(lowerSearch) ||
             !!project?.project_name?.toLowerCase().includes(lowerSearch);
 
-      const matchesVendor = vendorFilter === "all" || bill.vendor_id === vendorFilter;
-      const matchesStatus = statusFilter === "all" || bill.status === statusFilter;
+      const matchesVendor =
+        vendorFilter === "all" || bill.vendor_id === vendorFilter;
+
+      const matchesStatus =
+        statusFilter === "all" || bill.status === statusFilter;
 
       return matchesSearch && matchesVendor && matchesStatus;
     });
@@ -210,16 +213,18 @@ export default function ManagementVendorBills() {
         </div>
 
         {canEdit && (
-          <Button
-            onClick={() => {
-              setEditingBill(null);
-              setShowForm(true);
-            }}
-            className="bg-slate-900 hover:bg-slate-800"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Record
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => {
+                setEditingBill(null);
+                setShowForm(true);
+              }}
+              className="bg-slate-900 hover:bg-slate-800"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Record
+            </Button>
+          </div>
         )}
       </div>
 
