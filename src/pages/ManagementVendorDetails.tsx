@@ -10,6 +10,8 @@ import {
   ExternalLink,
   Loader2,
   Pencil,
+  CheckCircle2,
+  XCircle,
 } from "lucide-react";
 import { format } from "date-fns";
 import ManagementVendorForm, {
@@ -142,10 +144,7 @@ export default function ManagementVendorDetails() {
             <p className="text-slate-600">{vendor.trade_type || "—"}</p>
           </div>
 
-          <Button
-            onClick={() => setShowForm(true)}
-            variant="outline"
-          >
+          <Button onClick={() => setShowForm(true)} variant="outline">
             <Pencil className="mr-2 h-4 w-4" />
             Edit Vendor
           </Button>
@@ -247,6 +246,11 @@ export default function ManagementVendorDetails() {
             <div>
               <p className="text-sm text-slate-600">Would Work Again</p>
               <p className="font-medium">
+                {vendor.work_again ? (
+                  <CheckCircle2 className="inline h-4 w-4 text-emerald-600 mr-1" />
+                ) : (
+                  <XCircle className="inline h-4 w-4 text-rose-600 mr-1" />
+                )}{" "}
                 {vendor.work_again ? "Yes" : "No"}
               </p>
             </div>
