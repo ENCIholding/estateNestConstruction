@@ -53,8 +53,8 @@ export default function ManagementMasterDatabase() {
 
   const allItems = useMemo(() => {
     const items: DatabaseItem[] = [
-      ...clients.map((c: any) => ({ ...c, type: "Client" as const })),
-      ...vendors.map((v: any) => ({ ...v, type: "Vendor" as const })),
+      ...clients.map((c: any) => ({ ...c, type: "Client" as const, name: c.full_name || c.name || "" })),
+      ...vendors.map((v: any) => ({ ...v, type: "Vendor" as const, name: v.company_name || v.name || "" })),
     ];
     return items;
   }, [clients, vendors]);
