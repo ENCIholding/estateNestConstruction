@@ -1,4 +1,4 @@
-import { clearSessionCookie } from "./_lib/auth.js"; // Changed to .js extension
+import { clearSessionCookie } from "../_lib/auth";
 
 export default function handler(req: any, res: any) {
   if (req.method !== "POST") {
