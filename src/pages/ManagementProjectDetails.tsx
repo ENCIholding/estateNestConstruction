@@ -135,7 +135,6 @@ export default function ManagementProjectDetails() {
     );
   }
 
-  // Calculations
   const totalActual = budgetItems.reduce(
     (s: number, i: any) => s + (i.actual_cost || 0),
     0
@@ -159,11 +158,8 @@ export default function ManagementProjectDetails() {
     ? addYears(new Date(project.warranty_start_date), 1)
     : null;
 
-  const projectCompliance = compliance[0];
-
   return (
     <div className="min-h-screen bg-slate-50 p-8">
-      {/* Header */}
       <div className="mb-8">
         <Link to="/management/projects" className="mb-4 inline-block">
           <Button variant="ghost" size="sm">
@@ -198,7 +194,6 @@ export default function ManagementProjectDetails() {
         </div>
       </div>
 
-      {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <Card>
           <CardHeader className="pb-2">
@@ -253,7 +248,6 @@ export default function ManagementProjectDetails() {
         )}
       </div>
 
-      {/* Tabs */}
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -262,7 +256,6 @@ export default function ManagementProjectDetails() {
           <TabsTrigger value="documents">Documents</TabsTrigger>
         </TabsList>
 
-        {/* Overview Tab */}
         <TabsContent value="overview">
           <Card>
             <CardHeader>
@@ -308,7 +301,6 @@ export default function ManagementProjectDetails() {
           </Card>
         </TabsContent>
 
-        {/* Tasks Tab */}
         <TabsContent value="tasks">
           <Card>
             <CardHeader>
@@ -331,7 +323,6 @@ export default function ManagementProjectDetails() {
           </Card>
         </TabsContent>
 
-        {/* Financials Tab */}
         {showFinancials && (
           <TabsContent value="financials">
             <Card>
@@ -356,7 +347,6 @@ export default function ManagementProjectDetails() {
           </TabsContent>
         )}
 
-        {/* Documents Tab */}
         <TabsContent value="documents">
           <Card>
             <CardHeader>
@@ -389,7 +379,6 @@ export default function ManagementProjectDetails() {
         </TabsContent>
       </Tabs>
 
-      {/* Form Modal */}
       {showForm && (
         <ManagementProjectForm
           project={project}
