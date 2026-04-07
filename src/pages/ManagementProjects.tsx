@@ -5,18 +5,8 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 
 export default function ManagementProjects() {
   const navigate = useNavigate();
@@ -59,53 +49,38 @@ export default function ManagementProjects() {
           </p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>All Projects</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Project</TableHead>
-                  <TableHead>Address</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Budget</TableHead>
-                  <TableHead>Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {projects.map((p) => (
-                  <TableRow key={p.id}>
-                    <TableCell className="font-medium">{p.name}</TableCell>
-                    <TableCell>{p.address}</TableCell>
-                    <TableCell>
+        <div className="grid gap-4">
+          {projects.map((p) => (
+            <Card key={p.id}>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-lg mb-1">{p.name}</h3>
+                    <p className="text-slate-600 text-sm mb-2">{p.address}</p>
+                    <div className="flex items-center gap-3">
                       <Badge
                         className={`${statusColors[p.status] || ""}`}
                         variant="outline"
                       >
                         {p.status}
                       </Badge>
-                    </TableCell>
-                    <TableCell>
-                      ${p.budget.toLocaleString()}
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        size="sm"
-                        onClick={() =>
-                          navigate(`/management/project-details?id=${p.id}`)
-                        }
-                      >
-                        View
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+                      <span className="text-sm font-medium">
+                        ${p.budget.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={() =>
+                      navigate(`/management/project-details?id=${p.id}`)
+                    }
+                  >
+                    View
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     </ManagementLayout>
   );
