@@ -3,13 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,7 +17,6 @@ import {
 import {
   Plus,
   Search,
-  MoreHorizontal,
   Loader2,
   Pencil,
   Trash2,
@@ -105,6 +98,7 @@ export default function ManagementVendors() {
   const [showForm, setShowForm] = useState(false);
   const [editingVendor, setEditingVendor] = useState<Vendor | null>(null);
   const [deleteVendor, setDeleteVendor] = useState<Vendor | null>(null);
+  const [expandedVendor, setExpandedVendor] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
 
@@ -248,12 +242,13 @@ export default function ManagementVendors() {
             vendor.insurance_expiry_date
           );
           const whatsappPhone = normalizeWhatsAppPhone(vendor.phone);
+          const isExpanded = expandedVendor === vendor.id;
 
           return (
             <Card key={vendor.id}>
               <CardContent className="pt-6">
                 <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
+                  <div className="flex-1 cursor-pointer" onClick={() => setExpandedVendor(isExpanded ? null : vendor.id)}>
                     <div className="flex items-center gap-2 mb-2">
                       <h3 className="font-semibold text-lg">
                         {vendor.company_name || "—"}
@@ -269,45 +264,47 @@ export default function ManagementVendors() {
                       {vendor.trade_type || "—"}
                     </p>
 
-                    <div className="space-y-2 mb-4">
-                      {vendor.contact_person && (
-                        <p className="text-sm">{vendor.contact_person}</p>
-                      )}
+                    {isExpanded && (
+                      <div className="space-y-2 mb-4">
+                        {vendor.contact_person && (
+                          <p className="text-sm">{vendor.contact_person}</p>
+                        )}
 
-                      {vendor.phone && whatsappPhone && (
-                        <a
-                          href={`https://wa.me/${whatsappPhone}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-blue-600 hover:underline flex items-center gap-1"
-                        >
-                          <Phone className="h-3 w-3" />
-                          {vendor.phone}
-                        </a>
-                      )}
+                        {vendor.phone && whatsappPhone && (
+                          <a
+                            href={`https://wa.me/${whatsappPhone}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-blue-600 hover:underline flex items-center gap-1"
+                          >
+                            <Phone className="h-3 w-3" />
+                            {vendor.phone}
+                          </a>
+                        )}
 
-                      {vendor.email && (
-                        <a
-                          href={`mailto:${vendor.email}`}
-                          className="text-sm text-blue-600 hover:underline flex items-center gap-1"
-                        >
-                          <Mail className="h-3 w-3" />
-                          {vendor.email}
-                        </a>
-                      )}
+                        {vendor.email && (
+                          <a
+                            href={`mailto:${vendor.email}`}
+                            className="text-sm text-blue-600 hover:underline flex items-center gap-1"
+                          >
+                            <Mail className="h-3 w-3" />
+                            {vendor.email}
+                          </a>
+                        )}
 
-                      {vendor.website && (
-                        <a
-                          href={vendor.website}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-blue-600 hover:underline flex items-center gap-1"
-                        >
-                          <ExternalLink className="h-3 w-3" />
-                          Website
-                        </a>
-                      )}
-                    </div>
+                        {vendor.website && (
+                          <a
+                            href={vendor.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-blue-600 hover:underline flex items-center gap-1"
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                            Website
+                          </a>
+                        )}
+                      </div>
+                    )}
 
                     {vendor.vendor_rating && (
                       <div className="inline-block px-2 py-1 bg-blue-50 text-blue-700 rounded text-sm mb-3">
@@ -316,42 +313,44 @@ export default function ManagementVendors() {
                     )}
 
                     {vendor.insurance_expiry_date && (
-                      <div className={`inline-block px-2 py-1 rounded text-sm ${insuranceStatus?.color || ""}`}>
+                      <div
+                        className={`inline-block px-2 py-1 rounded text-sm ml-2 ${
+                          insuranceStatus?.color || ""
+                        }`}
+                      >
                         {insuranceStatus?.status === "expired" && (
                           <AlertTriangle className="inline mr-1 h-3 w-3" />
                         )}
                         Insurance:{" "}
-                        {format(new Date(vendor.insurance_expiry_date), "MMM d, yyyy")}
+                        {format(
+                          new Date(vendor.insurance_expiry_date),
+                          "MMM d, yyyy"
+                        )}
                       </div>
                     )}
                   </div>
 
                   {canEdit && (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setEditingVendor(vendor);
-                            setShowForm(true);
-                          }}
-                        >
-                          <Pencil className="mr-2 h-4 w-4" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => setDeleteVendor(vendor)}
-                          className="text-rose-600"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setEditingVendor(vendor);
+                          setShowForm(true);
+                        }}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-rose-600 hover:text-rose-700"
+                        onClick={() => setDeleteVendor(vendor)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   )}
                 </div>
               </CardContent>
