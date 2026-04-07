@@ -51,22 +51,45 @@ export default function ManagementComplianceForm({
   onClose,
   onSaved,
   defaultProjectId,
-}: any) {
+}: {
+  compliance?: Partial<Compliance> | null;
+  projects: Project[];
+  open: boolean;
+  onClose: () => void;
+  onSaved: () => void;
+  defaultProjectId?: string;
+}) {
   const [formData, setFormData] = useState<Compliance>(
-    compliance || {
-      project_id: defaultProjectId || "",
-      alberta_one_call_status: "Pending",
-      one_call_ticket_number: "",
-      development_permit_issued: false,
-      development_permit_number: "",
-      building_permit_issued: false,
-      building_permit_number: "",
-      new_home_warranty_enrolled: false,
-      warranty_certificate_number: "",
-      final_grade_certificate_issued: false,
-      occupancy_permit_issued: false,
-      notes: "",
-    }
+    compliance
+      ? {
+          project_id: compliance.project_id || "",
+          alberta_one_call_status: compliance.alberta_one_call_status || "Pending",
+          one_call_ticket_number: compliance.one_call_ticket_number || "",
+          development_permit_issued: compliance.development_permit_issued || false,
+          development_permit_number: compliance.development_permit_number || "",
+          building_permit_issued: compliance.building_permit_issued || false,
+          building_permit_number: compliance.building_permit_number || "",
+          new_home_warranty_enrolled: compliance.new_home_warranty_enrolled || false,
+          warranty_certificate_number: compliance.warranty_certificate_number || "",
+          final_grade_certificate_issued: compliance.final_grade_certificate_issued || false,
+          occupancy_permit_issued: compliance.occupancy_permit_issued || false,
+          notes: compliance.notes || "",
+          ...(compliance.id && { id: compliance.id }), // Include ID only if present
+        }
+      : {
+          project_id: defaultProjectId || "",
+          alberta_one_call_status: "Pending",
+          one_call_ticket_number: "",
+          development_permit_issued: false,
+          development_permit_number: "",
+          building_permit_issued: false,
+          building_permit_number: "",
+          new_home_warranty_enrolled: false,
+          warranty_certificate_number: "",
+          final_grade_certificate_issued: false,
+          occupancy_permit_issued: false,
+          notes: "",
+        }
   );
 
   const [saving, setSaving] = useState(false);
