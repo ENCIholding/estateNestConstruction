@@ -20,7 +20,6 @@ import {
   Pencil,
   Trash2,
 } from "lucide-react";
-import { format } from "date-fns";
 
 type Project = {
   id: string;
