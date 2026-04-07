@@ -6,7 +6,6 @@ import {
   Card,
   CardContent,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 
 export default function ManagementProjects() {
   const navigate = useNavigate();
@@ -58,12 +57,13 @@ export default function ManagementProjects() {
                     <h3 className="font-semibold text-lg mb-1">{p.name}</h3>
                     <p className="text-slate-600 text-sm mb-2">{p.address}</p>
                     <div className="flex items-center gap-3">
-                      <Badge
-                        className={`${statusColors[p.status] || ""}`}
-                        variant="outline"
+                      <span
+                        className={`px-3 py-1 rounded text-sm font-medium ${
+                          statusColors[p.status] || ""
+                        }`}
                       >
                         {p.status}
-                      </Badge>
+                      </span>
                       <span className="text-sm font-medium">
                         ${p.budget.toLocaleString()}
                       </span>
