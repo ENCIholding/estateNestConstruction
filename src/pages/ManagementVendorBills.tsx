@@ -2,23 +2,7 @@ import React, { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,11 +31,6 @@ import {
 import ManagementVendorBillForm from "@/components/invoices/ManagementVendorBillForm";
 import { format } from "date-fns";
 
-type User = {
-  id: string;
-  app_role?: string;
-};
-
 type Vendor = {
   id: string;
   company_name?: string;
@@ -79,7 +58,7 @@ const statusColors: Record<string, string> = {
   Paid: "bg-emerald-50 text-emerald-700",
 };
 
-async function fetchJson<T>(url: string, options: RequestInit = {}): Promise<T> {
+async function fetchJson(url: string, options: RequestInit = {}): Promise<any> {
   const response = await fetch(url, {
     credentials: "include",
     headers: {
@@ -115,7 +94,7 @@ export default function ManagementVendorBills() {
 
   const { data: sessionData } = useQuery({
     queryKey: ["management-session"],
-    queryFn: () => fetchJson<{ user: User | null }>("/api/management/session"),
+    queryFn: () => fetchJson("/api/management/session"),
     retry: false,
   });
 
@@ -123,33 +102,30 @@ export default function ManagementVendorBills() {
   const userRole = user?.app_role || "Admin";
   const canEdit = userRole === "Admin" || userRole === "Accountant";
 
-  const {
-    data: bills = [],
-    isLoading,
-  } = useQuery({
+  const { data: bills = [], isLoading } = useQuery({
     queryKey: ["vendorBills"],
-    queryFn: () => fetchJson<VendorBill[]>("/api/management/vendor-bills"),
+    queryFn: () => fetchJson("/api/management/vendor-bills"),
   });
 
   const { data: vendors = [] } = useQuery({
     queryKey: ["vendors"],
-    queryFn: () => fetchJson<Vendor[]>("/api/management/vendors"),
+    queryFn: () => fetchJson("/api/management/vendors"),
   });
 
   const { data: projects = [] } = useQuery({
     queryKey: ["projects"],
-    queryFn: () => fetchJson<Project[]>("/api/management/projects"),
+    queryFn: () => fetchJson("/api/management/projects"),
   });
 
   const vendorMap = useMemo(() => {
-    return vendors.reduce<Record<string, Vendor>>((acc, vendor) => {
+    return vendors.reduce<Record<string, Vendor>>((acc, vendor: Vendor) => {
       acc[vendor.id] = vendor;
       return acc;
     }, {});
   }, [vendors]);
 
   const projectMap = useMemo(() => {
-    return projects.reduce<Record<string, Project>>((acc, project) => {
+    return projects.reduce<Record<string, Project>>((acc, project: Project) => {
       acc[project.id] = project;
       return acc;
     }, {});
@@ -174,7 +150,7 @@ export default function ManagementVendorBills() {
   const filteredBills = useMemo(() => {
     const lowerSearch = search.toLowerCase().trim();
 
-    return bills.filter((bill) => {
+    return bills.filter((bill: VendorBill) => {
       const vendor = bill.vendor_id ? vendorMap[bill.vendor_id] : undefined;
       const project = bill.project_id ? projectMap[bill.project_id] : undefined;
 
@@ -196,41 +172,37 @@ export default function ManagementVendorBills() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="min-h-screen bg-slate-50 p-8">
+      <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-slate-900">
-            Vendor Bills
-          </h1>
-          <p className="text-slate-500 mt-1">{bills.length} bills received</p>
+          <h1 className="text-3xl font-bold mb-2">Vendor Bills</h1>
+          <p className="text-slate-600">{bills.length} bills received</p>
         </div>
 
         {canEdit && (
-          <div className="flex gap-2">
-            <Button
-              onClick={() => {
-                setEditingBill(null);
-                setShowForm(true);
-              }}
-              className="bg-slate-900 hover:bg-slate-800"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Record
-            </Button>
-          </div>
+          <Button
+            onClick={() => {
+              setEditingBill(null);
+              setShowForm(true);
+            }}
+            className="bg-slate-900 hover:bg-slate-800"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Add Record
+          </Button>
         )}
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-4">
+      <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
           <Input
             placeholder="Search bills..."
             value={search}
@@ -239,138 +211,135 @@ export default function ManagementVendorBills() {
           />
         </div>
 
-        <Select value={vendorFilter} onValueChange={setVendorFilter}>
-          <SelectTrigger className="w-full sm:w-48">
-            <SelectValue placeholder="All Vendors" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Vendors</SelectItem>
-            {vendors.map((vendor) => (
-              <SelectItem key={vendor.id} value={vendor.id}>
+        <div className="flex gap-2">
+          <span className="text-sm font-medium text-slate-600 py-2">
+            Vendor:
+          </span>
+          <select
+            value={vendorFilter}
+            onChange={(e) => setVendorFilter(e.target.value)}
+            className="px-3 py-2 border border-slate-300 rounded-md text-sm"
+          >
+            <option value="all">All Vendors</option>
+            {vendors.map((vendor: Vendor) => (
+              <option key={vendor.id} value={vendor.id}>
                 {vendor.company_name || "Unnamed Vendor"}
-              </SelectItem>
+              </option>
             ))}
-          </SelectContent>
-        </Select>
+          </select>
+        </div>
 
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-36">
-            <SelectValue placeholder="All Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="Received">Received</SelectItem>
-            <SelectItem value="Verified">Verified</SelectItem>
-            <SelectItem value="Paid">Paid</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex gap-2">
+          <span className="text-sm font-medium text-slate-600 py-2">
+            Status:
+          </span>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-3 py-2 border border-slate-300 rounded-md text-sm"
+          >
+            <option value="all">All Status</option>
+            <option value="Received">Received</option>
+            <option value="Verified">Verified</option>
+            <option value="Paid">Paid</option>
+          </select>
+        </div>
       </div>
 
-      <Card className="border-0 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-slate-50">
-                <TableHead>Vendor</TableHead>
-                <TableHead>Project</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
-                <TableHead>Due Date</TableHead>
-                <TableHead>Year</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-12"></TableHead>
-              </TableRow>
-            </TableHeader>
+      <div className="grid gap-4">
+        {filteredBills.map((bill: VendorBill) => {
+          const vendor = bill.vendor_id ? vendorMap[bill.vendor_id] : undefined;
+          const project = bill.project_id
+            ? projectMap[bill.project_id]
+            : undefined;
 
-            <TableBody>
-              {filteredBills.map((bill) => {
-                const vendor = bill.vendor_id ? vendorMap[bill.vendor_id] : undefined;
-                const project = bill.project_id ? projectMap[bill.project_id] : undefined;
+          return (
+            <Card key={bill.id}>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex-1">
+                    <p className="font-semibold">
+                      {vendor?.company_name || "—"}
+                    </p>
+                    <p className="text-sm text-slate-600 mb-2">
+                      {project?.project_name || "—"}
+                    </p>
+                    <div className="flex gap-4 text-sm mb-3">
+                      <span>
+                        ${bill.invoice_amount?.toLocaleString() || 0}
+                      </span>
+                      {bill.due_date && (
+                        <span>
+                          Due: {format(new Date(bill.due_date), "MMM d, yyyy")}
+                        </span>
+                      )}
+                      <span>Year: {bill.invoice_year || "—"}</span>
+                    </div>
+                    <div
+                      className={`inline-block px-2 py-1 rounded text-sm ${
+                        statusColors[bill.status || ""] || ""
+                      }`}
+                    >
+                      {bill.status || "—"}
+                    </div>
+                  </div>
 
-                return (
-                  <TableRow key={bill.id}>
-                    <TableCell>{vendor?.company_name || "—"}</TableCell>
-                    <TableCell>{project?.project_name || "—"}</TableCell>
-                    <TableCell className="text-right font-semibold">
-                      ${bill.invoice_amount?.toLocaleString() || 0}
-                    </TableCell>
-                    <TableCell>
-                      {bill.due_date
-                        ? format(new Date(bill.due_date), "MMM d, yyyy")
-                        : "—"}
-                    </TableCell>
-                    <TableCell>{bill.invoice_year || "—"}</TableCell>
-                    <TableCell>
-                      <Badge
-                        className={
-                          statusColors[bill.status || ""] ||
-                          "bg-slate-100 text-slate-700"
-                        }
+                  <div className="flex gap-2">
+                    {bill.invoice_file && (
+                      <a
+                        href={bill.invoice_file}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800"
                       >
-                        {bill.status || "—"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        {bill.invoice_file && (
-                          <a
-                            href={bill.invoice_file}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                        <FileText className="h-5 w-5" />
+                      </a>
+                    )}
+
+                    {canEdit && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setEditingBill(bill);
+                              setShowForm(true);
+                            }}
                           >
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <FileText className="h-4 w-4" />
-                            </Button>
-                          </a>
-                        )}
-
-                        {canEdit && (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setEditingBill(bill);
-                                  setShowForm(true);
-                                }}
-                              >
-                                <Pencil className="h-4 w-4 mr-2" />
-                                Edit
-                              </DropdownMenuItem>
-
-                              <DropdownMenuItem
-                                onClick={() => setDeleteBill(bill)}
-                                className="text-rose-600"
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
-      </Card>
+                            <Pencil className="mr-2 h-4 w-4" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => setDeleteBill(bill)}
+                            className="text-rose-600"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
 
       {filteredBills.length === 0 && (
-        <div className="text-center py-12 text-slate-500">No bills found</div>
+        <div className="text-center py-12">
+          <p className="text-slate-600">No bills found</p>
+        </div>
       )}
 
       <ManagementVendorBillForm
-        bill={editingBill}
-        vendors={vendors}
-        projects={projects}
         open={showForm}
+        bill={editingBill}
         onClose={() => {
           setShowForm(false);
           setEditingBill(null);
@@ -387,10 +356,10 @@ export default function ManagementVendorBills() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Bill</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this bill? This action cannot be undone.
+              Are you sure you want to delete this bill? This action cannot be
+              undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
-
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
