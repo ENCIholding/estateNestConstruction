@@ -98,7 +98,7 @@ export default function ManagementVendors() {
   const [showForm, setShowForm] = useState(false);
   const [editingVendor, setEditingVendor] = useState<Vendor | null>(null);
   const [deleteVendor, setDeleteVendor] = useState<Vendor | null>(null);
-  const [expandedVendor, setExpandedVendor] = useState<string | null>(null);
+  const [expandedVendor, setExpandedVendor] = useState<string | null>(null); // State for expanding vendor details
 
   const queryClient = useQueryClient();
 
@@ -248,7 +248,12 @@ export default function ManagementVendors() {
             <Card key={vendor.id}>
               <CardContent className="pt-6">
                 <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 cursor-pointer" onClick={() => setExpandedVendor(isExpanded ? null : vendor.id)}>
+                  <div
+                    className="flex-1 cursor-pointer"
+                    onClick={() =>
+                      setExpandedVendor(isExpanded ? null : vendor.id)
+                    }
+                  >
                     <div className="flex items-center gap-2 mb-2">
                       <h3 className="font-semibold text-lg">
                         {vendor.company_name || "—"}
@@ -307,13 +312,13 @@ export default function ManagementVendors() {
                     )}
 
                     {vendor.vendor_rating && (
-                      <div className="inline-block px-2 py-1 bg-blue-50 text-blue-700 rounded text-sm mb-3">
+                      <span className="inline-block px-2 py-1 bg-blue-50 text-blue-700 rounded text-sm mb-3">
                         Rating: {vendor.vendor_rating}
-                      </div>
+                      </span>
                     )}
 
                     {vendor.insurance_expiry_date && (
-                      <div
+                      <span
                         className={`inline-block px-2 py-1 rounded text-sm ml-2 ${
                           insuranceStatus?.color || ""
                         }`}
@@ -326,7 +331,7 @@ export default function ManagementVendors() {
                           new Date(vendor.insurance_expiry_date),
                           "MMM d, yyyy"
                         )}
-                      </div>
+                      </span>
                     )}
                   </div>
 
@@ -379,7 +384,10 @@ export default function ManagementVendors() {
         }}
       />
 
-      <AlertDialog open={!!deleteVendor} onOpenChange={() => setDeleteVendor(null)}>
+      <AlertDialog
+        open={!!deleteVendor}
+        onOpenChange={() => setDeleteVendor(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Vendor</AlertDialogTitle>
