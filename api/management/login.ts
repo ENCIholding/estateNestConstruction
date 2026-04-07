@@ -1,4 +1,4 @@
-import { createSessionToken, buildSessionCookie } from "./_lib/auth.ts"; // Corrected path and added .ts extension
+import { getCookie, getSessionCookieName, verifySessionToken } from "../_lib/auth";
 
 type LoginBody = {
   username?: string;
