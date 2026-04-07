@@ -1,5 +1,5 @@
-import { getCookie, getSessionCookieName, verifySessionToken } from "../../_lib/auth.js"; // Corrected path and added .js extension
-import { updateProjectById } from "../../_lib/projects.js"; // Corrected path and added .js extension
+import { getCookie, getSessionCookieName, verifySessionToken } from "../../_lib/auth";
+import { updateProjectById } from "../../_lib/projects";
 
 type RouteContext = {
   params: {
