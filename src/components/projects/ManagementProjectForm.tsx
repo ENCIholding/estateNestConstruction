@@ -3,13 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -330,42 +323,35 @@ export default function ManagementProjectForm({
 
               <div>
                 <Label>Zoning Code</Label>
-                <Select
+                <select
                   value={formData.zoning_code}
-                  onValueChange={(value) =>
-                    handleChange("zoning_code", value)
+                  onChange={(e) =>
+                    handleChange("zoning_code", e.target.value)
                   }
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md"
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select zoning code" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ZONING_CODES.map((code) => (
-                      <SelectItem key={code} value={code}>
-                        {code}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  <option value="">Select zoning code</option>
+                  {ZONING_CODES.map((code) => (
+                    <option key={code} value={code}>
+                      {code}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>
                 <Label>Status</Label>
-                <Select
+                <select
                   value={formData.status}
-                  onValueChange={(value) => handleChange("status", value)}
+                  onChange={(e) => handleChange("status", e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md"
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {STATUSES.map((status) => (
-                      <SelectItem key={status} value={status}>
-                        {status}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  {STATUSES.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
           </div>
