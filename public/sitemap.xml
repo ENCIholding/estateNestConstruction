@@ -1,18 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
+  <!-- Main Home Page -->
   <url>
-    <loc>https://www.estatenest.capital/</loc>
-    <lastmod>2026-04-01</lastmod>
+    <loc>https://estatenest.capital</loc>
+    <lastmod>2024-04-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
 
+  <!-- Builder Profile -->
   <url>
-    <loc>https://www.estatenest.capital/builder-profile</loc>
-    <lastmod>2026-04-01</lastmod>
+    <loc>https://estatenest.capitalbuilder-profile</loc>
+    <lastmod>2024-04-01</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Investor Relations -->
+  <url>
+    <loc>https://estatenest.capitalinvestor-relations</loc>
+    <lastmod>2024-04-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Careers -->
+  <url>
+    <loc>https://estatenest.capitalcareers</loc>
+    <lastmod>2024-04-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
 
 </urlset>
