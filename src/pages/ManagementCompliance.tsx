@@ -2,22 +2,7 @@ import React, { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,7 +16,6 @@ import {
 import {
   CheckCircle2,
   Clock,
-  MoreHorizontal,
   Pencil,
   Trash2,
   Loader2,
@@ -105,7 +89,7 @@ export default function ManagementCompliance() {
 
   const { data: sessionData } = useQuery({
     queryKey: ["management-session"],
-    queryFn: () => fetchJson<{ user: User | null }>("/api/management/session"),
+    queryFn: () => fetchJson("/api/management/session"),
     retry: false,
   });
 
@@ -113,21 +97,18 @@ export default function ManagementCompliance() {
   const userRole = user?.app_role || "Admin";
   const canEdit = userRole === "Admin" || userRole === "Project Manager";
 
-  const {
-    data: compliance = [],
-    isLoading,
-  } = useQuery({
+  const { data: compliance = [], isLoading } = useQuery({
     queryKey: ["compliance"],
-    queryFn: () => fetchJson<ComplianceItem[]>("/api/management/compliance"),
+    queryFn: () => fetchJson("/api/management/compliance"),
   });
 
   const { data: projects = [] } = useQuery({
     queryKey: ["projects"],
-    queryFn: () => fetchJson<Project[]>("/api/management/projects"),
+    queryFn: () => fetchJson("/api/management/projects"),
   });
 
   const projectMap = useMemo(() => {
-    return projects.reduce<Record<string, Project>>((acc, project) => {
+    return projects.reduce<Record<string, Project>>((acc, project: Project) => {
       acc[project.id] = project;
       return acc;
     }, {});
@@ -136,7 +117,7 @@ export default function ManagementCompliance() {
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
 
-    return compliance.filter((item) => {
+    return compliance.filter((item: ComplianceItem) => {
       const project = item.project_id ? projectMap[item.project_id] : undefined;
       const projectName = project?.project_name || "";
       const civicAddress = project?.civic_address || "";
@@ -191,20 +172,18 @@ export default function ManagementCompliance() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="min-h-screen bg-slate-50 p-8">
+      <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">
-            Compliance & Safety
-          </h1>
-          <p className="text-slate-500">
+          <h1 className="text-3xl font-bold mb-2">Compliance & Safety</h1>
+          <p className="text-slate-600">
             Track permits and regulatory requirements
           </p>
         </div>
@@ -217,168 +196,158 @@ export default function ManagementCompliance() {
             }}
             className="bg-slate-900 hover:bg-slate-800"
           >
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="mr-2 h-4 w-4" />
             Add Compliance Record
           </Button>
         )}
       </div>
 
-      <Input
-        placeholder="Search projects..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="w-full"
-      />
+      <Card className="mb-8">
+        <CardContent className="pt-6">
+          <Input
+            placeholder="Search compliance records..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full"
+          />
+        </CardContent>
+      </Card>
 
-      <Card className="border-0 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-slate-50">
-                <TableHead>Project</TableHead>
-                <TableHead>Completion</TableHead>
-                <TableHead>One-Call</TableHead>
-                <TableHead>Permits</TableHead>
-                <TableHead>Warranty</TableHead>
-                <TableHead>Final Grade</TableHead>
-                <TableHead>Occupancy</TableHead>
-                <TableHead className="w-12"></TableHead>
-              </TableRow>
-            </TableHeader>
+      <div className="space-y-4">
+        {filtered.map((item: ComplianceItem) => {
+          const project = item.project_id
+            ? projectMap[item.project_id]
+            : undefined;
+          const score = getScore(item);
 
-            <TableBody>
-              {filtered.map((item) => {
-                const project = item.project_id ? projectMap[item.project_id] : undefined;
-                const score = getScore(item);
+          return (
+            <Card key={item.id}>
+              <CardContent className="pt-6">
+                <div className="space-y-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-lg">
+                        {project?.project_name || "—"}
+                      </h3>
+                      {project?.civic_address && (
+                        <div className="flex items-center gap-1 text-sm text-slate-600 mt-1">
+                          <MapPin className="h-3 w-3" />
+                          {project.civic_address}
+                        </div>
+                      )}
+                    </div>
 
-                return (
-                  <TableRow key={item.id}>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium text-slate-900">
-                          {project?.project_name || "—"}
-                        </p>
-                        {project?.civic_address ? (
-                          <p className="text-sm text-slate-500 flex items-center gap-1">
-                            <MapPin className="h-3 w-3" />
-                            {project.civic_address}
-                          </p>
-                        ) : null}
-                      </div>
-                    </TableCell>
-
-                    <TableCell>
-                      <span
-                        className={`font-semibold ${
-                          score === 100
-                            ? "text-emerald-600"
+                    <div className="text-right">
+                      <p
+                        className={`text-2xl font-bold ${
+                          score >= 80
+                            ? "text-green-600"
                             : score >= 60
                             ? "text-amber-600"
                             : "text-rose-600"
                         }`}
                       >
                         {score}%
-                      </span>
-                    </TableCell>
+                      </p>
+                      <p className="text-xs text-slate-600">Completion</p>
+                    </div>
+                  </div>
 
-                    <TableCell>
-                      <Badge
-                        className={
-                          item.alberta_one_call_status === "Cleared"
-                            ? "bg-emerald-50 text-emerald-700"
-                            : "bg-amber-50 text-amber-700"
-                        }
-                      >
+                  <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+                    <div className="text-center">
+                      <p className="text-xs text-slate-600 mb-1">One-Call</p>
+                      <p className="text-sm font-medium">
                         {item.alberta_one_call_status || "Pending"}
-                      </Badge>
-                    </TableCell>
+                      </p>
+                    </div>
 
-                    <TableCell>
-                      <div className="flex gap-2">
-                        {item.development_permit_issued ? (
-                          <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                        ) : (
-                          <Clock className="h-5 w-5 text-amber-500" />
-                        )}
-                        {item.building_permit_issued ? (
-                          <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                        ) : (
-                          <Clock className="h-5 w-5 text-amber-500" />
-                        )}
-                      </div>
-                    </TableCell>
+                    <div className="text-center">
+                      <p className="text-xs text-slate-600 mb-1">Dev Permit</p>
+                      {item.development_permit_issued ? (
+                        <CheckCircle2 className="h-5 w-5 text-green-600 mx-auto" />
+                      ) : (
+                        <Clock className="h-5 w-5 text-slate-400 mx-auto" />
+                      )}
+                    </div>
 
-                    <TableCell>
+                    <div className="text-center">
+                      <p className="text-xs text-slate-600 mb-1">Build Permit</p>
+                      {item.building_permit_issued ? (
+                        <CheckCircle2 className="h-5 w-5 text-green-600 mx-auto" />
+                      ) : (
+                        <Clock className="h-5 w-5 text-slate-400 mx-auto" />
+                      )}
+                    </div>
+
+                    <div className="text-center">
+                      <p className="text-xs text-slate-600 mb-1">Warranty</p>
                       {item.new_home_warranty_enrolled ? (
-                        <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                        <CheckCircle2 className="h-5 w-5 text-green-600 mx-auto" />
                       ) : (
-                        <Clock className="h-5 w-5 text-amber-500" />
+                        <Clock className="h-5 w-5 text-slate-400 mx-auto" />
                       )}
-                    </TableCell>
+                    </div>
 
-                    <TableCell>
+                    <div className="text-center">
+                      <p className="text-xs text-slate-600 mb-1">Final Grade</p>
                       {item.final_grade_certificate_issued ? (
-                        <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                        <CheckCircle2 className="h-5 w-5 text-green-600 mx-auto" />
                       ) : (
-                        <Clock className="h-5 w-5 text-amber-500" />
+                        <Clock className="h-5 w-5 text-slate-400 mx-auto" />
                       )}
-                    </TableCell>
+                    </div>
 
-                    <TableCell>
+                    <div className="text-center">
+                      <p className="text-xs text-slate-600 mb-1">Occupancy</p>
                       {item.occupancy_permit_issued ? (
-                        <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                        <CheckCircle2 className="h-5 w-5 text-green-600 mx-auto" />
                       ) : (
-                        <Clock className="h-5 w-5 text-amber-500" />
+                        <Clock className="h-5 w-5 text-slate-400 mx-auto" />
                       )}
-                    </TableCell>
+                    </div>
+                  </div>
 
-                    <TableCell>
-                      {canEdit && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setEditingCompliance(item);
-                                setShowForm(true);
-                              }}
-                            >
-                              <Pencil className="h-4 w-4 mr-2" />
-                              Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => setDeleteCompliance(item)}
-                              className="text-rose-600"
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
-      </Card>
+                  {canEdit && (
+                    <div className="flex gap-2 pt-2 border-t">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setEditingCompliance(item);
+                          setShowForm(true);
+                        }}
+                      >
+                        <Pencil className="mr-1 h-4 w-4" />
+                        Edit
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-rose-600 hover:text-rose-700"
+                        onClick={() => setDeleteCompliance(item)}
+                      >
+                        <Trash2 className="mr-1 h-4 w-4" />
+                        Delete
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
 
       {filtered.length === 0 && (
-        <div className="text-center py-10 text-slate-500">
-          No compliance records found
+        <div className="text-center py-12">
+          <p className="text-slate-600">No compliance records found</p>
         </div>
       )}
 
       <ManagementComplianceForm
+        open={showForm}
         compliance={editingCompliance}
         projects={projects}
-        open={showForm}
         onClose={() => {
           setShowForm(false);
           setEditingCompliance(null);
@@ -390,10 +359,7 @@ export default function ManagementCompliance() {
         }}
       />
 
-      <AlertDialog
-        open={!!deleteCompliance}
-        onOpenChange={() => setDeleteCompliance(null)}
-      >
+      <AlertDialog open={!!deleteCompliance} onOpenChange={() => setDeleteCompliance(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Compliance Record</AlertDialogTitle>
@@ -402,7 +368,6 @@ export default function ManagementCompliance() {
               cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
-
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
