@@ -1,9 +1,9 @@
+
 import React, { useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Progress } from "@/components/ui/progress";
 import {
   Loader2,
   Printer,
@@ -99,30 +99,6 @@ async function fetchJson(url: string, options: RequestInit = {}): Promise<any> {
 
   if (!response.ok) {
     let message = "Request failed";
-    try {
-      const errorData = await response.json();
-      message = errorData?.error || message;
-    } catch {
-      message = `${response.status} ${response.statusText}`;
-    }
-    throw new Error(message);
-  }
-
-  return response.json();
-}
-
-async function uploadFile(file: File): Promise<any> {
-  const formData = new FormData();
-  formData.append("file", file);
-
-  const response = await fetch("/api/management/upload", {
-    method: "POST",
-    credentials: "include",
-    body: formData,
-  });
-
-  if (!response.ok) {
-    let message = "Upload failed";
     try {
       const errorData = await response.json();
       message = errorData?.error || message;
@@ -311,9 +287,7 @@ export default function ManagementReports() {
     <div className="min-h-screen bg-slate-50 p-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Project Reports</h1>
-        <p className="text-slate-600">
-          Generate detailed project reports
-        </p>
+        <p className="text-slate-600">Generate detailed project reports</p>
       </div>
 
       <Card className="mb-8">
@@ -416,7 +390,10 @@ export default function ManagementReports() {
                 <div>
                   <p className="text-sm text-slate-600 mb-1">Warranty Start</p>
                   <p className="font-semibold">
-                    {format(new Date(project.warranty_start_date), "MMM d, yyyy")}
+                    {format(
+                      new Date(project.warranty_start_date),
+                      "MMM d, yyyy"
+                    )}
                   </p>
                 </div>
                 <div>
@@ -555,13 +532,18 @@ export default function ManagementReports() {
           <h3 className="text-2xl font-bold mb-6">Task Progress</h3>
 
           <div className="mb-8">
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center justify-between mb-3">
               <p className="text-sm text-slate-600">
                 {completedTasks} of {projectTasks.length} completed
               </p>
               <p className="font-bold">{taskProgress}%</p>
             </div>
-            <Progress value={parseFloat(taskProgress)} />
+            <div className="w-full bg-slate-200 rounded-full h-2">
+              <div
+                className="bg-emerald-600 h-2 rounded-full transition-all"
+                style={{ width: `${taskProgress}%` }}
+              ></div>
+            </div>
           </div>
 
           {projectTasks.length > 0 && (
@@ -577,7 +559,9 @@ export default function ManagementReports() {
                     className="flex items-center justify-between p-3 bg-slate-50 rounded"
                   >
                     <div>
-                      <p className="font-medium">{task.task_name || "Untitled Task"}</p>
+                      <p className="font-medium">
+                        {task.task_name || "Untitled Task"}
+                      </p>
                       <p className="text-sm text-slate-600">
                         {task.phase || "—"}
                         {vendor?.company_name ? ` • ${vendor.company_name}` : ""}
