@@ -1,62 +1,24 @@
 import React, { useMemo, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import {
-  Loader2,
-  Camera,
-  CheckCircle2,
-  MapPin,
-  Clock,
-  X,
-  ChevronRight,
-} from "lucide-react";
-import { format, addDays } from "date-fns";
-
-type User = {
-  id: string;
-  name?: string;
-  email?: string;
-  app_role?: string;
-};
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { Search, Loader2, Plus, CheckCircle2, Clock } from "lucide-react";
 
 type Project = {
   id: string;
   project_name?: string;
-  civic_address?: string;
 };
 
 type Task = {
   id: string;
-  task_name?: string;
-  phase?: string;
   project_id?: string;
-  status?: "Not Started" | "In Progress" | "Completed" | "On Hold" | string;
-  city_inspection_passed?: boolean;
-  site_photos?: string[];
-  start_date?: string;
-  duration_days?: number;
-  notes?: string;
+  task_name?: string;
+  status?: string;
+  assigned_to?: string;
 };
 
-const statusColors: Record<string, string> = {
-  "Not Started": "bg-slate-100 text-slate-700",
-  "In Progress": "bg-blue-50 text-blue-700",
-  Completed: "bg-emerald-50 text-emerald-700",
-  "On Hold": "bg-amber-50 text-amber-700",
-};
-
-async function fetchJson<T>(url: string, options: RequestInit = {}): Promise<T> {
+async function fetchJson(url: string, options: RequestInit = {}): Promise<any> {
   const response = await fetch(url, {
     credentials: "include",
     headers: {
@@ -80,380 +42,181 @@ async function fetchJson<T>(url: string, options: RequestInit = {}): Promise<T> 
   return response.json();
 }
 
-async function uploadFile(file: File): Promise<{ file_url: string }> {
-  const formData = new FormData();
-  formData.append("file", file);
-
-  const response = await fetch("/api/management/upload", {
-    method: "POST",
-    credentials: "include",
-    body: formData,
-  });
-
-  if (!response.ok) {
-    let message = "Upload failed";
-    try {
-      const errorData = await response.json();
-      message = errorData?.error || message;
-    } catch {
-      message = `${response.status} ${response.statusText}`;
-    }
-    throw new Error(message);
-  }
-
-  return response.json();
-}
-
 export default function ManagementMobileTasks() {
+  const [search, setSearch] = useState("");
   const [projectFilter, setProjectFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("pending");
-  const [expandedTask, setExpandedTask] = useState<string | null>(null);
-  const [uploadingTaskId, setUploadingTaskId] = useState<string | null>(null);
-  const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
-
-  const queryClient = useQueryClient();
-
-  const { data: sessionData, isLoading: loadingSession } = useQuery({
-    queryKey: ["management-session"],
-    queryFn: () => fetchJson<{ user: User | null }>("/api/management/session"),
-    retry: false,
-  });
+  const [statusFilter, setStatusFilter] = useState("all");
 
   const { data: tasks = [], isLoading: loadingTasks } = useQuery({
     queryKey: ["tasks"],
-    queryFn: () => fetchJson<Task[]>("/api/management/tasks"),
+    queryFn: () => fetchJson("/api/management/tasks"),
   });
 
-  const { data: projects = [], isLoading: loadingProjects } = useQuery({
+  const { data: projects = [] } = useQuery({
     queryKey: ["projects"],
-    queryFn: () => fetchJson<Project[]>("/api/management/projects"),
+    queryFn: () => fetchJson("/api/management/projects"),
   });
-
-  const user = sessionData?.user || null;
 
   const projectMap = useMemo(() => {
-    return projects.reduce<Record<string, Project>>((acc, project) => {
+    return projects.reduce<Record<string, Project>>((acc, project: Project) => {
       acc[project.id] = project;
       return acc;
     }, {});
   }, [projects]);
 
   const filteredTasks = useMemo(() => {
-    return tasks.filter((task) => {
+    const lowerSearch = search.toLowerCase().trim();
+
+    return tasks.filter((task: Task) => {
+      const project = task.project_id
+        ? projectMap[task.project_id]
+        : undefined;
+
+      const matchesSearch =
+        lowerSearch === ""
+          ? true
+          : task.task_name?.toLowerCase().includes(lowerSearch) ||
+            project?.project_name?.toLowerCase().includes(lowerSearch);
+
       const matchesProject =
         projectFilter === "all" || task.project_id === projectFilter;
 
       const matchesStatus =
-        statusFilter === "all" ||
-        (statusFilter === "pending" && task.status !== "Completed") ||
-        (statusFilter === "completed" && task.status === "Completed");
+        statusFilter === "all" || task.status === statusFilter;
 
-      return matchesProject && matchesStatus;
+      return matchesSearch && matchesProject && matchesStatus;
     });
-  }, [tasks, projectFilter, statusFilter]);
+  }, [tasks, projectMap, search, projectFilter, statusFilter]);
 
-  const refreshTasks = async () => {
-    await queryClient.invalidateQueries({ queryKey: ["tasks"] });
-  };
+  const completedCount = filteredTasks.filter(
+    (t: Task) => t.status === "Completed"
+  ).length;
 
-  const updateTask = async (taskId: string, payload: Partial<Task>) => {
-    setUpdatingTaskId(taskId);
-    try {
-      await fetchJson(`/api/management/tasks/${taskId}`, {
-        method: "PATCH",
-        body: JSON.stringify(payload),
-      });
-      await refreshTasks();
-    } catch (error) {
-      console.error("Failed to update task:", error);
-      alert(error instanceof Error ? error.message : "Failed to update task.");
-    } finally {
-      setUpdatingTaskId(null);
-    }
-  };
-
-  const handleStatusChange = async (task: Task, newStatus: string) => {
-    await updateTask(task.id, { status: newStatus });
-  };
-
-  const handleInspectionChange = async (
-    task: Task,
-    checked: boolean | "indeterminate"
-  ) => {
-    await updateTask(task.id, {
-      city_inspection_passed: checked === true,
-    });
-  };
-
-  const handlePhotoUpload = async (task: Task, file?: File) => {
-    if (!file) return;
-
-    setUploadingTaskId(task.id);
-
-    try {
-      const uploadResult = await uploadFile(file);
-      const newPhotos = [...(task.site_photos || []), uploadResult.file_url];
-
-      await fetchJson(`/api/management/tasks/${task.id}`, {
-        method: "PATCH",
-        body: JSON.stringify({ site_photos: newPhotos }),
-      });
-
-      await refreshTasks();
-    } catch (error) {
-      console.error("Upload failed:", error);
-      alert(error instanceof Error ? error.message : "Photo upload failed.");
-    } finally {
-      setUploadingTaskId(null);
-    }
-  };
-
-  const removePhoto = async (task: Task, index: number) => {
-    const existingPhotos = [...(task.site_photos || [])];
-    existingPhotos.splice(index, 1);
-
-    await updateTask(task.id, {
-      site_photos: existingPhotos,
-    });
-  };
-
-  const isLoading = loadingSession || loadingTasks || loadingProjects;
-
-  if (isLoading) {
+  if (loadingTasks) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="max-w-lg mx-auto p-4">
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-700">
-          You are not logged in. Please log in to access mobile tasks.
-        </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <div>
-        <h1 className="text-xl font-bold text-slate-900">My Tasks</h1>
-        <p className="text-slate-500 text-sm">Site superintendent task list</p>
+    <div className="min-h-screen bg-slate-50 p-8">
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold mb-2">Mobile Tasks</h1>
+          <p className="text-slate-600">
+            {completedCount} of {filteredTasks.length} completed
+          </p>
+        </div>
+
+        <Button className="bg-slate-900 hover:bg-slate-800">
+          <Plus className="mr-2 h-4 w-4" />
+          New Task
+        </Button>
       </div>
 
-      <div className="flex gap-2">
-        <Select value={projectFilter} onValueChange={setProjectFilter}>
-          <SelectTrigger className="flex-1">
-            <SelectValue placeholder="All Projects" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Projects</SelectItem>
-            {projects.map((project) => (
-              <SelectItem key={project.id} value={project.id}>
-                {project.project_name || "Unnamed Project"}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <Card className="mb-8">
+        <CardContent className="pt-6">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+              <Input
+                placeholder="Search tasks..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-10"
+              />
+            </div>
 
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-32">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="completed">Completed</SelectItem>
-            <SelectItem value="all">All</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+            <div className="flex gap-2">
+              <span className="text-sm font-medium text-slate-600 py-2">
+                Project:
+              </span>
+              <select
+                value={projectFilter}
+                onChange={(e) => setProjectFilter(e.target.value)}
+                className="px-3 py-2 border border-slate-300 rounded-md text-sm"
+              >
+                <option value="all">All Projects</option>
+                {projects.map((project: Project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.project_name || "Unnamed"}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-      <div className="space-y-3">
-        {filteredTasks.length === 0 ? (
-          <div className="text-center py-12 text-slate-500">No tasks found</div>
-        ) : (
-          filteredTasks.map((task) => {
-            const project = task.project_id ? projectMap[task.project_id] : undefined;
-            const isExpanded = expandedTask === task.id;
+            <div className="flex gap-2">
+              <span className="text-sm font-medium text-slate-600 py-2">
+                Status:
+              </span>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="px-3 py-2 border border-slate-300 rounded-md text-sm"
+              >
+                <option value="all">All</option>
+                <option value="Pending">Pending</option>
+                <option value="Completed">Completed</option>
+              </select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-            const hasValidDates =
-              task.start_date &&
-              task.duration_days !== undefined &&
-              task.duration_days !== null &&
-              !Number.isNaN(new Date(task.start_date).getTime());
+      <div className="grid gap-4">
+        {filteredTasks.map((task: Task) => {
+          const project = task.project_id
+            ? projectMap[task.project_id]
+            : undefined;
+          const isCompleted = task.status === "Completed";
 
-            const endDate = hasValidDates
-              ? addDays(new Date(task.start_date as string), Number(task.duration_days))
-              : null;
-
-            const isUploading = uploadingTaskId === task.id;
-            const isUpdating = updatingTaskId === task.id;
-
-            return (
-              <Card key={task.id} className="border-0 shadow-sm overflow-hidden">
-                <button
-                  onClick={() => setExpandedTask(isExpanded ? null : task.id)}
-                  className="w-full p-4 text-left flex items-start gap-3"
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Badge
-                        className={
-                          statusColors[task.status || ""] || "bg-slate-100 text-slate-700"
-                        }
-                        variant="secondary"
-                      >
-                        {task.status || "Not Started"}
-                      </Badge>
-
-                      {task.city_inspection_passed && (
-                        <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                      )}
-
-                      {(isUploading || isUpdating) && (
-                        <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
-                      )}
-                    </div>
-
-                    <h3 className="font-medium text-slate-900">
-                      {task.task_name || "Untitled Task"}
-                    </h3>
-
-                    <p className="text-sm text-slate-500">{task.phase || "—"}</p>
-
-                    <div className="flex items-center gap-1 mt-2 text-sm text-slate-500">
-                      <MapPin className="h-3 w-3" />
-                      <span className="truncate">
-                        {project?.civic_address || project?.project_name || "No project address"}
-                      </span>
-                    </div>
-
-                    {task.start_date && (
-                      <div className="flex items-center gap-1 mt-1 text-sm text-slate-500">
-                        <Clock className="h-3 w-3" />
-                        <span>
-                          {format(new Date(task.start_date), "MMM d")}
-                          {endDate ? ` - ${format(endDate, "MMM d")}` : ""}
-                        </span>
-                      </div>
+          return (
+            <Card key={task.id}>
+              <CardContent className="pt-6">
+                <div className="flex items-start gap-4">
+                  <div className="mt-1">
+                    {isCompleted ? (
+                      <CheckCircle2 className="h-6 w-6 text-emerald-600" />
+                    ) : (
+                      <Clock className="h-6 w-6 text-slate-400" />
                     )}
                   </div>
 
-                  <ChevronRight
-                    className={`h-5 w-5 text-slate-400 transition-transform ${
-                      isExpanded ? "rotate-90" : ""
+                  <div className="flex-1">
+                    <p className="font-semibold text-lg">{task.task_name}</p>
+                    <p className="text-sm text-slate-600 mb-2">
+                      {project?.project_name || "—"}
+                    </p>
+                    {task.assigned_to && (
+                      <p className="text-sm text-slate-600">
+                        Assigned to: {task.assigned_to}
+                      </p>
+                    )}
+                  </div>
+
+                  <div
+                    className={`px-3 py-1 rounded text-sm font-medium ${
+                      isCompleted
+                        ? "bg-emerald-50 text-emerald-700"
+                        : "bg-amber-50 text-amber-700"
                     }`}
-                  />
-                </button>
-
-                {isExpanded && (
-                  <div className="border-t border-slate-100 p-4 space-y-4 bg-slate-50/50">
-                    <div className="space-y-2">
-                      <Label className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-                        Update Status
-                      </Label>
-
-                      <div className="flex flex-wrap gap-2">
-                        {["Not Started", "In Progress", "Completed", "On Hold"].map(
-                          (status) => (
-                            <Button
-                              key={status}
-                              variant={task.status === status ? "default" : "outline"}
-                              size="sm"
-                              onClick={() => handleStatusChange(task, status)}
-                              className={task.status === status ? "bg-slate-900" : ""}
-                              disabled={isUpdating}
-                            >
-                              {status}
-                            </Button>
-                          )
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`inspection-${task.id}`}
-                        checked={!!task.city_inspection_passed}
-                        onCheckedChange={(checked) =>
-                          handleInspectionChange(task, checked)
-                        }
-                        disabled={isUpdating}
-                      />
-                      <Label htmlFor={`inspection-${task.id}`} className="text-sm">
-                        City Inspection Passed
-                      </Label>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-                        Site Photos
-                      </Label>
-
-                      <div className="grid grid-cols-3 gap-2">
-                        {(task.site_photos || []).map((photo, index) => (
-                          <div
-                            key={`${task.id}-photo-${index}`}
-                            className="relative aspect-square rounded-lg overflow-hidden group"
-                          >
-                            <img
-                              src={photo}
-                              alt={`Site photo ${index + 1}`}
-                              className="w-full h-full object-cover"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => removePhoto(task, index)}
-                              className="absolute top-1 right-1 p-1 bg-black/50 rounded-full"
-                              disabled={isUpdating}
-                            >
-                              <X className="h-3 w-3 text-white" />
-                            </button>
-                          </div>
-                        ))}
-
-                        <label className="aspect-square rounded-lg border-2 border-dashed border-slate-300 flex flex-col items-center justify-center cursor-pointer hover:border-slate-400 bg-white transition-colors">
-                          {isUploading ? (
-                            <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
-                          ) : (
-                            <>
-                              <Camera className="h-6 w-6 text-slate-400" />
-                              <span className="text-xs text-slate-500 mt-1">Add Photo</span>
-                            </>
-                          )}
-
-                          <input
-                            type="file"
-                            accept="image/*"
-                            capture="environment"
-                            onChange={(e) => handlePhotoUpload(task, e.target.files?.[0])}
-                            className="hidden"
-                            disabled={isUploading}
-                          />
-                        </label>
-                      </div>
-                    </div>
-
-                    {task.notes && (
-                      <div className="space-y-1">
-                        <Label className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-                          Notes
-                        </Label>
-                        <p className="text-sm text-slate-600 bg-white p-3 rounded-lg">
-                          {task.notes}
-                        </p>
-                      </div>
-                    )}
+                  >
+                    {task.status || "Pending"}
                   </div>
-                )}
-              </Card>
-            );
-          })
-        )}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
+
+      {filteredTasks.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-slate-600">No tasks found</p>
+        </div>
+      )}
     </div>
   );
 }
