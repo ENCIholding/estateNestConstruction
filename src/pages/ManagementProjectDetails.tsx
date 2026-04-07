@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -6,8 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import {
   Tabs,
@@ -20,14 +18,12 @@ import {
   ArrowLeft,
   MapPin,
   FileText,
-  CheckCircle2,
-  Clock,
   Loader2,
   ExternalLink,
   Pencil,
 } from "lucide-react";
 import { format, addYears } from "date-fns";
-import ProjectForm from "@/components/projects/ProjectForm";
+import ManagementProjectForm from "@/components/projects/ManagementProjectForm";
 
 const statusColors: Record<string, string> = {
   Planning: "bg-blue-50 text-blue-700 border-blue-200",
@@ -44,7 +40,17 @@ async function fetchJson<T>(url: string, options: RequestInit = {}): Promise<T> 
     ...options,
   });
 
-  if (!res.ok) throw new Error("API error");
+  if (!res.ok) {
+    let message = "API error";
+    try {
+      const errorData = await res.json();
+      message = errorData?.error || message;
+    } catch {
+      message = `${res.status} ${res.statusText}`;
+    }
+    throw new Error(message);
+  }
+
   return res.json();
 }
 
@@ -57,7 +63,7 @@ export default function ManagementProjectDetails() {
 
   const { data: sessionData } = useQuery({
     queryKey: ["session"],
-    queryFn: () => fetchJson("/api/management/session"),
+    queryFn: () => fetchJson<any>("/api/management/session"),
   });
 
   const user = sessionData?.user;
@@ -68,41 +74,41 @@ export default function ManagementProjectDetails() {
 
   const { data: project, isLoading } = useQuery({
     queryKey: ["project", projectId],
-    queryFn: () => fetchJson(`/api/management/projects/${projectId}`),
+    queryFn: () => fetchJson<any>(`/api/management/projects/${projectId}`),
     enabled: !!projectId,
   });
 
   const { data: tasks = [] } = useQuery({
     queryKey: ["tasks", projectId],
-    queryFn: () => fetchJson(`/api/management/tasks?project_id=${projectId}`),
+    queryFn: () => fetchJson<any[]>(`/api/management/tasks?project_id=${projectId}`),
     enabled: !!projectId,
   });
 
   const { data: budgetItems = [] } = useQuery({
     queryKey: ["budget", projectId],
     queryFn: () =>
-      fetchJson(`/api/management/budget-items?project_id=${projectId}`),
+      fetchJson<any[]>(`/api/management/budget-items?project_id=${projectId}`),
     enabled: !!projectId,
   });
 
   const { data: compliance = [] } = useQuery({
     queryKey: ["compliance", projectId],
     queryFn: () =>
-      fetchJson(`/api/management/compliance?project_id=${projectId}`),
+      fetchJson<any[]>(`/api/management/compliance?project_id=${projectId}`),
     enabled: !!projectId,
   });
 
   const { data: changeOrders = [] } = useQuery({
     queryKey: ["changeOrders", projectId],
     queryFn: () =>
-      fetchJson(`/api/management/change-orders?project_id=${projectId}`),
+      fetchJson<any[]>(`/api/management/change-orders?project_id=${projectId}`),
     enabled: !!projectId,
   });
 
   const { data: documents = [] } = useQuery({
     queryKey: ["docs", projectId],
     queryFn: () =>
-      fetchJson(`/api/management/documents?project_id=${projectId}`),
+      fetchJson<any[]>(`/api/management/documents?project_id=${projectId}`),
     enabled: !!projectId,
   });
 
@@ -114,9 +120,10 @@ export default function ManagementProjectDetails() {
     );
   }
 
-  if (!project) return <div>Project not found</div>;
+  if (!project) {
+    return <div>Project not found</div>;
+  }
 
-  // ===== CALCULATIONS =====
   const totalActual = budgetItems.reduce(
     (s: number, i: any) => s + (i.actual_cost || 0),
     0
@@ -126,7 +133,7 @@ export default function ManagementProjectDetails() {
 
   const profitMargin = project.selling_price
     ? ((grossProfit / project.selling_price) * 100).toFixed(1)
-    : 0;
+    : "0";
 
   const completedTasks = tasks.filter(
     (t: any) => t.status === "Completed"
@@ -134,7 +141,7 @@ export default function ManagementProjectDetails() {
 
   const taskProgress = tasks.length
     ? ((completedTasks / tasks.length) * 100).toFixed(0)
-    : 0;
+    : "0";
 
   const warrantyExpiry = project.warranty_start_date
     ? addYears(new Date(project.warranty_start_date), 1)
@@ -142,11 +149,9 @@ export default function ManagementProjectDetails() {
 
   const projectCompliance = compliance[0];
 
-  // ===== UI =====
   return (
-    <div className="space-y-6">
-      {/* HEADER */}
-      <div className="flex justify-between items-center">
+    <div className="space-y-6 p-6">
+      <div className="flex justify-between items-center flex-wrap gap-4">
         <div className="flex gap-4 items-center">
           <Link to="/management/projects">
             <Button variant="ghost" size="icon">
@@ -156,7 +161,7 @@ export default function ManagementProjectDetails() {
 
           <div>
             <h1 className="text-2xl font-bold">{project.project_name}</h1>
-            <Badge className={statusColors[project.status]}>
+            <Badge className={statusColors[project.status] || "bg-slate-100 text-slate-700"}>
               {project.status}
             </Badge>
             <p className="text-sm text-slate-500 flex items-center gap-1 mt-1">
@@ -174,12 +179,11 @@ export default function ManagementProjectDetails() {
         )}
       </div>
 
-      {/* QUICK STATS */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="p-4">
           <p className="text-sm">Task Progress</p>
           <p className="text-xl font-bold">{taskProgress}%</p>
-          <Progress value={parseInt(taskProgress)} />
+          <Progress value={parseInt(taskProgress, 10)} />
         </Card>
 
         {showFinancials && (
@@ -201,15 +205,12 @@ export default function ManagementProjectDetails() {
 
             <Card className="p-4">
               <p className="text-sm">Change Orders</p>
-              <p className="text-xl font-bold">
-                {changeOrders.length}
-              </p>
+              <p className="text-xl font-bold">{changeOrders.length}</p>
             </Card>
           </>
         )}
       </div>
 
-      {/* TABS */}
       <Tabs defaultValue="overview">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -220,72 +221,85 @@ export default function ManagementProjectDetails() {
           <TabsTrigger value="documents">Docs</TabsTrigger>
         </TabsList>
 
-        {/* OVERVIEW */}
         <TabsContent value="overview">
           <Card>
-            <CardContent className="space-y-2">
-              <p>Start: {project.start_date}</p>
-              <p>End: {project.estimated_end_date}</p>
+            <CardContent className="space-y-2 pt-6">
+              <p>Start: {project.start_date || "—"}</p>
+              <p>End: {project.estimated_end_date || "—"}</p>
               <p>
                 Warranty Expiry:{" "}
-                {warrantyExpiry
-                  ? format(warrantyExpiry, "MMM d yyyy")
+                {warrantyExpiry ? format(warrantyExpiry, "MMM d yyyy") : "—"}
+              </p>
+              <p>
+                Compliance Status:{" "}
+                {projectCompliance
+                  ? projectCompliance.alberta_one_call_status || "Tracked"
                   : "—"}
               </p>
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* TASKS */}
         <TabsContent value="tasks">
-          {tasks.map((t: any) => (
-            <Card key={t.id} className="p-4 mb-2">
-              <p>{t.task_name}</p>
-              <Badge>{t.status}</Badge>
-            </Card>
-          ))}
+          {tasks.length > 0 ? (
+            tasks.map((t: any) => (
+              <Card key={t.id} className="p-4 mb-2">
+                <p>{t.task_name}</p>
+                <Badge>{t.status}</Badge>
+              </Card>
+            ))
+          ) : (
+            <Card className="p-4">No tasks found</Card>
+          )}
         </TabsContent>
 
-        {/* FINANCIALS */}
-        <TabsContent value="financials">
-          {budgetItems.map((b: any) => (
-            <Card key={b.id} className="p-4 mb-2">
-              <p>{b.category_name}</p>
-              <p>${b.actual_cost}</p>
-            </Card>
-          ))}
-        </TabsContent>
+        {showFinancials && (
+          <TabsContent value="financials">
+            {budgetItems.length > 0 ? (
+              budgetItems.map((b: any) => (
+                <Card key={b.id} className="p-4 mb-2">
+                  <p>{b.category_name}</p>
+                  <p>${b.actual_cost || 0}</p>
+                </Card>
+              ))
+            ) : (
+              <Card className="p-4">No budget items found</Card>
+            )}
+          </TabsContent>
+        )}
 
-        {/* DOCUMENTS */}
         <TabsContent value="documents">
-          {documents.map((doc: any) => (
-            <a
-              key={doc.id}
-              href={doc.file_url}
-              target="_blank"
-              className="flex gap-2 p-2 border"
-            >
-              <FileText />
-              {doc.file_name}
-              <ExternalLink />
-            </a>
-          ))}
+          {documents.length > 0 ? (
+            documents.map((doc: any) => (
+              <a
+                key={doc.id}
+                href={doc.file_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex gap-2 p-2 border rounded mb-2 items-center"
+              >
+                <FileText className="h-4 w-4" />
+                <span>{doc.file_name}</span>
+                <ExternalLink className="h-4 w-4" />
+              </a>
+            ))
+          ) : (
+            <Card className="p-4">No documents found</Card>
+          )}
         </TabsContent>
       </Tabs>
 
-      {/* FORM */}
-      {showForm && (
-        <ProjectForm
-          project={project}
-          open={showForm}
-          onClose={() => setShowForm(false)}
-          onSaved={() => {
-            queryClient.invalidateQueries({
-              queryKey: ["project", projectId],
-            });
-          }}
-        />
-      )}
+      <ManagementProjectForm
+        project={project}
+        open={showForm}
+        onClose={() => setShowForm(false)}
+        onSaved={() => {
+          queryClient.invalidateQueries({
+            queryKey: ["project", projectId],
+          });
+          setShowForm(false);
+        }}
+      />
     </div>
   );
 }
