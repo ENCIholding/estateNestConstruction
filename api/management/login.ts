@@ -1,4 +1,4 @@
-import { createSessionToken, buildSessionCookie } from "./_lib/auth";
+import { createSessionToken, buildSessionCookie } from "./_lib/auth.ts"; // Corrected path and added .ts extension
 
 type LoginBody = {
   username?: string;
@@ -38,10 +38,12 @@ export default async function handler(req: any, res: any) {
 
     return res.status(200).json({
       ok: true,
-      redirectTo: "/management-dashboard",
+      redirectTo: "/management/dashboard", // Corrected path
     });
   } catch (error) {
     return res.status(500).json({
+      authenticated: false,
+      user: null,
       message: "Server error",
       error: error instanceof Error ? error.message : String(error),
     });
