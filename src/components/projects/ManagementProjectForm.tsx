@@ -87,7 +87,7 @@ async function uploadFile(file: File): Promise<{ file_url: string }> {
   return response.json();
 }
 
-async function fetchJson(url: string, options: RequestInit = {}) {
+async function fetchJson(url: string, options: RequestInit = {}): Promise<any> {
   const response = await fetch(url, {
     credentials: "include",
     headers: {
@@ -248,7 +248,7 @@ export default function ManagementProjectForm({
       {formData[field] ? (
         <div className="flex items-center gap-2">
           <a
-            href={formData[field]}
+            href={String(formData[field])}
             target="_blank"
             rel="noopener noreferrer"
             className="text-blue-600 hover:underline"
