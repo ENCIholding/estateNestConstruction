@@ -5,13 +5,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -41,7 +34,7 @@ type Compliance = {
   notes: string;
 };
 
-async function fetchJson(url: string, options: RequestInit = {}) {
+async function fetchJson(url: string, options: RequestInit = {}): Promise<any> {
   const res = await fetch(url, {
     credentials: "include",
     headers: { "Content-Type": "application/json" },
@@ -83,7 +76,7 @@ export default function ManagementComplianceForm({
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
 
@@ -111,7 +104,7 @@ export default function ManagementComplianceForm({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {compliance ? "Edit Compliance Record" : "Add Compliance Record"}
@@ -120,150 +113,153 @@ export default function ManagementComplianceForm({
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* PROJECT */}
-          <div className="space-y-2">
+          <div>
             <Label>Project *</Label>
-            <Select
+            <select
               value={formData.project_id}
-              onValueChange={(v) => handleChange("project_id", v)}
+              onChange={(e) => handleChange("project_id", e.target.value)}
+              className="w-full px-3 py-2 border border-slate-300 rounded-md"
             >
-              <SelectTrigger>
-                <SelectValue placeholder="Select project" />
-              </SelectTrigger>
-              <SelectContent>
-                {projects.map((p: Project) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.project_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              <option value="">-- Select a project --</option>
+              {projects.map((p: Project) => (
+                <option key={p.id} value={p.id}>
+                  {p.project_name}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* ONE CALL */}
-          <div className="border p-4 rounded-lg space-y-3">
-            <h3 className="font-medium">Alberta One-Call</h3>
+          <div className="space-y-2">
+            <Label>Alberta One-Call</Label>
+            <div className="space-y-2">
+              <select
+                value={formData.alberta_one_call_status}
+                onChange={(e) =>
+                  handleChange("alberta_one_call_status", e.target.value)
+                }
+                className="w-full px-3 py-2 border border-slate-300 rounded-md"
+              >
+                <option value="Pending">Pending</option>
+                <option value="Cleared">Cleared</option>
+              </select>
 
-            <Select
-              value={formData.alberta_one_call_status}
-              onValueChange={(v) =>
-                handleChange("alberta_one_call_status", v)
-              }
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Pending">Pending</SelectItem>
-                <SelectItem value="Cleared">Cleared</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Input
-              placeholder="Ticket Number"
-              value={formData.one_call_ticket_number}
-              onChange={(e) =>
-                handleChange("one_call_ticket_number", e.target.value)
-              }
-            />
+              <Input
+                placeholder="Ticket Number"
+                value={formData.one_call_ticket_number}
+                onChange={(e) =>
+                  handleChange("one_call_ticket_number", e.target.value)
+                }
+              />
+            </div>
           </div>
 
           {/* PERMITS */}
-          <div className="border p-4 rounded-lg space-y-3">
-            <Label>
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
               <Checkbox
                 checked={formData.development_permit_issued}
                 onCheckedChange={(v) =>
                   handleChange("development_permit_issued", v)
                 }
               />
-              Development Permit
-            </Label>
+              <Label>Development Permit</Label>
+            </div>
 
-            <Input
-              placeholder="Permit Number"
-              value={formData.development_permit_number}
-              onChange={(e) =>
-                handleChange("development_permit_number", e.target.value)
-              }
-            />
+            {formData.development_permit_issued && (
+              <Input
+                placeholder="Permit Number"
+                value={formData.development_permit_number}
+                onChange={(e) =>
+                  handleChange("development_permit_number", e.target.value)
+                }
+              />
+            )}
 
-            <Label>
+            <div className="flex items-center gap-2">
               <Checkbox
                 checked={formData.building_permit_issued}
                 onCheckedChange={(v) =>
                   handleChange("building_permit_issued", v)
                 }
               />
-              Building Permit
-            </Label>
+              <Label>Building Permit</Label>
+            </div>
 
-            <Input
-              placeholder="Permit Number"
-              value={formData.building_permit_number}
-              onChange={(e) =>
-                handleChange("building_permit_number", e.target.value)
-              }
-            />
+            {formData.building_permit_issued && (
+              <Input
+                placeholder="Permit Number"
+                value={formData.building_permit_number}
+                onChange={(e) =>
+                  handleChange("building_permit_number", e.target.value)
+                }
+              />
+            )}
           </div>
 
           {/* WARRANTY */}
-          <div className="border p-4 rounded-lg space-y-3">
-            <Label>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
               <Checkbox
                 checked={formData.new_home_warranty_enrolled}
                 onCheckedChange={(v) =>
                   handleChange("new_home_warranty_enrolled", v)
                 }
               />
-              Warranty Enrolled
-            </Label>
+              <Label>Warranty Enrolled</Label>
+            </div>
 
-            <Input
-              placeholder="Certificate Number"
-              value={formData.warranty_certificate_number}
-              onChange={(e) =>
-                handleChange("warranty_certificate_number", e.target.value)
-              }
-            />
+            {formData.new_home_warranty_enrolled && (
+              <Input
+                placeholder="Certificate Number"
+                value={formData.warranty_certificate_number}
+                onChange={(e) =>
+                  handleChange("warranty_certificate_number", e.target.value)
+                }
+              />
+            )}
           </div>
 
           {/* OTHER */}
           <div className="space-y-2">
-            <Label>
+            <div className="flex items-center gap-2">
               <Checkbox
                 checked={formData.final_grade_certificate_issued}
                 onCheckedChange={(v) =>
                   handleChange("final_grade_certificate_issued", v)
                 }
               />
-              Final Grade Certificate
-            </Label>
+              <Label>Final Grade Certificate</Label>
+            </div>
 
-            <Label>
+            <div className="flex items-center gap-2">
               <Checkbox
                 checked={formData.occupancy_permit_issued}
                 onCheckedChange={(v) =>
                   handleChange("occupancy_permit_issued", v)
                 }
               />
-              Occupancy Permit
-            </Label>
+              <Label>Occupancy Permit</Label>
+            </div>
           </div>
 
           {/* NOTES */}
-          <Textarea
-            placeholder="Notes"
-            value={formData.notes}
-            onChange={(e) => handleChange("notes", e.target.value)}
-          />
+          <div>
+            <Label>Notes</Label>
+            <Textarea
+              value={formData.notes}
+              onChange={(e) => handleChange("notes", e.target.value)}
+              rows={4}
+              placeholder="Additional notes..."
+            />
+          </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-
             <Button type="submit" disabled={saving}>
-              {saving && <Loader2 className="mr-2 animate-spin" />}
+              {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Save
             </Button>
           </DialogFooter>
