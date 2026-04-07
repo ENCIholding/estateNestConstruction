@@ -1,5 +1,5 @@
-import { getCookie, getSessionCookieName, verifySessionToken } from "../../_lib/auth.js";
-import { updateProjectById } from "../../_lib/projects.js";
+import { getCookie, getSessionCookieName, verifySessionToken } from "../../_lib/auth.ts"; // Added .ts extension
+import { updateProjectById } from "../../_lib/projects.ts"; // Added .ts extension
 
 type RouteContext = {
   params: {
