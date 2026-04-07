@@ -24,7 +24,7 @@ import {
   Clock,
   Loader2,
   ExternalLink,
-Pencil,
+  Pencil,
 } from "lucide-react";
 import { format, addYears } from "date-fns";
 import ManagementProjectForm from "@/components/projects/ManagementProjectForm";
