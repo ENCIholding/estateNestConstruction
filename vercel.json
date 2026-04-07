@@ -4,6 +4,14 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
+      "source": "/management-login",
+      "destination": "/management/login"
+    },
+    {
+      "source": "/management/",
+      "destination": "/management/login"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
