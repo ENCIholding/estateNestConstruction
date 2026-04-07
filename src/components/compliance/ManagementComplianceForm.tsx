@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -157,11 +156,13 @@ export default function ManagementComplianceForm({
           {/* PERMITS */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <Checkbox
+              <input
+                type="checkbox"
                 checked={formData.development_permit_issued}
-                onCheckedChange={(v) =>
-                  handleChange("development_permit_issued", v)
+                onChange={(e) =>
+                  handleChange("development_permit_issued", e.target.checked)
                 }
+                className="w-4 h-4"
               />
               <Label>Development Permit</Label>
             </div>
@@ -177,11 +178,13 @@ export default function ManagementComplianceForm({
             )}
 
             <div className="flex items-center gap-2">
-              <Checkbox
+              <input
+                type="checkbox"
                 checked={formData.building_permit_issued}
-                onCheckedChange={(v) =>
-                  handleChange("building_permit_issued", v)
+                onChange={(e) =>
+                  handleChange("building_permit_issued", e.target.checked)
                 }
+                className="w-4 h-4"
               />
               <Label>Building Permit</Label>
             </div>
@@ -200,11 +203,13 @@ export default function ManagementComplianceForm({
           {/* WARRANTY */}
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <Checkbox
+              <input
+                type="checkbox"
                 checked={formData.new_home_warranty_enrolled}
-                onCheckedChange={(v) =>
-                  handleChange("new_home_warranty_enrolled", v)
+                onChange={(e) =>
+                  handleChange("new_home_warranty_enrolled", e.target.checked)
                 }
+                className="w-4 h-4"
               />
               <Label>Warranty Enrolled</Label>
             </div>
@@ -223,21 +228,25 @@ export default function ManagementComplianceForm({
           {/* OTHER */}
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <Checkbox
+              <input
+                type="checkbox"
                 checked={formData.final_grade_certificate_issued}
-                onCheckedChange={(v) =>
-                  handleChange("final_grade_certificate_issued", v)
+                onChange={(e) =>
+                  handleChange("final_grade_certificate_issued", e.target.checked)
                 }
+                className="w-4 h-4"
               />
               <Label>Final Grade Certificate</Label>
             </div>
 
             <div className="flex items-center gap-2">
-              <Checkbox
+              <input
+                type="checkbox"
                 checked={formData.occupancy_permit_issued}
-                onCheckedChange={(v) =>
-                  handleChange("occupancy_permit_issued", v)
+                onChange={(e) =>
+                  handleChange("occupancy_permit_issued", e.target.checked)
                 }
+                className="w-4 h-4"
               />
               <Label>Occupancy Permit</Label>
             </div>
