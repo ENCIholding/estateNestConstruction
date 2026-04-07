@@ -10,13 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 
 export type ManagementVendor = {
@@ -114,7 +107,7 @@ export default function ManagementVendorForm({
 }: ManagementVendorFormProps) {
   const isEdit = useMemo(() => Boolean(vendor?.id), [vendor?.id]);
 
-  const [form, setForm] = useState<ManagementVendor>({
+  const [form, setForm] = useState({
     company_name: "",
     trade_type: "",
     contact_person: "",
@@ -144,7 +137,9 @@ export default function ManagementVendorForm({
         website: vendor?.website || "",
         wcb_account_number: vendor?.wcb_account_number || "",
         gst_number: vendor?.gst_number || "",
-        insurance_expiry_date: normalizeDateInput(vendor?.insurance_expiry_date),
+        insurance_expiry_date: normalizeDateInput(
+          vendor?.insurance_expiry_date
+        ),
         notes: vendor?.notes || "",
         vendor_rating: vendor?.vendor_rating || "",
         work_again: vendor?.work_again ?? true,
@@ -155,7 +150,10 @@ export default function ManagementVendorForm({
     }
   }, [open, vendor]);
 
-  const setField = <K extends keyof ManagementVendor>(key: K, value: ManagementVendor[K]) => {
+  const setField = <K extends keyof ManagementVendor>(
+    key: K,
+    value: ManagementVendor[K]
+  ) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -215,9 +213,11 @@ export default function ManagementVendorForm({
         if (!saving && !nextOpen) onClose();
       }}
     >
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit Vendor" : "Add Vendor"}</DialogTitle>
+          <DialogTitle>
+            {isEdit ? "Edit Vendor" : "Add Vendor"}
+          </DialogTitle>
           <DialogDescription>
             Maintain vendor contact, compliance, and performance details.
           </DialogDescription>
@@ -225,172 +225,154 @@ export default function ManagementVendorForm({
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {error ? (
-            <div className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+            <div className="p-3 bg-rose-50 text-rose-700 rounded text-sm">
               {error}
             </div>
           ) : null}
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="company_name">Company Name *</Label>
-              <Input
-                id="company_name"
-                value={form.company_name || ""}
-                onChange={(e) => setField("company_name", e.target.value)}
-                placeholder="ABC Electrical Ltd."
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Trade Type</Label>
-              <Select
-                value={form.trade_type || ""}
-                onValueChange={(value) => setField("trade_type", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select trade type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {TRADE_TYPES.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {type}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="contact_person">Contact Person</Label>
-              <Input
-                id="contact_person"
-                value={form.contact_person || ""}
-                onChange={(e) => setField("contact_person", e.target.value)}
-                placeholder="John Doe"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone</Label>
-              <Input
-                id="phone"
-                value={form.phone || ""}
-                onChange={(e) => setField("phone", e.target.value)}
-                placeholder="780-000-0000"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={form.email || ""}
-                onChange={(e) => setField("email", e.target.value)}
-                placeholder="vendor@email.com"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="website">Website</Label>
-              <Input
-                id="website"
-                value={form.website || ""}
-                onChange={(e) => setField("website", e.target.value)}
-                placeholder="https://example.com"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="wcb_account_number">WCB Account Number</Label>
-              <Input
-                id="wcb_account_number"
-                value={form.wcb_account_number || ""}
-                onChange={(e) => setField("wcb_account_number", e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="gst_number">GST Number</Label>
-              <Input
-                id="gst_number"
-                value={form.gst_number || ""}
-                onChange={(e) => setField("gst_number", e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="insurance_expiry_date">Insurance Expiry Date</Label>
-              <Input
-                id="insurance_expiry_date"
-                type="date"
-                value={form.insurance_expiry_date || ""}
-                onChange={(e) => setField("insurance_expiry_date", e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Vendor Rating</Label>
-              <Select
-                value={form.vendor_rating || ""}
-                onValueChange={(value) => setField("vendor_rating", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select rating" />
-                </SelectTrigger>
-                <SelectContent>
-                  {VENDOR_RATINGS.map((rating) => (
-                    <SelectItem key={rating} value={rating}>
-                      {rating}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Work Again?</Label>
-              <Select
-                value={String(form.work_again ?? true)}
-                onValueChange={(value) => setField("work_again", value === "true")}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select option" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="true">Yes</SelectItem>
-                  <SelectItem value="false">No</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <div>
+            <Label>Company Name *</Label>
+            <Input
+              value={form.company_name}
+              onChange={(e) => setField("company_name", e.target.value)}
+              placeholder="ABC Electrical Ltd."
+            />
           </div>
 
-          <div className="grid gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="notes">Notes</Label>
-              <Textarea
-                id="notes"
-                value={form.notes || ""}
-                onChange={(e) => setField("notes", e.target.value)}
-                rows={4}
-                placeholder="General vendor notes"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="internal_notes">Internal Notes</Label>
-              <Textarea
-                id="internal_notes"
-                value={form.internal_notes || ""}
-                onChange={(e) => setField("internal_notes", e.target.value)}
-                rows={4}
-                placeholder="Internal performance or admin notes"
-              />
-            </div>
+          <div>
+            <Label>Trade Type</Label>
+            <select
+              value={form.trade_type}
+              onChange={(e) => setField("trade_type", e.target.value)}
+              className="w-full px-3 py-2 border border-slate-300 rounded-md"
+            >
+              <option value="">Select a trade...</option>
+              {TRADE_TYPES.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
           </div>
 
-          <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={onClose} disabled={saving}>
+          <div>
+            <Label>Contact Person</Label>
+            <Input
+              value={form.contact_person}
+              onChange={(e) => setField("contact_person", e.target.value)}
+              placeholder="John Doe"
+            />
+          </div>
+
+          <div>
+            <Label>Phone</Label>
+            <Input
+              value={form.phone}
+              onChange={(e) => setField("phone", e.target.value)}
+              placeholder="780-000-0000"
+            />
+          </div>
+
+          <div>
+            <Label>Email</Label>
+            <Input
+              type="email"
+              value={form.email}
+              onChange={(e) => setField("email", e.target.value)}
+              placeholder="vendor@email.com"
+            />
+          </div>
+
+          <div>
+            <Label>Website</Label>
+            <Input
+              value={form.website}
+              onChange={(e) => setField("website", e.target.value)}
+              placeholder="https://example.com"
+            />
+          </div>
+
+          <div>
+            <Label>WCB Account Number</Label>
+            <Input
+              value={form.wcb_account_number}
+              onChange={(e) =>
+                setField("wcb_account_number", e.target.value)
+              }
+            />
+          </div>
+
+          <div>
+            <Label>GST Number</Label>
+            <Input
+              value={form.gst_number}
+              onChange={(e) => setField("gst_number", e.target.value)}
+            />
+          </div>
+
+          <div>
+            <Label>Insurance Expiry Date</Label>
+            <Input
+              type="date"
+              value={form.insurance_expiry_date}
+              onChange={(e) =>
+                setField("insurance_expiry_date", e.target.value)
+              }
+            />
+          </div>
+
+          <div>
+            <Label>Vendor Rating</Label>
+            <select
+              value={form.vendor_rating}
+              onChange={(e) => setField("vendor_rating", e.target.value)}
+              className="w-full px-3 py-2 border border-slate-300 rounded-md"
+            >
+              <option value="">Select a rating...</option>
+              {VENDOR_RATINGS.map((rating) => (
+                <option key={rating} value={rating}>
+                  {rating}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <Label>Work Again?</Label>
+            <select
+              value={form.work_again ? "true" : "false"}
+              onChange={(e) =>
+                setField("work_again", e.target.value === "true")
+              }
+              className="w-full px-3 py-2 border border-slate-300 rounded-md"
+            >
+              <option value="true">Yes</option>
+              <option value="false">No</option>
+            </select>
+          </div>
+
+          <div>
+            <Label>Notes</Label>
+            <Textarea
+              value={form.notes}
+              onChange={(e) => setField("notes", e.target.value)}
+              rows={4}
+              placeholder="General vendor notes"
+            />
+          </div>
+
+          <div>
+            <Label>Internal Notes</Label>
+            <Textarea
+              value={form.internal_notes}
+              onChange={(e) => setField("internal_notes", e.target.value)}
+              rows={4}
+              placeholder="Internal performance or admin notes"
+            />
+          </div>
+
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
             <Button type="submit" disabled={saving}>
