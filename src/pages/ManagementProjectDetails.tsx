@@ -24,9 +24,10 @@ import {
   Clock,
   Loader2,
   ExternalLink,
-  Pencil,
+Pencil,
 } from "lucide-react";
 import { format, addYears } from "date-fns";
+import ManagementProjectForm from "@/components/projects/ManagementProjectForm";
 
 const statusColors: Record<string, string> = {
   Planning: "bg-blue-50 text-blue-700 border-blue-200",
