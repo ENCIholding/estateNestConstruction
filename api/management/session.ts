@@ -2,7 +2,7 @@ import {
   getCookie,
   getSessionCookieName,
   verifySessionToken,
-} from "./_lib/auth.ts"; // Added .ts extension
+} from "./_lib/auth.ts"; // Corrected path and added .ts extension
 
 export default function handler(req: any, res: any) {
   if (req.method !== "GET") {
