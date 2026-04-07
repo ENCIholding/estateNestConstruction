@@ -27,6 +27,7 @@ import ManagementVendorDetails from "./pages/ManagementVendorDetails";
 import ManagementVendorBills from "./pages/ManagementVendorBills";
 import NotFound from "./pages/NotFound";
 
+// Forcing a redeploy to pick up latest changes (this comment helps trigger a new commit)
 export default function App() {
   return (
     <BrowserRouter>
