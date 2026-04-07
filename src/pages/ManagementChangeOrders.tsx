@@ -1,43 +1,20 @@
 import React, { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
-  Plus,
-  Search,
-  Loader2,
-  Pencil,
-  Trash2,
-} from "lucide-react";
+import { Loader2, Plus } from "lucide-react";
 
 type Project = {
   id: string;
   project_name?: string;
+  estimated_budget?: number;
 };
 
-type ChangeOrder = {
+type EstimateItem = {
   id: string;
-  project_id?: string;
-  description?: string;
-  cost_impact?: number;
-  client_approval_status?: string;
-};
-
-const statusColors: Record<string, string> = {
-  Pending: "bg-amber-50 text-amber-700",
-  Approved: "bg-emerald-50 text-emerald-700",
-  Rejected: "bg-rose-50 text-rose-700",
+  category: string;
+  description: string;
+  estimatedCost: number;
 };
 
 async function fetchJson(url: string, options: RequestInit = {}): Promise<any> {
@@ -64,58 +41,40 @@ async function fetchJson(url: string, options: RequestInit = {}): Promise<any> {
   return response.json();
 }
 
-export default function ManagementChangeOrders() {
-  const [search, setSearch] = useState("");
-  const [projectFilter, setProjectFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [deleteOrder, setDeleteOrder] = useState<ChangeOrder | null>(null);
+export default function ManagementEstimator() {
+  const [selectedProject, setSelectedProject] = useState("");
+  const [estimates, setEstimates] = useState<EstimateItem[]>([]);
 
-  const { data: changeOrders = [], isLoading } = useQuery({
-    queryKey: ["changeOrders"],
-    queryFn: () => fetchJson("/api/management/change-orders"),
-  });
-
-  const { data: projects = [] } = useQuery({
+  const { data: projects = [], isLoading } = useQuery({
     queryKey: ["projects"],
     queryFn: () => fetchJson("/api/management/projects"),
   });
 
-  const projectMap = useMemo(() => {
-    return projects.reduce<Record<string, Project>>((acc, project: Project) => {
-      acc[project.id] = project;
-      return acc;
-    }, {});
-  }, [projects]);
-
-  const filteredOrders = useMemo(() => {
-    const lowerSearch = search.toLowerCase().trim();
-
-    return changeOrders.filter((order: ChangeOrder) => {
-      const project = order.project_id
-        ? projectMap[order.project_id]
-        : undefined;
-
-      const matchesSearch =
-        lowerSearch === ""
-          ? true
-          : order.description?.toLowerCase().includes(lowerSearch) ||
-            project?.project_name?.toLowerCase().includes(lowerSearch);
-
-      const matchesProject =
-        projectFilter === "all" || order.project_id === projectFilter;
-
-      const matchesStatus =
-        statusFilter === "all" ||
-        order.client_approval_status === statusFilter;
-
-      return matchesSearch && matchesProject && matchesStatus;
-    });
-  }, [changeOrders, projectMap, search, projectFilter, statusFilter]);
-
-  const totalImpact = filteredOrders.reduce(
-    (sum: number, order: ChangeOrder) => sum + (order.cost_impact || 0),
-    0
+  const selectedProjectData = useMemo(
+    () => projects.find((p: Project) => p.id === selectedProject),
+    [projects, selectedProject]
   );
+
+  const totalEstimate = useMemo(
+    () => estimates.reduce((sum, item) => sum + item.estimatedCost, 0),
+    [estimates]
+  );
+
+  const addEstimateItem = () => {
+    setEstimates([
+      ...estimates,
+      {
+        id: Math.random().toString(),
+        category: "",
+        description: "",
+        estimatedCost: 0,
+      },
+    ]);
+  };
+
+  const removeEstimateItem = (id: string) => {
+    setEstimates(estimates.filter((item) => item.id !== id));
+  };
 
   if (isLoading) {
     return (
@@ -127,149 +86,131 @@ export default function ManagementChangeOrders() {
 
   return (
     <div className="min-h-screen bg-slate-50 p-8">
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Change Orders</h1>
-          <p className="text-slate-600">{changeOrders.length} change orders</p>
-        </div>
-
-        <Button className="bg-slate-900 hover:bg-slate-800">
-          <Plus className="mr-2 h-4 w-4" />
-          New Change Order
-        </Button>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2">Project Estimator</h1>
+        <p className="text-slate-600">
+          Create detailed cost estimates for projects
+        </p>
       </div>
 
       <Card className="mb-8">
-        <CardContent className="pt-6">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-              <Input
-                placeholder="Search change orders..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-
-            <div className="flex gap-2">
-              <span className="text-sm font-medium text-slate-600 py-2">
-                Project:
-              </span>
-              <select
-                value={projectFilter}
-                onChange={(e) => setProjectFilter(e.target.value)}
-                className="px-3 py-2 border border-slate-300 rounded-md text-sm"
-              >
-                <option value="all">All Projects</option>
-                {projects.map((project: Project) => (
-                  <option key={project.id} value={project.id}>
-                    {project.project_name || "Unnamed"}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="flex gap-2">
-              <span className="text-sm font-medium text-slate-600 py-2">
-                Status:
-              </span>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-3 py-2 border border-slate-300 rounded-md text-sm"
-              >
-                <option value="all">All Status</option>
-                <option value="Pending">Pending</option>
-                <option value="Approved">Approved</option>
-                <option value="Rejected">Rejected</option>
-              </select>
-            </div>
-          </div>
+        <CardHeader>
+          <CardTitle>Select Project</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <select
+            value={selectedProject}
+            onChange={(e) => setSelectedProject(e.target.value)}
+            className="w-full px-3 py-2 border border-slate-300 rounded-md"
+          >
+            <option value="">-- Choose a project --</option>
+            {projects.map((project: Project) => (
+              <option key={project.id} value={project.id}>
+                {project.project_name || "Unnamed Project"}
+              </option>
+            ))}
+          </select>
         </CardContent>
       </Card>
 
-      <div className="grid gap-4">
-        {filteredOrders.map((order: ChangeOrder) => {
-          const project = order.project_id
-            ? projectMap[order.project_id]
-            : undefined;
+      {selectedProject && selectedProjectData && (
+        <>
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>{selectedProjectData.project_name}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <p className="text-sm">
+                  <span className="font-semibold">Current Budget:</span> $
+                  {selectedProjectData.estimated_budget?.toLocaleString() || 0}
+                </p>
+                <p className="text-sm">
+                  <span className="font-semibold">Your Estimate:</span> $
+                  {totalEstimate.toLocaleString()}
+                </p>
+                <p
+                  className={`text-sm font-semibold ${
+                    totalEstimate > (selectedProjectData.estimated_budget || 0)
+                      ? "text-rose-600"
+                      : "text-green-600"
+                  }`}
+                >
+                  <span>Difference:</span> $
+                  {Math.abs(
+                    totalEstimate -
+                      (selectedProjectData.estimated_budget || 0)
+                  ).toLocaleString()}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
 
-          return (
-            <Card key={order.id}>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex-1">
-                    <p className="font-semibold text-lg">
-                      {order.description || "Unnamed Change Order"}
-                    </p>
-                    <p className="text-sm text-slate-600 mb-2">
-                      {project?.project_name || "—"}
-                    </p>
-                    <div className="flex gap-4 text-sm mb-3">
-                      <span
-                        className={`font-semibold ${
-                          (order.cost_impact || 0) > 0
-                            ? "text-rose-600"
-                            : "text-green-600"
-                        }`}
-                      >
-                        {(order.cost_impact || 0) > 0 ? "+" : ""}$
-                        {Math.abs(order.cost_impact || 0).toLocaleString()}
-                      </span>
-                    </div>
-                    <div
-                      className={`inline-block px-2 py-1 rounded text-sm ${
-                        statusColors[order.client_approval_status || ""] || ""
-                      }`}
-                    >
-                      {order.client_approval_status || "—"}
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Button size="sm" variant="outline">
-                      <Pencil className="h-4 w-4" />
-                    </Button>
+          <div className="space-y-4 mb-8">
+            {estimates.map((item, index) => (
+              <Card key={item.id}>
+                <CardContent className="pt-6">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <input
+                      type="text"
+                      placeholder="Category"
+                      value={item.category}
+                      onChange={(e) => {
+                        const updated = [...estimates];
+                        updated[index].category = e.target.value;
+                        setEstimates(updated);
+                      }}
+                      className="px-3 py-2 border border-slate-300 rounded-md"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Description"
+                      value={item.description}
+                      onChange={(e) => {
+                        const updated = [...estimates];
+                        updated[index].description = e.target.value;
+                        setEstimates(updated);
+                      }}
+                      className="px-3 py-2 border border-slate-300 rounded-md"
+                    />
+                    <input
+                      type="number"
+                      placeholder="Estimated Cost"
+                      value={item.estimatedCost}
+                      onChange={(e) => {
+                        const updated = [...estimates];
+                        updated[index].estimatedCost = parseFloat(e.target.value) || 0;
+                        setEstimates(updated);
+                      }}
+                      className="px-3 py-2 border border-slate-300 rounded-md"
+                    />
                     <Button
-                      size="sm"
                       variant="outline"
                       className="text-rose-600 hover:text-rose-700"
-                      onClick={() => setDeleteOrder(order)}
+                      onClick={() => removeEstimateItem(item.id)}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      Remove
                     </Button>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
 
-      {filteredOrders.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-slate-600">No change orders found</p>
-        </div>
+          <Button onClick={addEstimateItem} className="bg-slate-900 hover:bg-slate-800">
+            <Plus className="mr-2 h-4 w-4" />
+            Add Estimate Item
+          </Button>
+        </>
       )}
 
-      <AlertDialog open={!!deleteOrder} onOpenChange={() => setDeleteOrder(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Change Order</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this change order? This action
-              cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction className="bg-rose-600 hover:bg-rose-700">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {!selectedProject && (
+        <div className="text-center py-12">
+          <p className="text-slate-600">
+            Select a project above to start creating an estimate
+          </p>
+        </div>
+      )}
     </div>
   );
 }
