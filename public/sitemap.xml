@@ -1,33 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://sitemaps.org">
 
-  <!-- Main Home Page -->
+  <!-- Main Home Page (Covers Home, About, Projects, and Contact tabs) -->
   <url>
-    <loc>https://estatenest.capital</loc>
+    <loc>https://www.estatenest.capital/</loc>
     <lastmod>2024-04-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
 
-  <!-- Builder Profile -->
+  <!-- Builder Profile Page -->
   <url>
-    <loc>https://estatenest.capitalbuilder-profile</loc>
+    <loc>https://www.estatenest.capital/builder-profile</loc>
     <lastmod>2024-04-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
-  <!-- Investor Relations -->
+  <!-- Investor Relations (Investment Excellence & Capital Solutions) -->
   <url>
-    <loc>https://estatenest.capitalinvestor-relations</loc>
+    <loc>https://www.estatenest.capital/investor-relations</loc>
     <lastmod>2024-04-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
 
-  <!-- Careers -->
+  <!-- Careers Page -->
   <url>
-    <loc>https://estatenest.capitalcareers</loc>
+    <loc>https://www.estatenest.capital/careers</loc>
     <lastmod>2024-04-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
