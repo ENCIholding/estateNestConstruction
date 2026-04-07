@@ -11,17 +11,19 @@
       "@/*": ["./src/*"]
     },
 
+    /* Inclusion of your Vercel API directory */
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    
+    /* Relaxed rules to match your current setup */
     "strict": false,
     "noImplicitAny": false,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": false,
-
-    "skipLibCheck": true,
-    "isolatedModules": true,
-    "moduleDetection": "force",
-    "allowImportingTsExtensions": true,
-    "noEmit": true
+    "skipLibCheck": true
   },
-  "include": ["src"]
+  "include": ["src", "api", "api/**/*.ts"] 
 }
