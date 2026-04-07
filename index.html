@@ -4,10 +4,26 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Estate Nest Capital</title>
+    
+    <title>Estate Nest Capital | Edmonton Residential & Commercial Construction</title>
+    <meta name="description" content="Edmonton's trusted development partner for custom infills, CMHC rowhouses, commercial daycares, and restaurant fit-outs. Creating lasting value through strategic projects." />
+    <meta name="keywords" content="Edmonton Construction, Residential Development, Commercial Renovations, CMHC Multi-unit, Custom Infills, Daycare Construction, Restaurant Fit-outs, Edmonton Real Estate" />
+    <meta name="author" content="Estate Nest Capital Inc." />
 
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-1GXQ2C8GTT"></script>
+    <!-- Open Graph / Meta -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://www.estatenest.capital/" />
+    <meta property="og:title" content="Estate Nest Capital | Development & Construction Partner" />
+    <meta property="og:description" content="From custom residential infills to specialized commercial wellness centers. We build spaces with lasting value in Edmonton." />
+    <meta property="og:image" content="https://estatenest.capital" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Estate Nest Capital Inc." />
+    <meta name="twitter:description" content="Edmonton-rooted development and construction firm focused on quality and community impact." />
+
+    <!-- Google Analytics -->
+    <script async src="https://googletagmanager.com"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -19,9 +35,10 @@
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "LocalBusiness",
+      "@type": "HomeAndConstructionBusiness",
       "name": "Estate Nest Capital Inc.",
-      "image": "https://www.estatenest.capital/favicon.png",
+      "description": "Edmonton-rooted development and construction firm specializing in residential infills, CMHC rowhouses, and commercial projects.",
+      "image": "https://estatenest.capital",
       "@id": "https://www.estatenest.capital",
       "url": "https://www.estatenest.capital",
       "telephone": "+1-780-860-3191",
@@ -34,22 +51,18 @@
         "postalCode": "T6W4Z5",
         "addressCountry": "CA"
       },
-      "areaServed": [
-        "Edmonton",
-        "Sherwood Park",
-        "St. Albert",
-        "Fort Saskatchewan"
-      ],
-      "sameAs": [
-        "https://www.linkedin.com/company/estate-nest-capital-inc/"
-      ]
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": 53.4214, 
+        "longitude": -113.5137
+      },
+      "areaServed": ["Edmonton", "Sherwood Park", "St. Albert", "Fort Saskatchewan"],
+      "sameAs": ["https://linkedin.com"]
     }
     </script>
   </head>
   <body>
-    <!-- THIS IS THE CRITICAL DIV WHERE YOUR REACT APP RENDERS -->
     <div id="root"></div>
-    <!-- The script below loads your main.tsx -->
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
