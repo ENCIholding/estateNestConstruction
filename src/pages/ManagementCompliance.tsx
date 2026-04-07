@@ -359,7 +359,10 @@ export default function ManagementCompliance() {
         }}
       />
 
-      <AlertDialog open={!!deleteCompliance} onOpenChange={() => setDeleteCompliance(null)}>
+      <AlertDialog
+        open={!!deleteCompliance}
+        onOpenChange={() => setDeleteCompliance(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Compliance Record</AlertDialogTitle>
