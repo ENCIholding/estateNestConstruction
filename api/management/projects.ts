@@ -1,5 +1,5 @@
-import { getCookie, getSessionCookieName, verifySessionToken } from "./_lib/auth";
-import { getAllProjects } from "./_lib/projects";
+import { getCookie, getSessionCookieName, verifySessionToken } from "./_lib/auth.ts"; // Corrected path and added .ts extension
+import { getAllProjects } from "./_lib/projects.ts"; // Corrected path and added .ts extension
 
 export async function GET(request: Request) {
   const cookieHeader = request.headers.get("cookie") || "";
