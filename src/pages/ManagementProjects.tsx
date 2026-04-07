@@ -1,7 +1,26 @@
 import { useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import ManagementLayout from "@/components/management/ManagementLayout";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export default function ManagementProjects() {
+  const navigate = useNavigate();
+
   const projects = useMemo(
     () => [
       {
@@ -22,49 +41,71 @@ export default function ManagementProjects() {
     []
   );
 
+  const statusColors: Record<string, string> = {
+    Planning: "bg-blue-100 text-blue-800",
+    "Pre-Construction": "bg-amber-100 text-amber-800",
+    Active: "bg-emerald-100 text-emerald-800",
+    Warranty: "bg-purple-100 text-purple-800",
+    Completed: "bg-slate-100 text-slate-800",
+  };
+
   return (
-    <ManagementLayout currentPageName="projects">
-      <div className="space-y-6">
+    <ManagementLayout>
+      <div className="space-y-8">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-slate-900">
-            Projects
-          </h1>
-          <p className="text-slate-500 mt-1">
+          <h1 className="text-3xl font-bold mb-2">Projects</h1>
+          <p className="text-slate-600">
             Manage and track all construction projects.
           </p>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-left">
-              <tr>
-                <th className="p-4">Project</th>
-                <th className="p-4">Address</th>
-                <th className="p-4">Status</th>
-                <th className="p-4">Budget</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {projects.map((p) => (
-                <tr key={p.id} className="border-t">
-                  <td className="p-4 font-medium text-slate-900">
-                    {p.name}
-                  </td>
-                  <td className="p-4 text-slate-600">{p.address}</td>
-                  <td className="p-4">
-                    <span className="px-2 py-1 text-xs rounded-full bg-slate-100">
-                      {p.status}
-                    </span>
-                  </td>
-                  <td className="p-4 text-slate-900">
-                    ${p.budget.toLocaleString()}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>All Projects</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Project</TableHead>
+                  <TableHead>Address</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Budget</TableHead>
+                  <TableHead>Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {projects.map((p) => (
+                  <TableRow key={p.id}>
+                    <TableCell className="font-medium">{p.name}</TableCell>
+                    <TableCell>{p.address}</TableCell>
+                    <TableCell>
+                      <Badge
+                        className={`${statusColors[p.status] || ""}`}
+                        variant="outline"
+                      >
+                        {p.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      ${p.budget.toLocaleString()}
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        size="sm"
+                        onClick={() =>
+                          navigate(`/management/project-details?id=${p.id}`)
+                        }
+                      >
+                        View
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       </div>
     </ManagementLayout>
   );
