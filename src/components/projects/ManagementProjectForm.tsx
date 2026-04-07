@@ -191,7 +191,7 @@ export default function ManagementProjectForm({
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
 
@@ -243,43 +243,39 @@ export default function ManagementProjectForm({
     field: "development_permit_pdf" | "building_permit_pdf" | "real_property_report";
     accept?: string;
   }) => (
-    <div className="space-y-2">
+    <div>
       <Label>{label}</Label>
-
       {formData[field] ? (
-        <div className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg">
+        <div className="flex items-center gap-2">
           <a
             href={formData[field]}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm text-blue-600 hover:underline truncate flex-1"
+            className="text-blue-600 hover:underline"
           >
             View Document
           </a>
-
-          <Button
+          <button
             type="button"
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
             onClick={() => handleChange(field, "")}
+            className="text-red-600 hover:text-red-800"
           >
-            <X className="h-4 w-4" />
-          </Button>
+            <X size={16} />
+          </button>
         </div>
       ) : (
-        <div className="relative">
-          <Input
+        <div>
+          <input
             type="file"
             accept={accept}
             onChange={(e) => handleFileUpload(field, e.target.files?.[0])}
             disabled={!!uploading[field]}
             className="cursor-pointer"
           />
-
           {uploading[field] && (
-            <div className="absolute inset-0 flex items-center justify-center bg-white/80">
-              <Loader2 className="h-4 w-4 animate-spin" />
+            <div className="flex items-center gap-2 mt-2">
+              <Loader2 size={16} className="animate-spin" />
+              <span>Uploading...</span>
             </div>
           )}
         </div>
@@ -291,33 +287,38 @@ export default function ManagementProjectForm({
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{project ? "Edit Project" : "New Project"}</DialogTitle>
+          <DialogTitle>
+            {project ? "Edit Project" : "New Project"}
+          </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-4">
-            <h3 className="font-medium text-slate-900">Basic Information</h3>
-
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Basic Information</h3>
+            <div className="space-y-4">
+              <div>
                 <Label>Project Name *</Label>
                 <Input
                   value={formData.project_name}
-                  onChange={(e) => handleChange("project_name", e.target.value)}
+                  onChange={(e) =>
+                    handleChange("project_name", e.target.value)
+                  }
                   required
                 />
               </div>
 
-              <div className="space-y-2">
+              <div>
                 <Label>Civic Address *</Label>
                 <Input
                   value={formData.civic_address}
-                  onChange={(e) => handleChange("civic_address", e.target.value)}
+                  onChange={(e) =>
+                    handleChange("civic_address", e.target.value)
+                  }
                   required
                 />
               </div>
 
-              <div className="space-y-2">
+              <div>
                 <Label>Legal Land Description</Label>
                 <Input
                   value={formData.legal_land_description}
@@ -327,14 +328,16 @@ export default function ManagementProjectForm({
                 />
               </div>
 
-              <div className="space-y-2">
+              <div>
                 <Label>Zoning Code</Label>
                 <Select
                   value={formData.zoning_code}
-                  onValueChange={(value) => handleChange("zoning_code", value)}
+                  onValueChange={(value) =>
+                    handleChange("zoning_code", value)
+                  }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select zoning" />
+                    <SelectValue placeholder="Select zoning code" />
                   </SelectTrigger>
                   <SelectContent>
                     {ZONING_CODES.map((code) => (
@@ -346,14 +349,14 @@ export default function ManagementProjectForm({
                 </Select>
               </div>
 
-              <div className="space-y-2">
+              <div>
                 <Label>Status</Label>
                 <Select
                   value={formData.status}
                   onValueChange={(value) => handleChange("status", value)}
                 >
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                   <SelectContent>
                     {STATUSES.map((status) => (
@@ -367,47 +370,51 @@ export default function ManagementProjectForm({
             </div>
           </div>
 
-          <div className="space-y-4">
-            <h3 className="font-medium text-slate-900">Financials</h3>
-
-            <div className="grid sm:grid-cols-3 gap-4">
-              <div className="space-y-2">
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Financials</h3>
+            <div className="space-y-4">
+              <div>
                 <Label>Estimated Budget</Label>
                 <Input
                   type="number"
                   value={formData.estimated_budget}
-                  onChange={(e) => handleChange("estimated_budget", e.target.value)}
+                  onChange={(e) =>
+                    handleChange("estimated_budget", e.target.value)
+                  }
                   placeholder="$0.00"
                 />
               </div>
 
-              <div className="space-y-2">
+              <div>
                 <Label>Selling Price</Label>
                 <Input
                   type="number"
                   value={formData.selling_price}
-                  onChange={(e) => handleChange("selling_price", e.target.value)}
+                  onChange={(e) =>
+                    handleChange("selling_price", e.target.value)
+                  }
                   placeholder="$0.00"
                 />
               </div>
 
-              <div className="space-y-2">
+              <div>
                 <Label>Deposit Amount</Label>
                 <Input
                   type="number"
                   value={formData.deposit_amount}
-                  onChange={(e) => handleChange("deposit_amount", e.target.value)}
+                  onChange={(e) =>
+                    handleChange("deposit_amount", e.target.value)
+                  }
                   placeholder="$0.00"
                 />
               </div>
             </div>
           </div>
 
-          <div className="space-y-4">
-            <h3 className="font-medium text-slate-900">Key Dates</h3>
-
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Key Dates</h3>
+            <div className="space-y-4">
+              <div>
                 <Label>Start Date</Label>
                 <Input
                   type="date"
@@ -416,7 +423,7 @@ export default function ManagementProjectForm({
                 />
               </div>
 
-              <div className="space-y-2">
+              <div>
                 <Label>Estimated End Date</Label>
                 <Input
                   type="date"
@@ -427,16 +434,18 @@ export default function ManagementProjectForm({
                 />
               </div>
 
-              <div className="space-y-2">
+              <div>
                 <Label>Actual End Date</Label>
                 <Input
                   type="date"
                   value={formData.actual_end_date}
-                  onChange={(e) => handleChange("actual_end_date", e.target.value)}
+                  onChange={(e) =>
+                    handleChange("actual_end_date", e.target.value)
+                  }
                 />
               </div>
 
-              <div className="space-y-2">
+              <div>
                 <Label>Warranty Start Date</Label>
                 <Input
                   type="date"
@@ -449,16 +458,15 @@ export default function ManagementProjectForm({
             </div>
           </div>
 
-          <div className="space-y-4">
-            <h3 className="font-medium text-slate-900">Key Documents</h3>
-
-            <div className="grid sm:grid-cols-3 gap-4">
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Key Documents</h3>
+            <div className="space-y-4">
               <FileUploadField
-                label="Development Permit"
+                label="Development Permit PDF"
                 field="development_permit_pdf"
               />
               <FileUploadField
-                label="Building Permit"
+                label="Building Permit PDF"
                 field="building_permit_pdf"
               />
               <FileUploadField
@@ -472,9 +480,8 @@ export default function ManagementProjectForm({
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-
             <Button type="submit" disabled={saving}>
-              {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {project ? "Update" : "Create"} Project
             </Button>
           </DialogFooter>
