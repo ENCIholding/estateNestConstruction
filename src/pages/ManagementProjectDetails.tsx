@@ -88,6 +88,12 @@ export default function ManagementProjectDetails() {
     enabled: !!projectId,
   });
 
+  const { data: tasks = [] } = useQuery({
+    queryKey: ["tasks", projectId],
+    queryFn: () => fetchJson(`/api/management/tasks?project_id=${projectId}`),
+    enabled: !!projectId,
+  });
+
   const { data: budgetItems = [] } = useQuery({
     queryKey: ["budget", projectId],
     queryFn: () =>
