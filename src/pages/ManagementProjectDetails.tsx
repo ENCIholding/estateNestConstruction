@@ -52,7 +52,7 @@ async function fetchJson(url: string, options: RequestInit = {}): Promise<any> {
 
 export default function ManagementProjectDetails() {
   const [showForm, setShowForm] = useState(false);
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState("overview"); // Replaced Tabs with manual tab state
   const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
 
@@ -168,9 +168,10 @@ export default function ManagementProjectDetails() {
           <div className="flex-1">
             <h1 className="text-3xl font-bold mb-2">{project.project_name}</h1>
             <div className="flex items-center gap-4 text-slate-600">
+              {/* Replaced Badge with span */}
               <span
                 className={`px-3 py-1 rounded text-sm font-medium ${
-                  statusColors[project.status] || ""
+                  statusColors[project.status || ""] || ""
                 }`}
               >
                 {project.status}
@@ -198,6 +199,7 @@ export default function ManagementProjectDetails() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{taskProgress}%</div>
+            {/* Replaced Progress with div */}
             <div className="w-full bg-slate-200 rounded-full h-2 mt-2">
               <div
                 className="bg-emerald-600 h-2 rounded-full transition-all"
@@ -250,6 +252,7 @@ export default function ManagementProjectDetails() {
         )}
       </div>
 
+      {/* Replaced Tabs with div and buttons */}
       <div className="space-y-4">
         <div className="flex gap-2 border-b">
           <button
