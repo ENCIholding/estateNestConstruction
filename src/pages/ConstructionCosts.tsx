@@ -138,7 +138,7 @@ export default function ConstructionCosts() {
               <XAxis dataKey="category" />
               <YAxis />
               <Tooltip
-                formatter={(value) => `$${value.toLocaleString()}`}
+                formatter={(value: number) => `$${value.toLocaleString()}`}
               />
               <Legend />
               <Bar dataKey="estimated" fill="#3b82f6" name="Estimated" />
@@ -160,7 +160,7 @@ export default function ConstructionCosts() {
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ category, actual }) =>
+                label={({ category, actual }: { category: string, actual: number }) =>
                   `${category}: $${actual.toLocaleString()}`
                 }
                 outerRadius={100}
@@ -172,7 +172,7 @@ export default function ConstructionCosts() {
                 ))}
               </Pie>
               <Tooltip
-                formatter={(value) => `$${value.toLocaleString()}`}
+                formatter={(value: number) => `$${value.toLocaleString()}`}
               />
             </PieChart>
           </ResponsiveContainer>
