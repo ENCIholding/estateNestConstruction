@@ -1,7 +1,27 @@
 User-agent: *
 Allow: /
 
-Disallow: /management-login
+# Disallow specific management paths (using correct slash notation)
+Disallow: /management/login
+Disallow: /management/dashboard
+Disallow: /management/projects
+Disallow: /management/vendors
+Disallow: /management/documents
+Disallow: /management/reports
+Disallow: /management/schedule
+Disallow: /management/gantt-chart
+Disallow: /management/budget-costs
+Disallow: /management/change-orders
+Disallow: /management/client-invoices
+Disallow: /management/client-selections
+Disallow: /management/compliance
+Disallow: /management/estimator
+Disallow: /management/master-database
+Disallow: /management/mobile-tasks
+Disallow: /management/project-details
+Disallow: /management/vendor-details
+Disallow: /management/vendor-bills
+
 Disallow: /api/
 Disallow: /private/
 Disallow: /.git/
