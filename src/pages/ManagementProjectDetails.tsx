@@ -14,7 +14,6 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
 import {
   ArrowLeft,
   MapPin,
@@ -200,7 +199,12 @@ export default function ManagementProjectDetails() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{taskProgress}%</div>
-            <Progress value={parseFloat(taskProgress)} className="mt-2" />
+            <div className="w-full bg-slate-200 rounded-full h-2">
+  <div
+    className="bg-emerald-600 h-2 rounded-full transition-all"
+    style={{ width: `${taskProgress}%` }}
+  ></div>
+</div>
           </CardContent>
         </Card>
 
