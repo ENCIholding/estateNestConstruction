@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
+  CardHeader,
+  CardTitle,
 } from "@/components/ui/card";
 import {
   Tabs,
@@ -18,6 +20,8 @@ import {
   ArrowLeft,
   MapPin,
   FileText,
+  CheckCircle2,
+  Clock,
   Loader2,
   ExternalLink,
   Pencil,
@@ -33,7 +37,7 @@ const statusColors: Record<string, string> = {
   Completed: "bg-slate-100 text-slate-700 border-slate-200",
 };
 
-async function fetchJson<T>(url: string, options: RequestInit = {}): Promise<T> {
+async function fetchJson(url: string, options: RequestInit = {}): Promise<any> {
   const res = await fetch(url, {
     credentials: "include",
     headers: { "Content-Type": "application/json" },
@@ -63,7 +67,7 @@ export default function ManagementProjectDetails() {
 
   const { data: sessionData } = useQuery({
     queryKey: ["session"],
-    queryFn: () => fetchJson<any>("/api/management/session"),
+    queryFn: () => fetchJson("/api/management/session"),
   });
 
   const user = sessionData?.user;
@@ -74,56 +78,64 @@ export default function ManagementProjectDetails() {
 
   const { data: project, isLoading } = useQuery({
     queryKey: ["project", projectId],
-    queryFn: () => fetchJson<any>(`/api/management/projects/${projectId}`),
+    queryFn: () => fetchJson(`/api/management/projects/${projectId}`),
     enabled: !!projectId,
   });
 
   const { data: tasks = [] } = useQuery({
     queryKey: ["tasks", projectId],
-    queryFn: () => fetchJson<any[]>(`/api/management/tasks?project_id=${projectId}`),
+    queryFn: () => fetchJson(`/api/management/tasks?project_id=${projectId}`),
     enabled: !!projectId,
   });
 
   const { data: budgetItems = [] } = useQuery({
     queryKey: ["budget", projectId],
     queryFn: () =>
-      fetchJson<any[]>(`/api/management/budget-items?project_id=${projectId}`),
+      fetchJson(`/api/management/budget-items?project_id=${projectId}`),
     enabled: !!projectId,
   });
 
   const { data: compliance = [] } = useQuery({
     queryKey: ["compliance", projectId],
     queryFn: () =>
-      fetchJson<any[]>(`/api/management/compliance?project_id=${projectId}`),
+      fetchJson(`/api/management/compliance?project_id=${projectId}`),
     enabled: !!projectId,
   });
 
   const { data: changeOrders = [] } = useQuery({
     queryKey: ["changeOrders", projectId],
     queryFn: () =>
-      fetchJson<any[]>(`/api/management/change-orders?project_id=${projectId}`),
+      fetchJson(`/api/management/change-orders?project_id=${projectId}`),
     enabled: !!projectId,
   });
 
   const { data: documents = [] } = useQuery({
     queryKey: ["docs", projectId],
     queryFn: () =>
-      fetchJson<any[]>(`/api/management/documents?project_id=${projectId}`),
+      fetchJson(`/api/management/documents?project_id=${projectId}`),
     enabled: !!projectId,
   });
 
   if (isLoading) {
     return (
-      <div className="flex justify-center py-20">
-        <Loader2 className="animate-spin h-8 w-8" />
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
 
   if (!project) {
-    return <div>Project not found</div>;
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+        <p>Project not found</p>
+        <Link to="/management/projects">
+          <Button variant="outline">Back to Projects</Button>
+        </Link>
+      </div>
+    );
   }
 
+  // Calculations
   const totalActual = budgetItems.reduce(
     (s: number, i: any) => s + (i.actual_cost || 0),
     0
@@ -150,156 +162,247 @@ export default function ManagementProjectDetails() {
   const projectCompliance = compliance[0];
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex justify-between items-center flex-wrap gap-4">
-        <div className="flex gap-4 items-center">
-          <Link to="/management/projects">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft />
-            </Button>
-          </Link>
-
-          <div>
-            <h1 className="text-2xl font-bold">{project.project_name}</h1>
-            <Badge className={statusColors[project.status] || "bg-slate-100 text-slate-700"}>
-              {project.status}
-            </Badge>
-            <p className="text-sm text-slate-500 flex items-center gap-1 mt-1">
-              <MapPin className="h-4 w-4" />
-              {project.civic_address}
-            </p>
-          </div>
-        </div>
-
-        {canEdit && (
-          <Button onClick={() => setShowForm(true)}>
-            <Pencil className="mr-2 h-4 w-4" />
-            Edit
+    <div className="min-h-screen bg-slate-50 p-8">
+      {/* Header */}
+      <div className="mb-8">
+        <Link to="/management/projects" className="mb-4 inline-block">
+          <Button variant="ghost" size="sm">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Projects
           </Button>
-        )}
+        </Link>
+
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <h1 className="text-3xl font-bold mb-2">{project.project_name}</h1>
+            <div className="flex items-center gap-4 text-slate-600">
+              <Badge
+                variant="outline"
+                className={`${statusColors[project.status] || ""}`}
+              >
+                {project.status}
+              </Badge>
+              <div className="flex items-center gap-1">
+                <MapPin className="h-4 w-4" />
+                {project.civic_address}
+              </div>
+            </div>
+          </div>
+
+          {canEdit && (
+            <Button onClick={() => setShowForm(true)}>
+              <Pencil className="mr-2 h-4 w-4" />
+              Edit
+            </Button>
+          )}
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="p-4">
-          <p className="text-sm">Task Progress</p>
-          <p className="text-xl font-bold">{taskProgress}%</p>
-          <Progress value={parseInt(taskProgress, 10)} />
+      {/* Quick Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Task Progress</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{taskProgress}%</div>
+            <Progress value={parseFloat(taskProgress)} className="mt-2" />
+          </CardContent>
         </Card>
 
         {showFinancials && (
           <>
-            <Card className="p-4">
-              <p className="text-sm">Budget Used</p>
-              <p className="text-xl font-bold">
-                ${totalActual.toLocaleString()}
-              </p>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Budget Used
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  ${totalActual.toLocaleString()}
+                </div>
+              </CardContent>
             </Card>
 
-            <Card className="p-4">
-              <p className="text-sm">Profit</p>
-              <p className="text-xl font-bold">
-                ${grossProfit.toLocaleString()}
-              </p>
-              <p className="text-xs">Margin {profitMargin}%</p>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Profit</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  ${grossProfit.toLocaleString()}
+                </div>
+                <p className="text-sm text-slate-600 mt-1">
+                  Margin {profitMargin}%
+                </p>
+              </CardContent>
             </Card>
 
-            <Card className="p-4">
-              <p className="text-sm">Change Orders</p>
-              <p className="text-xl font-bold">{changeOrders.length}</p>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Change Orders
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{changeOrders.length}</div>
+              </CardContent>
             </Card>
           </>
         )}
       </div>
 
-      <Tabs defaultValue="overview">
+      {/* Tabs */}
+      <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="tasks">Tasks</TabsTrigger>
-          {showFinancials && (
-            <TabsTrigger value="financials">Financials</TabsTrigger>
-          )}
-          <TabsTrigger value="documents">Docs</TabsTrigger>
+          {showFinancials && <TabsTrigger value="financials">Financials</TabsTrigger>}
+          <TabsTrigger value="documents">Documents</TabsTrigger>
         </TabsList>
 
+        {/* Overview Tab */}
         <TabsContent value="overview">
           <Card>
-            <CardContent className="space-y-2 pt-6">
-              <p>Start: {project.start_date || "—"}</p>
-              <p>End: {project.estimated_end_date || "—"}</p>
-              <p>
-                Warranty Expiry:{" "}
-                {warrantyExpiry ? format(warrantyExpiry, "MMM d yyyy") : "—"}
-              </p>
-              <p>
-                Compliance Status:{" "}
-                {projectCompliance
-                  ? projectCompliance.alberta_one_call_status || "Tracked"
-                  : "—"}
-              </p>
+            <CardHeader>
+              <CardTitle>Project Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-slate-500" />
+                  <div>
+                    <p className="text-sm text-slate-600">Start</p>
+                    <p className="font-medium">{project.start_date || "—"}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-slate-500" />
+                  <div>
+                    <p className="text-sm text-slate-600">Estimated End</p>
+                    <p className="font-medium">
+                      {project.estimated_end_date || "—"}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-slate-500" />
+                  <div>
+                    <p className="text-sm text-slate-600">Warranty Expiry</p>
+                    <p className="font-medium">
+                      {warrantyExpiry
+                        ? format(warrantyExpiry, "MMM d, yyyy")
+                        : "—"}
+                    </p>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-600">Legal Description</p>
+                  <p className="font-medium">
+                    {project.legal_land_description || "—"}
+                  </p>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
 
+        {/* Tasks Tab */}
         <TabsContent value="tasks">
-          {tasks.length > 0 ? (
-            tasks.map((t: any) => (
-              <Card key={t.id} className="p-4 mb-2">
-                <p>{t.task_name}</p>
-                <Badge>{t.status}</Badge>
-              </Card>
-            ))
-          ) : (
-            <Card className="p-4">No tasks found</Card>
-          )}
+          <Card>
+            <CardHeader>
+              <CardTitle>Tasks ({tasks.length})</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {tasks.length > 0 ? (
+                <div className="space-y-2">
+                  {tasks.map((t: any) => (
+                    <div key={t.id} className="flex items-center justify-between p-3 bg-slate-50 rounded">
+                      <span className="font-medium">{t.task_name}</span>
+                      <Badge variant="outline">{t.status}</Badge>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-slate-600">No tasks found</p>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
+        {/* Financials Tab */}
         {showFinancials && (
           <TabsContent value="financials">
-            {budgetItems.length > 0 ? (
-              budgetItems.map((b: any) => (
-                <Card key={b.id} className="p-4 mb-2">
-                  <p>{b.category_name}</p>
-                  <p>${b.actual_cost || 0}</p>
-                </Card>
-              ))
-            ) : (
-              <Card className="p-4">No budget items found</Card>
-            )}
+            <Card>
+              <CardHeader>
+                <CardTitle>Budget Items</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {budgetItems.length > 0 ? (
+                  <div className="space-y-2">
+                    {budgetItems.map((b: any) => (
+                      <div key={b.id} className="flex items-center justify-between p-3 bg-slate-50 rounded">
+                        <span className="font-medium">{b.category_name}</span>
+                        <span>${(b.actual_cost || 0).toLocaleString()}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-slate-600">No budget items found</p>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
         )}
 
+        {/* Documents Tab */}
         <TabsContent value="documents">
-          {documents.length > 0 ? (
-            documents.map((doc: any) => (
-              <a
-                key={doc.id}
-                href={doc.file_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex gap-2 p-2 border rounded mb-2 items-center"
-              >
-                <FileText className="h-4 w-4" />
-                <span>{doc.file_name}</span>
-                <ExternalLink className="h-4 w-4" />
-              </a>
-            ))
-          ) : (
-            <Card className="p-4">No documents found</Card>
-          )}
+          <Card>
+            <CardHeader>
+              <CardTitle>Documents</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {documents.length > 0 ? (
+                <div className="space-y-2">
+                  {documents.map((doc: any) => (
+                    <a
+                      key={doc.id}
+                      href={doc.file_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-between p-3 bg-slate-50 rounded hover:bg-slate-100"
+                    >
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-4 w-4" />
+                        <span className="font-medium">{doc.file_name}</span>
+                      </div>
+                      <ExternalLink className="h-4 w-4" />
+                    </a>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-slate-600">No documents found</p>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
 
-      <ManagementProjectForm
-        project={project}
-        open={showForm}
-        onClose={() => setShowForm(false)}
-        onSaved={() => {
-          queryClient.invalidateQueries({
-            queryKey: ["project", projectId],
-          });
-          setShowForm(false);
-        }}
-      />
+      {/* Form Modal */}
+      {showForm && (
+        <ManagementProjectForm
+          project={project}
+          open={showForm}
+          onClose={() => setShowForm(false)}
+          onSaved={() => {
+            queryClient.invalidateQueries({
+              queryKey: ["project", projectId],
+            });
+            setShowForm(false);
+          }}
+        />
+      )}
     </div>
   );
 }
