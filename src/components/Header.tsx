@@ -1,10 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
 import { Menu } from "lucide-react";
-// Assuming Sheet is used and imported correctly, as it was in your previous context
-// import Sheet, { SheetContent, SheetTrigger } from "@/components/ui/sheet"; 
-
 import { useState } from "react";
+import { 
+  Sheet, 
+  SheetContent, 
+  SheetTrigger 
+} from "@/components/ui/sheet";
 
 const Header = () => {
   const location = useLocation();
@@ -16,7 +18,7 @@ const Header = () => {
     { label: "About Us", path: "/#about" },
     { label: "Projects", path: "/#projects" },
     { label: "Contact", path: "/#appointment", isContact: true },
-    { label: "Management", path: "/management/login" } // <--- FIX HERE: Changed to /management/login
+    { label: "Management", path: "/management/login" }
   ];
 
   const scrollToSection = (hash: string) => {
@@ -35,7 +37,11 @@ const Header = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-4">
             <div className="bg-white rounded-full p-1 flex items-center justify-center">
-              <img src="/lovable-uploads/65d67880-f4ae-4ca0-841d-1a60dd73a2d5.png" alt="Estate Nest Capital Logo" className="h-10 w-10" />
+              <img 
+                src="/lovable-uploads/65d67880-f4ae-4ca0-841d-1a60dd73a2d5.png" 
+                alt="Estate Nest Capital Logo" 
+                className="h-10 w-10" 
+              />
             </div>
             <h1 className="text-xl font-bold tracking-wide bg-gradient-to-r from-enc-orange to-enc-yellow bg-clip-text text-transparent">
               ESTATE NEST<br />CAPITAL
@@ -45,7 +51,6 @@ const Header = () => {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             {navigationItems.map((item) => {
-              // Handle /builder-profile and /management/login (now correct)
               if (item.path === "/builder-profile" || item.path === "/management/login") {
                 return (
                   <Link to={item.path} key={item.label}>
@@ -55,16 +60,15 @@ const Header = () => {
                   </Link>
                 );
               } else if (item.path.startsWith("/#")) {
-                // Handle internal anchor links
                 return (
                   <Button
                     key={item.label}
                     variant="ghost"
                     onClick={() => {
                       if (location.pathname !== "/") {
-                        window.location.href = item.path; // Reloads for external pages
+                        window.location.href = item.path;
                       } else {
-                        scrollToSection(item.path.substring(1)); // Scrolls for homepage
+                        scrollToSection(item.path.substring(1));
                       }
                     }}
                     className="text-white hover:text-enc-orange-light hover:bg-transparent text-sm font-medium tracking-wide"
@@ -73,13 +77,12 @@ const Header = () => {
                   </Button>
                 );
               }
-              return null; // Don't render anything if path doesn't match
+              return null;
             })}
           </nav>
 
           {/* Mobile Menu */}
           <div className="md:hidden">
-            {/* Assuming Sheet component is properly working or you've replaced it */}
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="text-white hover:text-enc-orange-light">
