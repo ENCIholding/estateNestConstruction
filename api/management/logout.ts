@@ -1,4 +1,4 @@
-import { clearSessionCookie } from "./_lib/auth";
+import { clearSessionCookie } from "./_lib/auth.ts"; // Added .ts extension
 
 export default function handler(req: any, res: any) {
   if (req.method !== "POST") {
