@@ -2,9 +2,11 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="google-site-verification" content="QUX0c93-9KEKrLUA2aNlwAub6Be3Li60uXbywJHzQrk" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Estate Nest Capital</title>
 
-    <!-- Google Analytics -->
+    <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-1GXQ2C8GTT"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -13,17 +15,7 @@
       gtag('config', 'G-1GXQ2C8GTT');
     </script>
 
-   <link rel="icon" type="image/png" href="/favicon.png?v=2" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Estate Nest Capital</title>
-    <meta name="description" content="Estate Nest Capital Inc. – Premium construction and real estate development services in Edmonton, Alberta." />
-    <meta property="og:title" content="Estate Nest Capital Inc." />
-    <meta property="og:description" content="Premium construction and real estate development services in Edmonton, Alberta." />
-    <meta property="og:image" content="https://www.estatenest.capital/favicon.png" />
-    <meta property="og:url" content="https://www.estatenest.capital/" />
-    <meta property="og:type" content="website" />
-    <link rel="canonical" href="https://www.estatenest.capital/" />
-
+    <!-- Schema.org JSON-LD -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -55,7 +47,9 @@
     </script>
   </head>
   <body>
+    <!-- THIS IS THE CRITICAL DIV WHERE YOUR REACT APP RENDERS -->
     <div id="root"></div>
+    <!-- The script below loads your main.tsx -->
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
