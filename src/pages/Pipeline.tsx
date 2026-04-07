@@ -104,7 +104,9 @@ export default function Pipeline() {
               <XAxis dataKey="stage" />
               <YAxis yAxisId="left" />
               <YAxis yAxisId="right" orientation="right" />
-              <Tooltip />
+              <Tooltip
+                formatter={(value: number) => `$${value.toLocaleString()}`}
+              />
               <Legend />
               <Bar yAxisId="left" dataKey="count" fill="#3b82f6" name="Count" />
               <Bar
