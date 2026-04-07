@@ -3,13 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -65,7 +58,7 @@ async function uploadFile(file: File): Promise<{ file_url: string }> {
   return response.json();
 }
 
-async function fetchJson(url: string, options: RequestInit = {}) {
+async function fetchJson(url: string, options: RequestInit = {}): Promise<any> {
   const response = await fetch(url, {
     credentials: "include",
     headers: {
@@ -154,7 +147,7 @@ export default function ManagementVendorBillForm({
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
 
@@ -195,146 +188,137 @@ export default function ManagementVendorBillForm({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{bill ? "Edit Bill" : "Add Bill"}</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div className="space-y-2 sm:col-span-2">
-              <Label>Vendor *</Label>
-              <Select
-                value={formData.vendor_id}
-                onValueChange={(value) => handleChange("vendor_id", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select vendor" />
-                </SelectTrigger>
-                <SelectContent>
-                  {vendors.map((vendor) => (
-                    <SelectItem key={vendor.id} value={vendor.id}>
-                      {vendor.company_name || "Unnamed Vendor"}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Vendor */}
+          <div>
+            <Label>Vendor *</Label>
+            <select
+              value={formData.vendor_id}
+              onChange={(e) => handleChange("vendor_id", e.target.value)}
+              className="w-full px-3 py-2 border border-slate-300 rounded-md"
+              required
+            >
+              <option value="">-- Select a vendor --</option>
+              {vendors.map((vendor) => (
+                <option key={vendor.id} value={vendor.id}>
+                  {vendor.company_name || "Unnamed Vendor"}
+                </option>
+              ))}
+            </select>
+          </div>
 
-            <div className="space-y-2 sm:col-span-2">
-              <Label>Project *</Label>
-              <Select
-                value={formData.project_id}
-                onValueChange={(value) => handleChange("project_id", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select project" />
-                </SelectTrigger>
-                <SelectContent>
-                  {projects.map((project) => (
-                    <SelectItem key={project.id} value={project.id}>
-                      {project.project_name || "Unnamed Project"}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          {/* Project */}
+          <div>
+            <Label>Project *</Label>
+            <select
+              value={formData.project_id}
+              onChange={(e) => handleChange("project_id", e.target.value)}
+              className="w-full px-3 py-2 border border-slate-300 rounded-md"
+              required
+            >
+              <option value="">-- Select a project --</option>
+              {projects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.project_name || "Unnamed Project"}
+                </option>
+              ))}
+            </select>
+          </div>
 
-            <div className="space-y-2">
-              <Label>Invoice Amount *</Label>
-              <Input
-                type="number"
-                value={formData.invoice_amount}
-                onChange={(e) => handleChange("invoice_amount", e.target.value)}
-                required
-              />
-            </div>
+          {/* Invoice Amount */}
+          <div>
+            <Label>Invoice Amount *</Label>
+            <Input
+              type="number"
+              value={formData.invoice_amount}
+              onChange={(e) => handleChange("invoice_amount", e.target.value)}
+              required
+            />
+          </div>
 
-            <div className="space-y-2">
-              <Label>Due Date</Label>
-              <Input
-                type="date"
-                value={formData.due_date}
-                onChange={(e) => handleChange("due_date", e.target.value)}
-              />
-            </div>
+          {/* Due Date */}
+          <div>
+            <Label>Due Date</Label>
+            <Input
+              type="date"
+              value={formData.due_date}
+              onChange={(e) => handleChange("due_date", e.target.value)}
+            />
+          </div>
 
-            <div className="space-y-2">
-              <Label>Invoice Year</Label>
-              <Input
-                type="number"
-                value={formData.invoice_year}
-                onChange={(e) => handleChange("invoice_year", e.target.value)}
-              />
-            </div>
+          {/* Invoice Year */}
+          <div>
+            <Label>Invoice Year</Label>
+            <Input
+              type="number"
+              value={formData.invoice_year}
+              onChange={(e) => handleChange("invoice_year", e.target.value)}
+            />
+          </div>
 
-            <div className="space-y-2">
-              <Label>Status</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value) => handleChange("status", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Received">Received</SelectItem>
-                  <SelectItem value="Verified">Verified</SelectItem>
-                  <SelectItem value="Paid">Paid</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          {/* Status */}
+          <div>
+            <Label>Status</Label>
+            <select
+              value={formData.status}
+              onChange={(e) => handleChange("status", e.target.value)}
+              className="w-full px-3 py-2 border border-slate-300 rounded-md"
+            >
+              <option value="Received">Received</option>
+              <option value="Verified">Verified</option>
+              <option value="Paid">Paid</option>
+            </select>
+          </div>
 
-            <div className="space-y-2 sm:col-span-2">
-              <Label>Invoice File</Label>
-
-              {formData.invoice_file ? (
-                <div className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg">
-                  <a
-                    href={formData.invoice_file}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-blue-600 hover:underline truncate flex-1"
-                  >
-                    View File
-                  </a>
-
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => handleChange("invoice_file", "")}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ) : (
-                <div className="relative">
-                  <Input
-                    type="file"
-                    accept=".pdf,.jpg,.jpeg,.png"
-                    onChange={(e) => handleFileUpload(e.target.files?.[0])}
-                    disabled={uploading}
-                  />
-
-                  {uploading && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-white/80">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+          {/* Invoice File */}
+          <div>
+            <Label>Invoice File</Label>
+            {formData.invoice_file ? (
+              <div className="flex items-center gap-2">
+                <a
+                  href={formData.invoice_file}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline"
+                >
+                  View File
+                </a>
+                <button
+                  type="button"
+                  onClick={() => handleChange("invoice_file", "")}
+                  className="text-red-600 hover:text-red-800"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            ) : (
+              <div>
+                <input
+                  type="file"
+                  onChange={(e) => handleFileUpload(e.target.files?.[0])}
+                  disabled={uploading}
+                />
+                {uploading && (
+                  <div className="flex items-center gap-2 mt-2">
+                    <Loader2 size={16} className="animate-spin" />
+                    <span>Uploading...</span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-
             <Button type="submit" disabled={saving}>
-              {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {bill ? "Update" : "Add"} Bill
             </Button>
           </DialogFooter>
