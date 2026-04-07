@@ -1,4 +1,3 @@
-
 import React, { useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -462,8 +461,7 @@ export default function ManagementReports() {
                     variance > 0 ? "text-rose-600" : "text-emerald-600"
                   }`}
                 >
-                  {variance > 0 ? "+" : ""}
-                  ${variance.toLocaleString()}
+                  {variance > 0 ? "+" : ""}${variance.toLocaleString()}
                 </p>
               </CardContent>
             </Card>
