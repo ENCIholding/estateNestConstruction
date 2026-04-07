@@ -9,12 +9,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
-import {
   ArrowLeft,
   MapPin,
   FileText,
@@ -58,6 +52,7 @@ async function fetchJson(url: string, options: RequestInit = {}): Promise<any> {
 
 export default function ManagementProjectDetails() {
   const [showForm, setShowForm] = useState(false);
+  const [activeTab, setActiveTab] = useState("overview");
   const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
 
@@ -127,7 +122,10 @@ export default function ManagementProjectDetails() {
       <div className="flex flex-col items-center justify-center min-h-screen gap-4">
         <p>Project not found</p>
         <Link to="/management/projects">
-          <Button variant="outline">Back to Projects</Button>
+          <Button variant="outline">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Projects
+          </Button>
         </Link>
       </div>
     );
@@ -170,12 +168,13 @@ export default function ManagementProjectDetails() {
           <div className="flex-1">
             <h1 className="text-3xl font-bold mb-2">{project.project_name}</h1>
             <div className="flex items-center gap-4 text-slate-600">
-              <Badge
-                variant="outline"
-                className={`${statusColors[project.status] || ""}`}
+              <span
+                className={`px-3 py-1 rounded text-sm font-medium ${
+                  statusColors[project.status] || ""
+                }`}
               >
                 {project.status}
-              </Badge>
+              </span>
               <div className="flex items-center gap-1">
                 <MapPin className="h-4 w-4" />
                 {project.civic_address}
@@ -199,12 +198,12 @@ export default function ManagementProjectDetails() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{taskProgress}%</div>
-            <div className="w-full bg-slate-200 rounded-full h-2">
-  <div
-    className="bg-emerald-600 h-2 rounded-full transition-all"
-    style={{ width: `${taskProgress}%` }}
-  ></div>
-</div>
+            <div className="w-full bg-slate-200 rounded-full h-2 mt-2">
+              <div
+                className="bg-emerald-600 h-2 rounded-full transition-all"
+                style={{ width: `${taskProgress}%` }}
+              ></div>
+            </div>
           </CardContent>
         </Card>
 
@@ -251,50 +250,81 @@ export default function ManagementProjectDetails() {
         )}
       </div>
 
-      <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="tasks">Tasks</TabsTrigger>
-          {showFinancials && <TabsTrigger value="financials">Financials</TabsTrigger>}
-          <TabsTrigger value="documents">Documents</TabsTrigger>
-        </TabsList>
+      <div className="space-y-4">
+        <div className="flex gap-2 border-b">
+          <button
+            onClick={() => setActiveTab("overview")}
+            className={`px-4 py-2 font-medium ${
+              activeTab === "overview"
+                ? "border-b-2 border-blue-600 text-blue-600"
+                : "text-slate-600"
+            }`}
+          >
+            Overview
+          </button>
+          <button
+            onClick={() => setActiveTab("tasks")}
+            className={`px-4 py-2 font-medium ${
+              activeTab === "tasks"
+                ? "border-b-2 border-blue-600 text-blue-600"
+                : "text-slate-600"
+            }`}
+          >
+            Tasks
+          </button>
+          {showFinancials && (
+            <button
+              onClick={() => setActiveTab("financials")}
+              className={`px-4 py-2 font-medium ${
+                activeTab === "financials"
+                  ? "border-b-2 border-blue-600 text-blue-600"
+                  : "text-slate-600"
+              }`}
+            >
+              Financials
+            </button>
+          )}
+          <button
+            onClick={() => setActiveTab("documents")}
+            className={`px-4 py-2 font-medium ${
+              activeTab === "documents"
+                ? "border-b-2 border-blue-600 text-blue-600"
+                : "text-slate-600"
+            }`}
+          >
+            Documents
+          </button>
+        </div>
 
-        <TabsContent value="overview">
+        {activeTab === "overview" && (
           <Card>
             <CardHeader>
               <CardTitle>Project Details</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-slate-500" />
-                  <div>
-                    <p className="text-sm text-slate-600">Start</p>
-                    <p className="font-medium">{project.start_date || "—"}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-slate-500" />
-                  <div>
-                    <p className="text-sm text-slate-600">Estimated End</p>
-                    <p className="font-medium">
-                      {project.estimated_end_date || "—"}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-slate-500" />
-                  <div>
-                    <p className="text-sm text-slate-600">Warranty Expiry</p>
-                    <p className="font-medium">
-                      {warrantyExpiry
-                        ? format(warrantyExpiry, "MMM d, yyyy")
-                        : "—"}
-                    </p>
-                  </div>
+                <div>
+                  <p className="text-sm text-slate-600 mb-1">Start Date</p>
+                  <p className="font-medium">{project.start_date || "—"}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-slate-600">Legal Description</p>
+                  <p className="text-sm text-slate-600 mb-1">Estimated End</p>
+                  <p className="font-medium">
+                    {project.estimated_end_date || "—"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-600 mb-1">Warranty Expiry</p>
+                  <p className="font-medium">
+                    {warrantyExpiry
+                      ? format(warrantyExpiry, "MMM d, yyyy")
+                      : "—"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-600 mb-1">
+                    Legal Description
+                  </p>
                   <p className="font-medium">
                     {project.legal_land_description || "—"}
                   </p>
@@ -302,9 +332,9 @@ export default function ManagementProjectDetails() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
+        )}
 
-        <TabsContent value="tasks">
+        {activeTab === "tasks" && (
           <Card>
             <CardHeader>
               <CardTitle>Tasks ({tasks.length})</CardTitle>
@@ -313,9 +343,14 @@ export default function ManagementProjectDetails() {
               {tasks.length > 0 ? (
                 <div className="space-y-2">
                   {tasks.map((t: any) => (
-                    <div key={t.id} className="flex items-center justify-between p-3 bg-slate-50 rounded">
+                    <div
+                      key={t.id}
+                      className="flex items-center justify-between p-3 bg-slate-50 rounded"
+                    >
                       <span className="font-medium">{t.task_name}</span>
-                      <Badge variant="outline">{t.status}</Badge>
+                      <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                        {t.status}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -324,33 +359,34 @@ export default function ManagementProjectDetails() {
               )}
             </CardContent>
           </Card>
-        </TabsContent>
-
-        {showFinancials && (
-          <TabsContent value="financials">
-            <Card>
-              <CardHeader>
-                <CardTitle>Budget Items</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {budgetItems.length > 0 ? (
-                  <div className="space-y-2">
-                    {budgetItems.map((b: any) => (
-                      <div key={b.id} className="flex items-center justify-between p-3 bg-slate-50 rounded">
-                        <span className="font-medium">{b.category_name}</span>
-                        <span>${(b.actual_cost || 0).toLocaleString()}</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-slate-600">No budget items found</p>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
         )}
 
-        <TabsContent value="documents">
+        {showFinancials && activeTab === "financials" && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Budget Items</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {budgetItems.length > 0 ? (
+                <div className="space-y-2">
+                  {budgetItems.map((b: any) => (
+                    <div
+                      key={b.id}
+                      className="flex items-center justify-between p-3 bg-slate-50 rounded"
+                    >
+                      <span className="font-medium">{b.category_name}</span>
+                      <span>${(b.actual_cost || 0).toLocaleString()}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-slate-600">No budget items found</p>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {activeTab === "documents" && (
           <Card>
             <CardHeader>
               <CardTitle>Documents</CardTitle>
@@ -379,8 +415,8 @@ export default function ManagementProjectDetails() {
               )}
             </CardContent>
           </Card>
-        </TabsContent>
-      </Tabs>
+        )}
+      </div>
 
       {showForm && (
         <ManagementProjectForm
