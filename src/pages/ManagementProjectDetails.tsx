@@ -19,46 +19,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   buildProjectActivity,
+  fetchManagementProjectById,
   getProjectControlGaps,
+  type ManagementProject,
 } from "@/lib/managementData";
-
-type ManagementProject = {
-  id: string;
-  project_name: string;
-  civic_address: string;
-  status: string;
-  estimated_budget?: number;
-  selling_price?: number;
-  start_date?: string;
-  estimated_end_date?: string;
-  actual_end_date?: string;
-  legal_land_description?: string;
-  warranty_start_date?: string;
-  zoning_code?: string;
-  deposit_amount?: number;
-  development_permit_pdf?: string;
-  building_permit_pdf?: string;
-  real_property_report?: string;
-  project_owner?: string;
-  project_manager?: string;
-  primary_contact_email?: string;
-  next_milestone?: string;
-  status_note?: string;
-};
-
-async function fetchJson<T>(url: string): Promise<T> {
-  const response = await fetch(url, {
-    cache: "no-store",
-    credentials: "include",
-  });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error?.message || `Request failed: ${response.status}`);
-  }
-
-  return response.json();
-}
 
 function formatCurrency(value?: number) {
   if (!value) {
@@ -117,7 +81,7 @@ export default function ManagementProjectDetails() {
     error,
   } = useQuery({
     queryKey: ["management-project", projectId],
-    queryFn: () => fetchJson<ManagementProject>(`/api/management/projects/${projectId}`),
+    queryFn: () => fetchManagementProjectById(projectId || ""),
     enabled: Boolean(projectId),
   });
 

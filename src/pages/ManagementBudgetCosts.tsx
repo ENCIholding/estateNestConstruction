@@ -8,9 +8,8 @@ import Input from "@/components/ui/input";
 import {
   buildBudgetRows,
   buildBudgetSummary,
-  fetchManagementJson,
+  fetchManagementProjects,
   formatCurrency,
-  type ManagementProject,
 } from "@/lib/managementData";
 
 function formatRatio(value: number | null) {
@@ -31,7 +30,7 @@ export default function ManagementBudgetCosts() {
     isLoading,
   } = useQuery({
     queryKey: ["management-projects"],
-    queryFn: () => fetchManagementJson<ManagementProject[]>("/api/management/projects"),
+    queryFn: fetchManagementProjects,
   });
 
   const budgetRows = useMemo(() => buildBudgetRows(projects), [projects]);

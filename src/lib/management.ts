@@ -11,7 +11,7 @@ export const managementModules: ManagementModule[] = [
   { name: "Schedule", page: "schedule", enabled: true },
   { name: "Gantt Chart", page: "gantt-chart", enabled: false },
   { name: "Budget & Costs", page: "budget-costs", enabled: true },
-  { name: "Vendors", page: "vendors", enabled: false },
+  { name: "Vendors", page: "vendors", enabled: true },
   { name: "Client Invoices", page: "client-invoices", enabled: false },
   { name: "Vendor Bills", page: "vendor-bills", enabled: false },
   { name: "Documents", page: "documents", enabled: true },

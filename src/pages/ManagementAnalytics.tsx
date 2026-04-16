@@ -7,9 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   buildProjectCompliance,
   buildProjectDocuments,
-  fetchManagementJson,
+  fetchManagementProjects,
   getRegistryCoverage,
-  type ManagementProject,
 } from "@/lib/managementData";
 
 export default function ManagementAnalytics() {
@@ -19,7 +18,7 @@ export default function ManagementAnalytics() {
     isLoading,
   } = useQuery({
     queryKey: ["management-projects"],
-    queryFn: () => fetchManagementJson<ManagementProject[]>("/api/management/projects"),
+    queryFn: fetchManagementProjects,
   });
 
   const complianceRows = useMemo(() => buildProjectCompliance(projects), [projects]);

@@ -6,9 +6,8 @@ import Badge from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   buildWarrantyReminders,
-  fetchManagementJson,
+  fetchManagementProjects,
   formatDate,
-  type ManagementProject,
 } from "@/lib/managementData";
 
 export default function ManagementWarrantyReminder() {
@@ -18,7 +17,7 @@ export default function ManagementWarrantyReminder() {
     isLoading,
   } = useQuery({
     queryKey: ["management-projects"],
-    queryFn: () => fetchManagementJson<ManagementProject[]>("/api/management/projects"),
+    queryFn: fetchManagementProjects,
   });
 
   const reminders = useMemo(() => buildWarrantyReminders(projects), [projects]);

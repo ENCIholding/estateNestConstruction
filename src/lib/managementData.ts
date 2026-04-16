@@ -112,6 +112,28 @@ export async function fetchManagementJson<T>(url: string): Promise<T> {
   return response.json();
 }
 
+export async function fetchManagementProjects() {
+  const { mergeProjectsWithWorkspace } = await import("./managementWorkspace");
+
+  try {
+    const projects = await fetchManagementJson<ManagementProject[]>("/api/management/projects");
+    return mergeProjectsWithWorkspace(projects).projects;
+  } catch {
+    return mergeProjectsWithWorkspace([]).projects;
+  }
+}
+
+export async function fetchManagementProjectById(projectId: string) {
+  const projects = await fetchManagementProjects();
+  const project = projects.find((item) => item.id === projectId);
+
+  if (!project) {
+    throw new Error("Project not found");
+  }
+
+  return project;
+}
+
 function parseDateValue(value?: string | null): Date | null {
   if (!value) {
     return null;

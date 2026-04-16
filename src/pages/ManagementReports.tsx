@@ -9,10 +9,9 @@ import {
   buildProjectCompliance,
   buildProjectDocuments,
   buildProjectsCsv,
-  fetchManagementJson,
+  fetchManagementProjects,
   formatCurrency,
   getRegistryCoverage,
-  type ManagementProject,
 } from "@/lib/managementData";
 
 function downloadCsv(filename: string, content: string) {
@@ -34,7 +33,7 @@ export default function ManagementReports() {
     isLoading,
   } = useQuery({
     queryKey: ["management-projects"],
-    queryFn: () => fetchManagementJson<ManagementProject[]>("/api/management/projects"),
+    queryFn: fetchManagementProjects,
   });
 
   const complianceRows = useMemo(() => buildProjectCompliance(projects), [projects]);

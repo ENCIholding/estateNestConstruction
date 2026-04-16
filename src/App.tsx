@@ -16,6 +16,7 @@ const ThankYou = lazy(() => import("./pages/ThankYou"));
 const ManagementLogin = lazy(() => import("./pages/ManagementLogin"));
 const ManagementDashboard = lazy(() => import("./pages/ManagementDashboard"));
 const ManagementProjects = lazy(() => import("./pages/ManagementProjects"));
+const ManagementVendors = lazy(() => import("./pages/ManagementVendors"));
 const ManagementProjectDetails = lazy(() => import("./pages/ManagementProjectDetails"));
 const ManagementSchedule = lazy(() => import("./pages/ManagementSchedule"));
 const ManagementBudgetCosts = lazy(() => import("./pages/ManagementBudgetCosts"));
@@ -140,10 +141,7 @@ export default function App() {
               path="/management/vendors"
               element={
                 <RequireManagementAuth>
-                  <ManagementModuleUnavailable
-                    currentPageName="vendors"
-                    title="Vendor Information"
-                  />
+                  <ManagementVendors />
                 </RequireManagementAuth>
               }
             />

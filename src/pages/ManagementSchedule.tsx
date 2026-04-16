@@ -8,9 +8,8 @@ import Input from "@/components/ui/input";
 import {
   buildProjectScheduleEntries,
   buildUndatedMilestones,
-  fetchManagementJson,
+  fetchManagementProjects,
   formatDate,
-  type ManagementProject,
 } from "@/lib/managementData";
 
 const categoryLabels = {
@@ -31,7 +30,7 @@ export default function ManagementSchedule() {
     isLoading,
   } = useQuery({
     queryKey: ["management-projects"],
-    queryFn: () => fetchManagementJson<ManagementProject[]>("/api/management/projects"),
+    queryFn: fetchManagementProjects,
   });
 
   const scheduleEntries = useMemo(

@@ -1,25 +1,30 @@
-import { useQuery } from "@tanstack/react-query";
-import { FileCheck2, Link2, Mail, MapPin } from "lucide-react";
+import { useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  FileCheck2,
+  Link2,
+  Mail,
+  MapPin,
+  Pencil,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import ManagementLayout from "@/components/management/ManagementLayout";
+import ManagementProjectForm from "@/components/projects/ManagementProjectForm";
 import Badge from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-type ManagementProject = {
-  id: string;
-  project_name: string;
-  civic_address: string;
-  status: string;
-  estimated_budget?: number;
-  legal_land_description?: string;
-  project_owner?: string;
-  project_manager?: string;
-  primary_contact_email?: string;
-  building_permit_pdf?: string;
-  development_permit_pdf?: string;
-  real_property_report?: string;
-};
+import {
+  type ManagementProject,
+  fetchManagementJson,
+} from "@/lib/managementData";
+import {
+  deleteProjectFromWorkspace,
+  getProjectWorkspaceBadge,
+  mergeProjectsWithWorkspace,
+  saveProjectToWorkspace,
+} from "@/lib/managementWorkspace";
 
 type ProjectsStatus = {
   projectRegistry: {
@@ -27,20 +32,6 @@ type ProjectsStatus = {
     source: "environment" | "temporary" | "unconfigured";
   };
 };
-
-async function fetchJson<T>(url: string): Promise<T> {
-  const response = await fetch(url, {
-    cache: "no-store",
-    credentials: "include",
-  });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error?.message || `Request failed: ${response.status}`);
-  }
-
-  return response.json();
-}
 
 function formatCurrency(value?: number) {
   if (!value) {
@@ -61,7 +52,7 @@ function getStatusClass(status?: string) {
     return "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300";
   }
 
-  if (normalized === "pre-construction") {
+  if (normalized === "pre-construction" || normalized === "planning") {
     return "bg-amber-500/10 text-amber-700 dark:text-amber-300";
   }
 
@@ -74,44 +65,96 @@ function getStatusClass(status?: string) {
 
 function getRegistryMessage(source: ProjectsStatus["projectRegistry"]["source"]) {
   if (source === "environment") {
-    return "This registry is being served from MANAGEMENT_PROJECTS_JSON. That is stable for deployment previews, but the records are read-only from the dashboard.";
+    return "Deployment records are loaded from MANAGEMENT_PROJECTS_JSON. You can now create browser workspace drafts, overrides, and local removals without changing the deployment dataset.";
   }
 
   if (source === "temporary") {
-    return "These records exist only in temporary server memory and should not be treated as durable production records.";
+    return "Server memory records are available, and browser workspace changes will layer on top inside this device.";
   }
 
-  return "No project registry is configured yet. The projects module stays empty instead of showing demo records.";
+  return "No deployment-backed project registry is configured yet. You can still add browser workspace projects right now so operations can move forward honestly.";
+}
+
+function invalidateProjectQueries(queryClient: ReturnType<typeof useQueryClient>) {
+  return Promise.all([
+    queryClient.invalidateQueries({
+      predicate: (query) =>
+        Array.isArray(query.queryKey) &&
+        typeof query.queryKey[0] === "string" &&
+        query.queryKey[0].startsWith("management"),
+    }),
+  ]);
 }
 
 export default function ManagementProjects() {
+  const queryClient = useQueryClient();
+  const [workspaceRevision, setWorkspaceRevision] = useState(0);
+  const [showForm, setShowForm] = useState(false);
+  const [editingProject, setEditingProject] = useState<ManagementProject | null>(null);
+
   const {
-    data: projects = [],
+    data: serverProjects = [],
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["management-projects"],
-    queryFn: () => fetchJson<ManagementProject[]>("/api/management/projects"),
+    queryKey: ["management-projects-server"],
+    queryFn: async () => {
+      try {
+        return await fetchManagementJson<ManagementProject[]>("/api/management/projects");
+      } catch {
+        return [];
+      }
+    },
   });
 
   const { data: status } = useQuery({
     queryKey: ["management-status"],
-    queryFn: () => fetchJson<ProjectsStatus>("/api/management/status"),
+    queryFn: () => fetchManagementJson<ProjectsStatus>("/api/management/status"),
   });
+
+  const mergedRegistry = useMemo(
+    () => mergeProjectsWithWorkspace(serverProjects),
+    [serverProjects, workspaceRevision]
+  );
+
+  const handleSave = async (project: ManagementProject) => {
+    saveProjectToWorkspace(project);
+    setWorkspaceRevision((value) => value + 1);
+    await invalidateProjectQueries(queryClient);
+  };
+
+  const handleDelete = async (project: ManagementProject) => {
+    deleteProjectFromWorkspace(project.id, mergedRegistry.serverIds.has(project.id));
+    setWorkspaceRevision((value) => value + 1);
+    await invalidateProjectQueries(queryClient);
+  };
 
   return (
     <ManagementLayout currentPageName="projects">
       <div className="space-y-6">
         <div className="dashboard-panel overflow-hidden p-8">
           <div className="absolute inset-y-0 right-0 w-40 bg-gradient-to-l from-enc-yellow/10 via-enc-orange/10 to-transparent" />
-          <div className="relative">
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-enc-orange">
-              Project Registry
-            </p>
-            <h1 className="mt-3 text-3xl font-bold text-foreground">Projects</h1>
-            <p className="mt-4 max-w-3xl text-sm leading-6 text-muted-foreground">
-              Project records are shown only when real data is configured. This page no longer uses sample budgets, addresses, or fake project cards.
-            </p>
+          <div className="relative flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-enc-orange">
+                Project Registry
+              </p>
+              <h1 className="mt-3 text-3xl font-bold text-foreground">Projects</h1>
+              <p className="mt-4 max-w-3xl text-sm leading-6 text-muted-foreground">
+                Deployment records stay honest and read-only, while browser workspace records let you add, update, and remove projects on this device right now.
+              </p>
+            </div>
+
+            <Button
+              className="rounded-full bg-gradient-to-r from-enc-red via-enc-orange to-enc-yellow text-white shadow-glow"
+              onClick={() => {
+                setEditingProject(null);
+                setShowForm(true);
+              }}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Add Record
+            </Button>
           </div>
         </div>
 
@@ -119,10 +162,15 @@ export default function ManagementProjects() {
           <CardHeader>
             <CardTitle className="text-xl text-foreground">Registry status</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-3">
             <p className="text-sm leading-6 text-muted-foreground">
               {getRegistryMessage(status?.projectRegistry.source || "unconfigured")}
             </p>
+            <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+              <Badge className="rounded-full bg-muted text-muted-foreground">Deployment Record</Badge>
+              <Badge className="rounded-full bg-enc-orange/10 text-enc-orange">Workspace Draft</Badge>
+              <Badge className="rounded-full bg-enc-yellow/20 text-foreground">Workspace Override</Badge>
+            </div>
           </CardContent>
         </Card>
 
@@ -135,17 +183,23 @@ export default function ManagementProjects() {
         ) : error ? (
           <Card className="dashboard-panel p-2">
             <CardContent className="p-6 text-sm leading-6 text-muted-foreground">
-              The project registry could not be loaded. Review the management API before relying on this page.
+              Deployment-backed projects could not be loaded, but browser workspace records can still be added on this device.
             </CardContent>
           </Card>
-        ) : projects.length ? (
+        ) : mergedRegistry.projects.length ? (
           <div className="grid gap-4">
-            {projects.map((project) => {
+            {mergedRegistry.projects.map((project) => {
               const diligenceLinks = [
                 project.development_permit_pdf,
                 project.building_permit_pdf,
                 project.real_property_report,
               ].filter(Boolean).length;
+
+              const sourceBadge = getProjectWorkspaceBadge(
+                project.id,
+                mergedRegistry.serverIds,
+                mergedRegistry.upserts
+              );
 
               return (
                 <Card key={project.id} className="dashboard-panel p-2">
@@ -158,6 +212,17 @@ export default function ManagementProjects() {
                           </h2>
                           <Badge className={`rounded-full ${getStatusClass(project.status)}`}>
                             {project.status}
+                          </Badge>
+                          <Badge
+                            className={
+                              sourceBadge === "Deployment Record"
+                                ? "rounded-full bg-muted text-muted-foreground"
+                                : sourceBadge === "Workspace Override"
+                                  ? "rounded-full bg-enc-yellow/20 text-foreground"
+                                  : "rounded-full bg-enc-orange/10 text-enc-orange"
+                            }
+                          >
+                            {sourceBadge}
                           </Badge>
                         </div>
 
@@ -191,23 +256,35 @@ export default function ManagementProjects() {
                             </p>
                           </div>
                         </div>
-
-                        <div className="flex flex-wrap gap-2 text-sm">
-                          <Badge className="rounded-full bg-muted text-muted-foreground">
-                            Legal land: {project.legal_land_description ? "recorded" : "missing"}
-                          </Badge>
-                          <Badge className="rounded-full bg-muted text-muted-foreground">
-                            Permit links: {diligenceLinks ? "attached" : "missing"}
-                          </Badge>
-                        </div>
                       </div>
 
-                      <Button asChild variant="outline" className="rounded-full">
-                        <Link to={`/management/project-details?id=${project.id}`}>
-                          <Link2 className="mr-2 h-4 w-4" />
-                          Open project
-                        </Link>
-                      </Button>
+                      <div className="flex flex-wrap gap-2">
+                        <Button asChild variant="outline" className="rounded-full">
+                          <Link to={`/management/project-details?id=${project.id}`}>
+                            <Link2 className="mr-2 h-4 w-4" />
+                            Open project
+                          </Link>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="rounded-full"
+                          onClick={() => {
+                            setEditingProject(project);
+                            setShowForm(true);
+                          }}
+                        >
+                          <Pencil className="mr-2 h-4 w-4" />
+                          Edit
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="rounded-full text-rose-600 hover:text-rose-700"
+                          onClick={() => void handleDelete(project)}
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Remove
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -217,14 +294,28 @@ export default function ManagementProjects() {
         ) : (
           <Card className="dashboard-panel p-2">
             <CardContent className="space-y-4 p-6">
-              <p className="text-base font-semibold text-foreground">No live project records are available</p>
+              <p className="text-base font-semibold text-foreground">No project records are available yet</p>
               <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-                To make this module operational, connect a reviewed project registry through a durable backend or deploy a verified MANAGEMENT_PROJECTS_JSON data set. Until then, the page stays empty rather than presenting fake pipeline data.
+                Use the Add Record button to start your browser workspace registry now. Those records are honest device-local drafts until a durable backend is connected.
               </p>
             </CardContent>
           </Card>
         )}
       </div>
+
+      <ManagementProjectForm
+        open={showForm}
+        project={editingProject}
+        onClose={() => {
+          setShowForm(false);
+          setEditingProject(null);
+        }}
+        onSaved={() => {
+          setShowForm(false);
+          setEditingProject(null);
+        }}
+        onSubmitRecord={handleSave}
+      />
     </ManagementLayout>
   );
 }

@@ -7,8 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Input from "@/components/ui/input";
 import {
   buildProjectDocuments,
-  fetchManagementJson,
-  type ManagementProject,
+  fetchManagementProjects,
 } from "@/lib/managementData";
 
 export default function ManagementDocuments() {
@@ -21,7 +20,7 @@ export default function ManagementDocuments() {
     isLoading,
   } = useQuery({
     queryKey: ["management-projects"],
-    queryFn: () => fetchManagementJson<ManagementProject[]>("/api/management/projects"),
+    queryFn: fetchManagementProjects,
   });
 
   const documents = useMemo(() => buildProjectDocuments(projects), [projects]);

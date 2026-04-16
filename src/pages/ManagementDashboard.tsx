@@ -16,21 +16,12 @@ import StatsCard from "@/components/dashboard/StatsCard";
 import Badge from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  fetchManagementJson,
+  fetchManagementProjects,
+  type ManagementProject,
+} from "@/lib/managementData";
 import { managementModules } from "@/lib/management";
-
-type ManagementProject = {
-  id: string;
-  project_name: string;
-  civic_address: string;
-  status: string;
-  estimated_budget?: number;
-  estimated_end_date?: string;
-  legal_land_description?: string;
-  building_permit_pdf?: string;
-  development_permit_pdf?: string;
-  primary_contact_email?: string;
-  project_manager?: string;
-};
 
 type DashboardStatus = {
   authConfigured: boolean;
@@ -47,20 +38,6 @@ type ActionItem = {
   severity: "critical" | "warning" | "info";
   title: string;
 };
-
-async function fetchJson<T>(url: string): Promise<T> {
-  const response = await fetch(url, {
-    cache: "no-store",
-    credentials: "include",
-  });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error?.message || `Request failed: ${response.status}`);
-  }
-
-  return response.json();
-}
 
 function formatCurrency(value?: number) {
   if (!value) {
@@ -131,7 +108,7 @@ export default function ManagementDashboard() {
     error: projectsError,
   } = useQuery({
     queryKey: ["management-projects"],
-    queryFn: () => fetchJson<ManagementProject[]>("/api/management/projects"),
+    queryFn: fetchManagementProjects,
   });
 
   const {
@@ -140,7 +117,7 @@ export default function ManagementDashboard() {
     error: statusError,
   } = useQuery({
     queryKey: ["management-status"],
-    queryFn: () => fetchJson<DashboardStatus>("/api/management/status"),
+    queryFn: () => fetchManagementJson<DashboardStatus>("/api/management/status"),
   });
 
   const activeProjects = useMemo(
@@ -165,12 +142,12 @@ export default function ManagementDashboard() {
     }
 
     if (!projects.length) {
-      actions.push({
-        severity: "warning",
-        title: "No live project registry is connected",
-        detail:
-          "The projects module is ready to display real records, but there are currently no verified project records loaded.",
-      });
+          actions.push({
+            severity: "warning",
+            title: "No project records are loaded yet",
+            detail:
+              "Use Projects to add a deployment-backed record or a browser workspace draft so the operational views stop staying empty.",
+          });
     }
 
     projects.forEach((project) => {
@@ -224,9 +201,9 @@ export default function ManagementDashboard() {
     if (disabledModules.length) {
       actions.push({
         severity: "info",
-        title: "Task, invoice, vendor, and compliance modules remain offline",
+        title: "Advanced workflow modules remain offline",
         detail:
-          "Those workflows stay hidden until their server-backed data and validation paths are ready for production use.",
+          "Only workflows with real storage and validation stay live. The remaining modules still need their own backend paths before they can be trusted.",
       });
     }
 
@@ -283,17 +260,16 @@ export default function ManagementDashboard() {
               Operational Dashboard
             </h1>
             <div className="mt-4 h-1 w-24 rounded-full bg-gradient-hero" />
-            <p className="mt-4 max-w-3xl text-muted-foreground">
-              This dashboard now reports only live readiness, connected project records, and explicitly offline modules.
-              Decorative demo stats have been removed.
-            </p>
-          </div>
+              <p className="mt-4 max-w-3xl text-muted-foreground">
+              This dashboard now reports only live readiness, connected project records, browser workspace drafts, and explicitly offline modules. Decorative demo stats have been removed.
+              </p>
+            </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <StatsCard
             title="Project Registry"
-            value={status.projectRegistry.projectCount}
+            value={projects.length}
             subtitle={getRegistryLabel(status.projectRegistry.source)}
             icon={FolderKanban}
           />
@@ -391,10 +367,10 @@ export default function ManagementDashboard() {
                 <p className="text-sm font-semibold text-foreground">Project source</p>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
                   {status.projectRegistry.source === "environment"
-                    ? "Projects are being served from MANAGEMENT_PROJECTS_JSON. This is stable for previews and production, but currently read-only."
+                    ? "Projects are being served from MANAGEMENT_PROJECTS_JSON. This is stable for previews and production, and browser workspace edits can now layer on top for this device."
                     : status.projectRegistry.source === "temporary"
-                      ? "Projects currently exist only in temporary server memory. That is useful for short-lived testing, not for production recordkeeping."
-                      : "No structured project registry is configured yet. The dashboard will stay honest and empty until records are connected."}
+                      ? "Projects currently exist only in temporary server memory, and browser workspace edits can layer on top. That is useful for short-lived testing, not for production recordkeeping."
+                      : "No structured project registry is configured yet. The dashboard will stay honest until records are added in the browser workspace or connected through a durable source."}
                 </p>
               </div>
 
@@ -408,6 +384,9 @@ export default function ManagementDashboard() {
               <Button asChild className="w-full rounded-full bg-gradient-to-r from-enc-red via-enc-orange to-enc-yellow text-white shadow-glow">
                 <Link to="/management/projects">Review Project Registry</Link>
               </Button>
+              <Button asChild variant="outline" className="w-full rounded-full">
+                <Link to="/management/vendors">Open Vendor Registry</Link>
+              </Button>
             </CardContent>
           </Card>
         </div>
@@ -417,7 +396,7 @@ export default function ManagementDashboard() {
             <div>
               <CardTitle className="text-2xl text-foreground">Project Registry</CardTitle>
               <p className="mt-2 text-sm text-muted-foreground">
-                Only configured project records are shown. When no real records exist, the dashboard stays empty on purpose.
+                Only configured project records and browser workspace drafts are shown. When no real records exist, the dashboard stays empty on purpose.
               </p>
             </div>
             <Badge className="rounded-full bg-muted text-muted-foreground">

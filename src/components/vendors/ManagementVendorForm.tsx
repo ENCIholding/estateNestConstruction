@@ -27,12 +27,14 @@ export type ManagementVendor = {
   vendor_rating?: string;
   work_again?: boolean;
   internal_notes?: string;
+  status?: string;
 };
 
 type ManagementVendorFormProps = {
   open: boolean;
   onClose: () => void;
   onSaved: () => void;
+  onSubmitRecord?: (vendor: ManagementVendor) => Promise<void>;
   vendor?: ManagementVendor | null;
 };
 
@@ -103,6 +105,7 @@ export default function ManagementVendorForm({
   open,
   onClose,
   onSaved,
+  onSubmitRecord,
   vendor,
 }: ManagementVendorFormProps) {
   const isEdit = useMemo(() => Boolean(vendor?.id), [vendor?.id]);
@@ -121,6 +124,7 @@ export default function ManagementVendorForm({
     vendor_rating: "",
     work_again: true,
     internal_notes: "",
+    status: "Active",
   });
 
   const [saving, setSaving] = useState(false);
@@ -144,6 +148,7 @@ export default function ManagementVendorForm({
         vendor_rating: vendor?.vendor_rating || "",
         work_again: vendor?.work_again ?? true,
         internal_notes: vendor?.internal_notes || "",
+        status: vendor?.status || "Active",
       });
       setError("");
       setSaving(false);
@@ -183,9 +188,15 @@ export default function ManagementVendorForm({
         vendor_rating: form.vendor_rating || null,
         work_again: Boolean(form.work_again),
         internal_notes: form.internal_notes?.trim() || null,
+        status: form.status || "Active",
       };
 
-      if (isEdit && vendor?.id) {
+      if (onSubmitRecord) {
+        await onSubmitRecord({
+          ...payload,
+          id: vendor?.id,
+        });
+      } else if (isEdit && vendor?.id) {
         await fetchJson(`/api/management/vendors/${vendor.id}`, {
           method: "PUT",
           body: JSON.stringify(payload),
@@ -319,6 +330,20 @@ export default function ManagementVendorForm({
                 setField("insurance_expiry_date", e.target.value)
               }
             />
+          </div>
+
+          <div>
+            <Label>Status</Label>
+            <select
+              value={form.status}
+              onChange={(e) => setField("status", e.target.value)}
+              className="w-full px-3 py-2 border border-slate-300 rounded-md"
+            >
+              <option value="Active">Active</option>
+              <option value="Preferred">Preferred</option>
+              <option value="Watchlist">Watchlist</option>
+              <option value="Inactive">Inactive</option>
+            </select>
           </div>
 
           <div>
