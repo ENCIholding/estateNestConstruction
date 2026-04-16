@@ -3,7 +3,7 @@ import heroImage from "@/assets/hero-building.jpg";
 
 export default function HeroSection() {
   return (
-    <section id="home" className="relative min-h-screen overflow-hidden">
+    <section id="home" className="relative min-h-screen scroll-mt-28 overflow-hidden">
       <div className="absolute inset-0">
         <img
           src={heroImage}

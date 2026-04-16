@@ -1,9 +1,20 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, CalendarClock, ClipboardList, FileText, ShieldCheck, Users } from "lucide-react";
+import {
+  ArrowRight,
+  CalendarClock,
+  ClipboardList,
+  FileText,
+  Globe,
+  Mail,
+  Phone,
+  ShieldCheck,
+  Users,
+} from "lucide-react";
 import builderExcellenceImage from "@/assets/builder-excellence.jpg";
 import BuilderCredentials from "@/components/BuilderCredentials";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
+import PublicPageBackLink from "@/components/PublicPageBackLink";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -62,6 +73,8 @@ export default function BuilderProfile() {
         <section className="pb-12 pt-8">
           <div className="container mx-auto px-6">
             <div className="mx-auto max-w-6xl">
+              <PublicPageBackLink />
+
               <div className="relative overflow-hidden rounded-[2rem] shadow-2xl">
                 <div className="aspect-[21/9] w-full">
                   <img
@@ -176,6 +189,55 @@ export default function BuilderProfile() {
               </section>
 
               <BuilderCredentials />
+
+              <section className="mt-16">
+                <Card className="card-hover overflow-hidden border-0 shadow-2xl">
+                  <CardContent className="p-8 md:p-12">
+                    <div className="text-center">
+                      <h2 className="text-3xl font-bold md:text-4xl">
+                        <span className="gradient-text">Ready to Build</span>
+                        <span className="text-enc-text-primary"> Edmonton&apos;s Future</span>
+                      </h2>
+                      <p className="mx-auto mt-5 max-w-3xl text-lg leading-8 text-enc-text-secondary">
+                        If you want to review Estate Nest Capital&apos;s builder approach, discuss diligence expectations, or start a project conversation, use the contact paths below.
+                      </p>
+                    </div>
+
+                    <div className="mt-10 grid gap-4 md:grid-cols-3">
+                      <div className="card-hover rounded-[1.5rem] border border-border bg-card p-6 text-center shadow-lg">
+                        <Mail className="mx-auto h-6 w-6 text-enc-orange" />
+                        <p className="mt-4 text-base font-semibold text-enc-text-primary">
+                          hello@estatenest.capital
+                        </p>
+                      </div>
+                      <div className="card-hover rounded-[1.5rem] border border-border bg-card p-6 text-center shadow-lg">
+                        <Phone className="mx-auto h-6 w-6 text-enc-orange" />
+                        <p className="mt-4 text-base font-semibold text-enc-text-primary">
+                          (780) 860-3191
+                        </p>
+                      </div>
+                      <div className="card-hover rounded-[1.5rem] border border-border bg-card p-6 text-center shadow-lg">
+                        <Globe className="mx-auto h-6 w-6 text-enc-orange" />
+                        <p className="mt-4 text-base font-semibold text-enc-text-primary">
+                          www.estatenest.capital
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
+                      <Button asChild size="lg" className="bg-gradient-warm text-white hover:shadow-glow">
+                        <Link to="/#appointment">
+                          Schedule consultation
+                          <ArrowRight className="ml-2 h-4 w-4" />
+                        </Link>
+                      </Button>
+                      <Button asChild size="lg" variant="outline">
+                        <Link to="/#projects">Review capabilities</Link>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </section>
             </div>
           </div>
         </section>

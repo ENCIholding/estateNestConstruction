@@ -4,6 +4,7 @@ import { CheckCircle, FileText, Handshake, Shield, Users } from "lucide-react";
 import investorCollaborationImage from "@/assets/investor-collaboration.jpg";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
+import PublicPageBackLink from "@/components/PublicPageBackLink";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -47,6 +48,9 @@ export default function InvestorRelations() {
         <section className="bg-gradient-to-br from-enc-orange/10 via-enc-yellow/10 to-background py-20">
           <div className="container mx-auto px-6">
             <div className="mx-auto max-w-4xl text-center">
+              <div className="text-left">
+                <PublicPageBackLink />
+              </div>
               <h1 className="text-5xl font-bold md:text-6xl">
                 <span className="gradient-text">Investor</span>
                 <span className="text-enc-text-primary"> relations</span>

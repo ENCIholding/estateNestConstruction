@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { AccessibilityProvider } from "./components/accessibility/AccessibilityProvider";
 import RequireManagementAuth from "./components/management/RequireManagementAuth";
+import ScrollToTop from "./components/ScrollToTop";
 import { Toaster } from "./components/ui/toaster";
 import { Toaster as SonnerToaster } from "./components/ui/sonner";
 
@@ -43,6 +44,7 @@ export default function App() {
     <BrowserRouter>
       <AccessibilityProvider>
         <SpeedInsights />
+        <ScrollToTop />
         <Suspense fallback={<RouteFallback />}>
           <Routes>
             <Route path="/" element={<Index />} />

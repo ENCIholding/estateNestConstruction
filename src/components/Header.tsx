@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Menu } from "lucide-react";
 import { useState } from "react";
 import BrandLockup from "@/components/BrandLockup";
@@ -10,26 +10,17 @@ import {
 } from "@/components/ui/sheet";
 
 const Header = () => {
-  const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
 
   const navigationItems = [
-    { label: "Home", path: "/#home" },
+    { label: "Home", path: "/" },
+    { label: "Projects", path: "/#projects" },
     { label: "Builder Profile", path: "/builder-profile" },
     { label: "Investor Relations", path: "/investor-relations" },
     { label: "About Us", path: "/#about" },
     { label: "Contact", path: "/#appointment", isContact: true },
     { label: "Management", path: "/management/login" },
   ];
-
-  const scrollToSection = (hash: string) => {
-    if (hash) {
-      const element = document.querySelector(hash);
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth" });
-      }
-    }
-  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-enc-text-primary">
@@ -49,37 +40,18 @@ const Header = () => {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8" aria-label="Primary">
             {navigationItems.map((item) => {
-              if (
-                item.path === "/builder-profile" ||
-                item.path === "/investor-relations" ||
-                item.path === "/management/login"
-              ) {
-                return (
-                  <Link to={item.path} key={item.label}>
-                    <Button variant="ghost" className="text-white hover:text-enc-orange-light hover:bg-transparent text-sm font-medium tracking-wide">
-                      {item.label}
-                    </Button>
-                  </Link>
-                );
-              } else if (item.path.startsWith("/#")) {
-                return (
-                  <Button
-                    key={item.label}
-                    variant="ghost"
-                    onClick={() => {
-                      if (location.pathname !== "/") {
-                        window.location.href = item.path;
-                      } else {
-                        scrollToSection(item.path.substring(1));
-                      }
-                    }}
-                    className="text-white hover:text-enc-orange-light hover:bg-transparent text-sm font-medium tracking-wide"
-                  >
-                    {item.label}
-                  </Button>
-                );
-              }
-              return null;
+              return (
+                <Button
+                  key={item.label}
+                  variant="ghost"
+                  asChild
+                  className={`text-sm font-medium tracking-wide text-white hover:bg-transparent hover:text-enc-orange-light ${
+                    item.isContact ? "rounded-full border border-white/15 px-5 hover:border-enc-orange-light/40" : ""
+                  }`}
+                >
+                  <Link to={item.path}>{item.label}</Link>
+                </Button>
+              );
             })}
           </nav>
 
@@ -102,38 +74,18 @@ const Header = () => {
                 </div>
                 <nav className="flex flex-col gap-4 mt-8">
                   {navigationItems.map((item) => {
-                    if (
-                      item.path === "/builder-profile" ||
-                      item.path === "/investor-relations" ||
-                      item.path === "/management/login"
-                    ) {
-                      return (
-                        <Link key={item.label} to={item.path} onClick={() => setIsOpen(false)}>
-                          <Button variant="ghost" className="w-full justify-start text-white hover:text-enc-orange-light hover:bg-white/10 text-base font-medium">
-                            {item.label}
-                          </Button>
-                        </Link>
-                      );
-                    } else if (item.path.startsWith("/#")) {
-                      return (
-                        <Button
-                          key={item.label}
-                          variant="ghost"
-                          onClick={() => {
-                            setIsOpen(false);
-                            if (location.pathname !== "/") {
-                              window.location.href = item.path;
-                            } else {
-                              scrollToSection(item.path.substring(1));
-                            }
-                          }}
-                          className="w-full justify-start text-white hover:text-enc-orange-light hover:bg-white/10 text-base font-medium"
-                        >
+                    return (
+                      <Button
+                        key={item.label}
+                        variant="ghost"
+                        asChild
+                        className="w-full justify-start text-base font-medium text-white hover:bg-white/10 hover:text-enc-orange-light"
+                      >
+                        <Link to={item.path} onClick={() => setIsOpen(false)}>
                           {item.label}
-                        </Button>
-                      );
-                    }
-                    return null;
+                        </Link>
+                      </Button>
+                    );
                   })}
                 </nav>
               </SheetContent>

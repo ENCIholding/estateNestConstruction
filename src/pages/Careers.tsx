@@ -1,11 +1,22 @@
 import { useState } from "react";
-import { Building2, Clock, DollarSign, MapPin } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  Building2,
+  Clock,
+  DollarSign,
+  FileUp,
+  MapPin,
+  Phone,
+  ShieldCheck,
+} from "lucide-react";
 import careersTeamImage from "@/assets/careers-team.jpg";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
+import PublicPageBackLink from "@/components/PublicPageBackLink";
 import Badge from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "@/hooks/use-toast";
 
 const talentAreas = [
   {
@@ -38,8 +49,60 @@ const talentAreas = [
   },
 ];
 
+const supportedFileTypes =
+  ".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
 export default function Careers() {
+  const navigate = useNavigate();
   const [selectedRole, setSelectedRole] = useState("General interest");
+  const [humanCheck, setHumanCheck] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (humanCheck.trim().toLowerCase() !== "yes") {
+      toast({
+        title: "Human verification required",
+        description: 'Type "YES" in the verification field before submitting.',
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch("https://formspree.io/f/xojpnvbz", {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to submit application.");
+      }
+
+      form.reset();
+      setSelectedRole("General interest");
+      setHumanCheck("");
+      navigate("/thank-you");
+    } catch {
+      toast({
+        title: "Application not sent",
+        description:
+          "Something went wrong while submitting your application. Please try again or call the team directly.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -48,6 +111,8 @@ export default function Careers() {
       <main id="main-content" className="pt-28">
         <div className="container mx-auto px-6 py-12">
           <div className="mx-auto max-w-6xl">
+            <PublicPageBackLink />
+
             <div className="relative mb-16 overflow-hidden rounded-[2rem] shadow-2xl">
               <div className="aspect-[21/9] w-full">
                 <img
@@ -65,7 +130,7 @@ export default function Careers() {
                   Join the Estate Nest talent network
                 </h1>
                 <p className="mt-4 max-w-3xl text-lg leading-8 text-white/85">
-                  This page no longer presents unverified "current openings." Instead, it offers a cleaner way to register interest in the roles Estate Nest Capital expects to need as operations grow.
+                  This page no longer presents unverified &quot;current openings.&quot; Instead, it offers a direct way to submit interest, resume files, and background details for the roles Estate Nest Capital expects to need as operations grow.
                 </p>
               </div>
             </div>
@@ -158,21 +223,20 @@ export default function Careers() {
               ))}
             </div>
 
-            <section id="apply" className="mt-20">
+            <section id="apply" className="mt-20 scroll-mt-32 md:scroll-mt-36">
               <Card className="card-hover border-0 shadow-xl">
                 <CardHeader className="text-center">
                   <CardTitle className="text-3xl text-enc-text-primary">
-                    Introduce yourself
+                    Apply directly
                   </CardTitle>
                   <p className="mx-auto max-w-2xl text-enc-text-secondary">
-                    Use this form to register interest. Estate Nest Capital reviews submissions and reaches out when there is a genuine fit.
+                    Use this form to register interest, upload your resume, and share the kind of role you want to be considered for.
                   </p>
                 </CardHeader>
 
                 <CardContent>
                   <form
-                    action="https://formspree.io/f/xojpnvbz"
-                    method="POST"
+                    onSubmit={handleSubmit}
                     encType="multipart/form-data"
                     className="mx-auto max-w-3xl space-y-6"
                   >
@@ -181,12 +245,15 @@ export default function Careers() {
                       name="_subject"
                       value="New Career Interest Submission - Estate Nest Capital"
                     />
-                    <input
-                      type="hidden"
-                      name="_next"
-                      value="https://www.estatenest.capital/thank-you"
-                    />
                     <input type="hidden" name="form-type" value="careers" />
+                    <input
+                      type="text"
+                      name="_gotcha"
+                      tabIndex={-1}
+                      autoComplete="off"
+                      className="sr-only"
+                      aria-hidden="true"
+                    />
 
                     <div className="grid gap-4 md:grid-cols-2">
                       <input
@@ -232,29 +299,145 @@ export default function Careers() {
 
                     <textarea
                       name="message"
-                      placeholder="Tell us about your background, project experience, and the kind of work you are looking for..."
+                      placeholder="Tell us about your background, project experience, software tools, certifications, and the kind of work you are looking for..."
                       rows={5}
                       className="w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-enc-orange"
                     />
 
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="rounded-[1.5rem] border border-border bg-muted/40 p-5">
+                        <label className="text-sm font-semibold text-enc-text-primary">
+                          Resume upload
+                        </label>
+                        <input
+                          name="resume_file"
+                          type="file"
+                          accept={supportedFileTypes}
+                          className="mt-3 block w-full text-sm text-enc-text-secondary file:mr-4 file:rounded-full file:border-0 file:bg-gradient-warm file:px-4 file:py-2 file:font-semibold file:text-white hover:file:shadow-glow"
+                        />
+                        <p className="mt-3 text-xs leading-6 text-enc-text-secondary">
+                          Upload PDF or Word format if you want your resume included with the application.
+                        </p>
+                      </div>
+
+                      <div className="rounded-[1.5rem] border border-border bg-muted/40 p-5">
+                        <label className="text-sm font-semibold text-enc-text-primary">
+                          Portfolio or work sample
+                        </label>
+                        <input
+                          name="portfolio_file"
+                          type="file"
+                          accept={supportedFileTypes}
+                          className="mt-3 block w-full text-sm text-enc-text-secondary file:mr-4 file:rounded-full file:border-0 file:bg-gradient-warm file:px-4 file:py-2 file:font-semibold file:text-white hover:file:shadow-glow"
+                        />
+                        <p className="mt-3 text-xs leading-6 text-enc-text-secondary">
+                          Optional for roles where project examples, estimates, or writing samples help give context.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="rounded-[1.5rem] border border-border bg-muted/40 p-5">
+                      <div className="flex items-center gap-3">
+                        <ShieldCheck className="h-5 w-5 text-enc-orange" />
+                        <p className="text-sm font-semibold text-enc-text-primary">
+                          Human verification
+                        </p>
+                      </div>
+                      <p className="mt-3 text-sm leading-7 text-enc-text-secondary">
+                        Type <strong>YES</strong> below to help reduce spam submissions.
+                      </p>
+                      <input
+                        name="human-check"
+                        type="text"
+                        value={humanCheck}
+                        onChange={(event) => setHumanCheck(event.target.value)}
+                        placeholder='Type "YES"'
+                        required
+                        className="mt-4 w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-enc-orange"
+                      />
+                    </div>
+
                     <div className="rounded-2xl border border-border bg-muted/40 p-4 text-sm leading-7 text-enc-text-secondary">
-                      If you want to include a resume or portfolio, please email it separately to{" "}
-                      <a
-                        href="mailto:hello@estatenest.capital?subject=Career Interest Submission"
-                        className="font-medium text-enc-orange"
-                      >
-                        hello@estatenest.capital
-                      </a>
-                      .
+                      <div className="flex items-center gap-3">
+                        <FileUp className="h-4 w-4 text-enc-orange" />
+                        <p className="font-medium text-enc-text-primary">
+                          Direct application path enabled
+                        </p>
+                      </div>
+                      <p className="mt-3">
+                        You can now submit resume or portfolio files directly through this page instead of sending them separately by email.
+                      </p>
                     </div>
 
                     <Button
                       type="submit"
-                      className="w-full bg-gradient-warm py-6 text-base font-semibold text-white hover:shadow-glow"
+                      disabled={isSubmitting}
+                      className="w-full bg-gradient-warm py-6 text-base font-semibold text-white hover:shadow-glow disabled:opacity-70"
                     >
-                      Submit career interest
+                      {isSubmitting ? "Submitting application..." : "Submit application"}
                     </Button>
                   </form>
+                </CardContent>
+              </Card>
+            </section>
+
+            <section className="mt-12 grid gap-6 lg:grid-cols-2">
+              <Card className="card-hover border-0 shadow-xl">
+                <CardHeader className="text-center">
+                  <CardTitle className="text-3xl text-enc-text-primary">
+                    Need help before applying?
+                  </CardTitle>
+                  <p className="mx-auto max-w-2xl text-enc-text-secondary">
+                    If you have questions about a role or prefer another way to connect before applying, use any of these options.
+                  </p>
+                </CardHeader>
+                <CardContent className="space-y-6 text-center">
+                  <div className="flex flex-col justify-center gap-4 sm:flex-row">
+                    <Button asChild className="bg-gradient-warm text-white hover:shadow-glow">
+                      <a href="mailto:hello@estatenest.capital?subject=Careers Inquiry">
+                        Email careers team
+                      </a>
+                    </Button>
+                    <Button asChild variant="outline">
+                      <Link to="/#appointment">Schedule consultation</Link>
+                    </Button>
+                  </div>
+                  <div className="rounded-[1.5rem] border border-border bg-muted/40 p-5 text-left">
+                    <div className="flex items-start gap-3">
+                      <Phone className="mt-1 h-5 w-5 text-enc-orange" />
+                      <div>
+                        <p className="font-semibold text-enc-text-primary">Call the team</p>
+                        <a
+                          href="tel:780-860-3191"
+                          className="mt-2 inline-block text-enc-text-secondary hover:text-enc-orange"
+                        >
+                          780-860-3191
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="card-hover border-0 shadow-xl">
+                <CardHeader className="text-center">
+                  <CardTitle className="text-3xl text-enc-text-primary">
+                    Equal opportunity
+                  </CardTitle>
+                  <p className="mx-auto max-w-2xl text-enc-text-secondary">
+                    Estate Nest Capital Inc. is committed to fair consideration and inclusive hiring as the team grows.
+                  </p>
+                </CardHeader>
+                <CardContent className="space-y-4 text-sm leading-7 text-enc-text-secondary">
+                  <p>
+                    We welcome applicants from diverse backgrounds and aim to review submissions based on relevant experience, role fit, and operational need.
+                  </p>
+                  <p>
+                    If you need an accommodation or an alternate application path, contact the team by phone, email, or the consultation form and note that you need application support.
+                  </p>
+                  <p className="font-medium text-enc-text-primary">
+                    Accessibility and application support requests will be handled as part of the hiring process.
+                  </p>
                 </CardContent>
               </Card>
             </section>

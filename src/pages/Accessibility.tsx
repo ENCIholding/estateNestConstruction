@@ -1,5 +1,6 @@
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
+import PublicPageBackLink from "@/components/PublicPageBackLink";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const features = [
@@ -34,6 +35,9 @@ export default function Accessibility() {
         <div className="container mx-auto px-6 py-16">
           <div className="mx-auto max-w-4xl">
             <div className="mb-16 text-center">
+              <div className="text-left">
+                <PublicPageBackLink />
+              </div>
               <h1 className="text-4xl font-bold md:text-5xl">
                 <span className="gradient-text">Accessibility</span>
               </h1>

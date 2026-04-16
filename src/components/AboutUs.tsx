@@ -30,7 +30,7 @@ const pillars = [
 
 export default function AboutUs() {
   return (
-    <section id="about" className="bg-background py-20">
+    <section id="about" className="scroll-mt-32 bg-background py-20 md:scroll-mt-36">
       <div className="container mx-auto px-6">
         <div className="mb-14 text-center">
           <h2 className="text-4xl font-bold md:text-5xl">

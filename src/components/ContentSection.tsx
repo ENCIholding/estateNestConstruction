@@ -126,12 +126,12 @@ export default function ContentSection() {
         </div>
       </section>
 
-      <section id="projects" className="bg-background py-24">
+      <section id="projects" className="scroll-mt-32 bg-background py-24 md:scroll-mt-36">
         <div className="container mx-auto px-6">
           <div className="mb-16 text-center">
             <h2 className="text-4xl font-bold md:text-5xl">
               <span className="gradient-text">Capabilities</span>
-              <span className="text-enc-text-primary"> & concept references</span>
+              <span className="text-enc-text-primary"> & Concept References</span>
             </h2>
             <p className="mx-auto mt-6 max-w-3xl text-xl leading-8 text-enc-text-secondary">
               These visuals are representative references used to discuss fit, scope, and delivery approach. They are not presented as completed proof-of-work unless separately identified in diligence materials.
@@ -142,7 +142,7 @@ export default function ContentSection() {
             {capabilities.map((capability) => (
               <Card
                 key={capability.title}
-                className="card-hover overflow-hidden border-border bg-background"
+                className="group card-hover overflow-hidden border-border bg-background"
               >
                 <div className="aspect-video overflow-hidden">
                   <img

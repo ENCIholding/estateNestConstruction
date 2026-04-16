@@ -109,7 +109,7 @@ export default function AppointmentSection() {
   };
 
   return (
-    <section id="appointment" className="bg-muted/30 py-20">
+    <section id="appointment" className="scroll-mt-32 bg-muted/30 py-20 md:scroll-mt-36">
       <div className="container mx-auto px-6">
         <div className="mb-16 text-center">
           <h2 className="text-4xl font-bold md:text-5xl">

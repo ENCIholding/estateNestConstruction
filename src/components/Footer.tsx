@@ -3,7 +3,6 @@ import { Globe, Mail, MapPin, Phone } from "lucide-react";
 import BrandLockup from "@/components/BrandLockup";
 
 type FooterLink = {
-  isContact?: boolean;
   label: string;
   path: string;
 };
@@ -26,8 +25,8 @@ const footerSections: FooterSection[] = [
     title: "Capabilities",
     links: [
       { label: "About Estate Nest", path: "/#about" },
-      { label: "Project Types", path: "/#projects" },
-      { label: "Book a Consultation", path: "/#appointment", isContact: true },
+      { label: "Capabilities & Concept References", path: "/#projects" },
+      { label: "Book a Consultation", path: "/#appointment" },
     ],
   },
   {
@@ -41,39 +40,6 @@ const footerSections: FooterSection[] = [
 ];
 
 function FooterLinkItem({ link }: { link: FooterLink }) {
-  if (link.isContact) {
-    return (
-      <a
-        href={link.path}
-        className="text-sm text-white/75 transition-colors hover:text-enc-orange-light"
-        onClick={(event) => {
-          event.preventDefault();
-          const appointmentSection = document.getElementById("appointment");
-
-          if (appointmentSection) {
-            appointmentSection.scrollIntoView({ behavior: "smooth" });
-            return;
-          }
-
-          window.location.href = link.path;
-        }}
-      >
-        {link.label}
-      </a>
-    );
-  }
-
-  if (link.path.startsWith("/#")) {
-    return (
-      <a
-        href={link.path}
-        className="text-sm text-white/75 transition-colors hover:text-enc-orange-light"
-      >
-        {link.label}
-      </a>
-    );
-  }
-
   return (
     <Link
       to={link.path}

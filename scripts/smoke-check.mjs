@@ -11,6 +11,8 @@ const robots = read("public/robots.txt");
 const sitemap = read("public/sitemap.xml");
 const app = read("src/App.tsx");
 const management = read("src/lib/management.ts");
+const header = read("src/components/Header.tsx");
+const careers = read("src/pages/Careers.tsx");
 
 const expectations = [
   {
@@ -78,6 +80,10 @@ const expectations = [
     ok: app.includes('path="/management/warranty-reminder"'),
   },
   {
+    name: "scroll-to-top component mounted in app",
+    ok: app.includes("<ScrollToTop />"),
+  },
+  {
     name: "schedule is enabled in management navigation",
     ok: management.includes('{ name: "Schedule", page: "schedule", enabled: true }'),
   },
@@ -104,6 +110,18 @@ const expectations = [
   {
     name: "warranty reminder is enabled in management navigation",
     ok: management.includes('{ name: "Warranty Reminder", page: "warranty-reminder", enabled: true }'),
+  },
+  {
+    name: "projects navigation exists in public header",
+    ok: header.includes('{ label: "Projects", path: "/#projects" }'),
+  },
+  {
+    name: "careers form supports resume upload",
+    ok: careers.includes('name="resume_file"'),
+  },
+  {
+    name: "careers form includes human verification",
+    ok: careers.includes('name="human-check"'),
   },
 ];
 
