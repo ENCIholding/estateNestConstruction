@@ -43,35 +43,44 @@ export function createSessionToken(username: string): string {
   return `${encoded}.${sign(payload)}`;
 }
 
+export function readSessionToken(
+  token?: string | null
+): { expiresAt: number; username: string } | null {
+  try {
+    if (!token) return null;
+
+    const parts = token.split(".");
+    if (parts.length !== 2) return null;
+
+    const [encodedPayload, signature] = parts;
+    const payload = Buffer.from(encodedPayload, "base64url").toString("utf8");
+    const expectedSignature = sign(payload);
+
+    if (signature !== expectedSignature) return null;
+
+    const parsed = JSON.parse(payload) as {
+      exp: number;
+      u: string;
+    };
+
+    if (!parsed.exp || parsed.exp < Date.now() || !parsed.u) {
+      return null;
+    }
+
+    return {
+      expiresAt: parsed.exp,
+      username: parsed.u,
+    };
+  } catch {
+    return null;
+  }
+}
+
 /**
  * VERIFY TOKEN
  */
 export function verifySessionToken(token?: string | null): boolean {
-  try {
-    if (!token) return false;
-
-    const parts = token.split(".");
-    if (parts.length !== 2) return false;
-
-    const [encodedPayload, signature] = parts;
-
-    const payload = Buffer.from(encodedPayload, "base64url").toString("utf8");
-
-    const expectedSignature = sign(payload);
-
-    if (signature !== expectedSignature) return false;
-
-    const parsed = JSON.parse(payload) as {
-      u: string;
-      exp: number;
-    };
-
-    if (!parsed.exp || parsed.exp < Date.now()) return false;
-
-    return true;
-  } catch {
-    return false;
-  }
+  return Boolean(readSessionToken(token));
 }
 
 /**

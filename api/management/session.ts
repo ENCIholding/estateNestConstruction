@@ -1,7 +1,7 @@
 import {
   getCookie,
   getSessionCookieName,
-  verifySessionToken,
+  readSessionToken,
 } from "../_lib/auth";
 
 export default function handler(req: any, res: any) {
@@ -15,7 +15,9 @@ export default function handler(req: any, res: any) {
   try {
     const token = getCookie(req, getSessionCookieName());
 
-    if (!verifySessionToken(token)) {
+    const session = readSessionToken(token);
+
+    if (!session) {
       return res.status(401).json({
         authenticated: false,
         user: null,
@@ -25,7 +27,7 @@ export default function handler(req: any, res: any) {
     return res.status(200).json({
       authenticated: true,
       user: {
-        username: process.env.MANAGEMENT_USERNAME || "ENCIKD",
+        username: session.username,
         app_role: "Admin",
       },
       redirectTo: "/management/dashboard",

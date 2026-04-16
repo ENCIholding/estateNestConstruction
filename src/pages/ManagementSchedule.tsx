@@ -1,210 +1,251 @@
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { CalendarClock, Search, TimerReset, TriangleAlert } from "lucide-react";
 import ManagementLayout from "@/components/management/ManagementLayout";
+import Badge from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Input from "@/components/ui/input";
+import {
+  buildProjectScheduleEntries,
+  buildUndatedMilestones,
+  fetchManagementJson,
+  formatDate,
+  type ManagementProject,
+} from "@/lib/managementData";
 
-type TaskItem = {
-  id: string;
-  task_name: string;
-  project_name: string;
-  phase: string;
-  status: string;
-  start_date: string;
-  duration_days: number;
-};
+const categoryLabels = {
+  actual: "Actual completion",
+  review: "Annual review",
+  start: "Start",
+  target: "Target completion",
+  warranty: "Warranty start",
+} as const;
 
 export default function ManagementSchedule() {
   const [search, setSearch] = useState("");
-  const [projectFilter, setProjectFilter] = useState("all");
-  const [phaseFilter, setPhaseFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
 
-  const tasks = useMemo<TaskItem[]>(
-    () => [
-      {
-        id: "t1",
-        task_name: "Permit Review",
-        project_name: "Corner Daycare Concept",
-        phase: "1. Pre-Construction",
-        status: "In Progress",
-        start_date: "2026-04-05",
-        duration_days: 7,
-      },
-      {
-        id: "t2",
-        task_name: "Foundation Pour",
-        project_name: "Parkallen Fourplex",
-        phase: "2. Foundation",
-        status: "Not Started",
-        start_date: "2026-04-10",
-        duration_days: 3,
-      },
-      {
-        id: "t3",
-        task_name: "Main Floor Framing",
-        project_name: "Parkallen Fourplex",
-        phase: "3. Framing",
-        status: "In Progress",
-        start_date: "2026-04-15",
-        duration_days: 10,
-      },
-      {
-        id: "t4",
-        task_name: "Electrical Rough-In",
-        project_name: "Parkallen Fourplex",
-        phase: "4. Rough-Ins",
-        status: "On Hold",
-        start_date: "2026-04-28",
-        duration_days: 5,
-      },
-      {
-        id: "t5",
-        task_name: "Drywall Installation",
-        project_name: "Parkallen Fourplex",
-        phase: "5. Drywall",
-        status: "Not Started",
-        start_date: "2026-05-08",
-        duration_days: 6,
-      },
-    ],
-    []
-  );
-
-  const projectOptions = Array.from(new Set(tasks.map((t) => t.project_name)));
-  const phaseOptions = Array.from(new Set(tasks.map((t) => t.phase)));
-  const statusOptions = Array.from(new Set(tasks.map((t) => t.status)));
-
-  const filteredTasks = tasks.filter((task) => {
-    const matchesSearch = task.task_name
-      .toLowerCase()
-      .includes(search.toLowerCase());
-    const matchesProject =
-      projectFilter === "all" || task.project_name === projectFilter;
-    const matchesPhase = phaseFilter === "all" || task.phase === phaseFilter;
-    const matchesStatus = statusFilter === "all" || task.status === statusFilter;
-
-    return matchesSearch && matchesProject && matchesPhase && matchesStatus;
+  const {
+    data: projects = [],
+    error,
+    isLoading,
+  } = useQuery({
+    queryKey: ["management-projects"],
+    queryFn: () => fetchManagementJson<ManagementProject[]>("/api/management/projects"),
   });
 
-  const groupedTasks = filteredTasks.reduce<Record<string, TaskItem[]>>(
-    (acc, task) => {
-      if (!acc[task.phase]) acc[task.phase] = [];
-      acc[task.phase].push(task);
-      return acc;
-    },
-    {}
+  const scheduleEntries = useMemo(
+    () => buildProjectScheduleEntries(projects),
+    [projects]
   );
+  const undatedMilestones = useMemo(
+    () => buildUndatedMilestones(projects),
+    [projects]
+  );
+
+  const filteredEntries = useMemo(() => {
+    const query = search.trim().toLowerCase();
+
+    return scheduleEntries.filter((entry) => {
+      const matchesSearch =
+        !query ||
+        entry.projectName.toLowerCase().includes(query) ||
+        entry.label.toLowerCase().includes(query) ||
+        entry.detail.toLowerCase().includes(query);
+      const matchesCategory =
+        categoryFilter === "all" || entry.category === categoryFilter;
+
+      return matchesSearch && matchesCategory;
+    });
+  }, [categoryFilter, scheduleEntries, search]);
+
+  const upcomingCount = scheduleEntries.filter((entry) => entry.isUpcoming).length;
+  const overdueCount = scheduleEntries.filter((entry) => entry.isOverdue).length;
+  const projectsMissingDates = projects.filter(
+    (project) => !project.start_date || !project.estimated_end_date
+  ).length;
 
   return (
     <ManagementLayout currentPageName="schedule">
       <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl lg:text-3xl font-bold text-slate-900">
-              Schedule & Tasks
-            </h1>
-            <p className="text-slate-500 mt-1">
-              {tasks.length} tasks across all projects
+        <div className="dashboard-panel overflow-hidden p-8">
+          <div className="absolute inset-y-0 right-0 w-44 bg-gradient-to-l from-enc-yellow/10 via-enc-orange/10 to-transparent" />
+          <div className="relative">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-enc-orange">
+              Schedule Readiness
+            </p>
+            <h1 className="mt-3 text-3xl font-bold text-foreground">Schedule</h1>
+            <p className="mt-4 max-w-3xl text-sm leading-6 text-muted-foreground">
+              This module now shows only date checkpoints that exist inside the live project registry. Task-level sequencing remains offline until a real task backend is ready.
             </p>
           </div>
-
-          <button className="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium">
-            Add Task
-          </button>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-4">
-          <input
-            placeholder="Search tasks..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="border border-slate-200 rounded-lg px-4 py-2"
-          />
-
-          <select
-            value={projectFilter}
-            onChange={(e) => setProjectFilter(e.target.value)}
-            className="border border-slate-200 rounded-lg px-4 py-2"
-          >
-            <option value="all">All Projects</option>
-            {projectOptions.map((project) => (
-              <option key={project} value={project}>
-                {project}
-              </option>
-            ))}
-          </select>
-
-          <select
-            value={phaseFilter}
-            onChange={(e) => setPhaseFilter(e.target.value)}
-            className="border border-slate-200 rounded-lg px-4 py-2"
-          >
-            <option value="all">All Phases</option>
-            {phaseOptions.map((phase) => (
-              <option key={phase} value={phase}>
-                {phase}
-              </option>
-            ))}
-          </select>
-
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="border border-slate-200 rounded-lg px-4 py-2"
-          >
-            <option value="all">All Status</option>
-            {statusOptions.map((status) => (
-              <option key={status} value={status}>
-                {status}
-              </option>
-            ))}
-          </select>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <Card className="dashboard-panel p-2">
+            <CardContent className="p-5">
+              <p className="text-sm font-medium text-muted-foreground">Dated checkpoints</p>
+              <p className="mt-3 text-3xl font-semibold text-foreground">{scheduleEntries.length}</p>
+            </CardContent>
+          </Card>
+          <Card className="dashboard-panel p-2">
+            <CardContent className="p-5">
+              <p className="text-sm font-medium text-muted-foreground">Upcoming in 30 days</p>
+              <p className="mt-3 text-3xl font-semibold text-foreground">{upcomingCount}</p>
+            </CardContent>
+          </Card>
+          <Card className="dashboard-panel p-2">
+            <CardContent className="p-5">
+              <p className="text-sm font-medium text-muted-foreground">Past target dates</p>
+              <p className="mt-3 text-3xl font-semibold text-foreground">{overdueCount}</p>
+            </CardContent>
+          </Card>
+          <Card className="dashboard-panel p-2">
+            <CardContent className="p-5">
+              <p className="text-sm font-medium text-muted-foreground">Projects missing core dates</p>
+              <p className="mt-3 text-3xl font-semibold text-foreground">{projectsMissingDates}</p>
+            </CardContent>
+          </Card>
         </div>
 
-        <div className="space-y-6">
-          {Object.entries(groupedTasks)
-            .sort(([a], [b]) => a.localeCompare(b))
-            .map(([phase, phaseTasks]) => (
-              <div
-                key={phase}
-                className="bg-white rounded-xl shadow border overflow-hidden"
-              >
-                <div className="px-6 py-4 border-b bg-slate-50">
-                  <h2 className="font-semibold text-slate-900">{phase}</h2>
+        <Card className="dashboard-panel p-2">
+          <CardHeader>
+            <CardTitle className="text-xl text-foreground">Filter timeline</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-4 md:grid-cols-[minmax(0,1fr)_220px]">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                className="pl-10"
+                placeholder="Search by project, checkpoint, or note"
+              />
+            </div>
+            <select
+              value={categoryFilter}
+              onChange={(event) => setCategoryFilter(event.target.value)}
+              className="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
+            >
+              <option value="all">All checkpoint types</option>
+              {Object.entries(categoryLabels).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </CardContent>
+        </Card>
+
+        {isLoading ? (
+          <Card className="dashboard-panel p-2">
+            <CardContent className="p-6 text-sm text-muted-foreground">
+              Loading registry-backed schedule checkpoints...
+            </CardContent>
+          </Card>
+        ) : error ? (
+          <Card className="dashboard-panel p-2">
+            <CardContent className="flex items-start gap-3 p-6 text-sm leading-6 text-muted-foreground">
+              <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-rose-500" />
+              The schedule registry could not be loaded. Review the management API before relying on date controls.
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            <Card className="dashboard-panel p-2">
+              <CardHeader className="flex flex-row items-start justify-between gap-4">
+                <div>
+                  <CardTitle className="text-xl text-foreground">Timeline checkpoints</CardTitle>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    Sorted from the current project registry. Only recorded dates are displayed.
+                  </p>
                 </div>
+                <Badge className="rounded-full bg-muted text-muted-foreground">
+                  {filteredEntries.length} shown
+                </Badge>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {filteredEntries.length ? (
+                  filteredEntries.map((entry) => (
+                    <div key={entry.id} className="dashboard-item p-4">
+                      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="text-base font-semibold text-foreground">{entry.projectName}</p>
+                            <Badge className="rounded-full bg-muted text-muted-foreground">
+                              {categoryLabels[entry.category]}
+                            </Badge>
+                            {entry.isOverdue ? (
+                              <Badge className="rounded-full bg-rose-500/10 text-rose-700 dark:text-rose-300">
+                                Overdue
+                              </Badge>
+                            ) : entry.isUpcoming ? (
+                              <Badge className="rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300">
+                                Upcoming
+                              </Badge>
+                            ) : null}
+                          </div>
+                          <p className="mt-2 text-sm font-medium text-foreground">{entry.label}</p>
+                          <p className="mt-2 text-sm leading-6 text-muted-foreground">{entry.detail}</p>
+                        </div>
 
-                <div className="divide-y">
-                  {phaseTasks.map((task) => (
-                    <div
-                      key={task.id}
-                      className="p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3"
-                    >
-                      <div>
-                        <h3 className="font-medium text-slate-900">
-                          {task.task_name}
-                        </h3>
-                        <p className="text-sm text-slate-500 mt-1">
-                          {task.project_name}
-                        </p>
-                        <p className="text-xs text-slate-400 mt-1">
-                          Start: {task.start_date} • Duration: {task.duration_days} days
-                        </p>
-                      </div>
-
-                      <div>
-                        <span className="px-2 py-1 text-xs rounded-full bg-slate-100">
-                          {task.status}
-                        </span>
+                        <div className="rounded-2xl border border-border/70 bg-background/80 px-4 py-3 text-sm text-muted-foreground">
+                          {formatDate(entry.date)}
+                        </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-        </div>
+                  ))
+                ) : (
+                  <div className="dashboard-item p-6 text-sm leading-6 text-muted-foreground">
+                    No recorded checkpoints match the current filter. This page stays empty rather than inventing a task schedule.
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
-        {filteredTasks.length === 0 && (
-          <div className="text-center py-12 text-slate-500">
-            No tasks found
-          </div>
+            <Card className="dashboard-panel p-2">
+              <CardHeader className="flex flex-row items-start justify-between gap-4">
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-xl text-foreground">
+                    <CalendarClock className="h-5 w-5 text-enc-orange" />
+                    Undated next milestones
+                  </CardTitle>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    These notes are useful for planning conversations but are not treated as hard schedule commitments until dated.
+                  </p>
+                </div>
+                <Badge className="rounded-full bg-muted text-muted-foreground">
+                  {undatedMilestones.length} noted
+                </Badge>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {undatedMilestones.length ? (
+                  undatedMilestones.map((milestone) => (
+                    <div key={`${milestone.projectId}-${milestone.detail}`} className="dashboard-item p-4">
+                      <p className="text-sm font-semibold text-foreground">{milestone.projectName}</p>
+                      <p className="mt-2 text-sm leading-6 text-muted-foreground">{milestone.detail}</p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="dashboard-item p-4 text-sm leading-6 text-muted-foreground">
+                    No undated milestones are recorded yet.
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card className="dashboard-panel p-2">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-xl text-foreground">
+                  <TimerReset className="h-5 w-5 text-enc-orange" />
+                  What stays offline
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm leading-6 text-muted-foreground">
+                Task assignments, crew sequencing, and Gantt dependencies remain offline until there is a durable task model with server-side validation and history.
+              </CardContent>
+            </Card>
+          </>
         )}
       </div>
     </ManagementLayout>

@@ -4,8 +4,10 @@ import {
   CalendarClock,
   ExternalLink,
   FileText,
+  History,
   Mail,
   MapPin,
+  MessageSquare,
   ShieldCheck,
   TriangleAlert,
   UserRound,
@@ -15,6 +17,10 @@ import ManagementLayout from "@/components/management/ManagementLayout";
 import Badge from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  buildProjectActivity,
+  getProjectControlGaps,
+} from "@/lib/managementData";
 
 type ManagementProject = {
   id: string;
@@ -130,17 +136,8 @@ export default function ManagementProjectDetails() {
     },
   ].filter((item) => item.href);
 
-  const controlGaps = project
-    ? [
-        !project.legal_land_description ? "Legal land description is missing." : null,
-        !project.estimated_budget ? "Budget baseline is missing." : null,
-        !project.project_manager && !project.project_owner
-          ? "Project owner or manager is not assigned."
-          : null,
-        !project.primary_contact_email ? "Primary contact email is not set." : null,
-        !diligenceLinks.length ? "No permit or diligence links are attached." : null,
-      ].filter(Boolean)
-    : [];
+  const controlGaps = project ? getProjectControlGaps(project) : [];
+  const activityTimeline = project ? buildProjectActivity(project) : [];
 
   return (
     <ManagementLayout currentPageName="projects">
@@ -360,6 +357,55 @@ export default function ManagementProjectDetails() {
                       No obvious project-control gaps were detected from the current record.
                     </div>
                   )}
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.9fr)]">
+              <Card className="dashboard-panel p-2">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-xl text-foreground">
+                    <History className="h-5 w-5 text-enc-orange" />
+                    Activity timeline
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {activityTimeline.length ? (
+                    activityTimeline.map((entry) => (
+                      <div key={entry.id} className="dashboard-item p-4">
+                        <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
+                          <div>
+                            <p className="text-sm font-semibold text-foreground">{entry.label}</p>
+                            <p className="mt-2 text-sm leading-6 text-muted-foreground">{entry.detail}</p>
+                          </div>
+                          <div className="rounded-2xl border border-border/70 bg-background/80 px-4 py-3 text-sm text-muted-foreground">
+                            {formatDate(entry.date)}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="dashboard-item p-4 text-sm leading-6 text-muted-foreground">
+                      No dated activity history has been recorded for this project yet.
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card className="dashboard-panel p-2">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-xl text-foreground">
+                    <MessageSquare className="h-5 w-5 text-enc-orange" />
+                    Communication record
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm leading-6 text-muted-foreground">
+                  <div className="dashboard-item p-4">
+                    Project emails can now be sent from the dashboard, but messages are not yet archived back into a project activity log.
+                  </div>
+                  <div className="dashboard-item p-4">
+                    Until message archiving is implemented, treat the primary contact field and the dashboard email composer as communication aids rather than a complete CRM trail.
+                  </div>
                 </CardContent>
               </Card>
             </div>

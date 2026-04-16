@@ -10,6 +10,7 @@ function read(relativePath) {
 const robots = read("public/robots.txt");
 const sitemap = read("public/sitemap.xml");
 const app = read("src/App.tsx");
+const management = read("src/lib/management.ts");
 
 const expectations = [
   {
@@ -47,6 +48,62 @@ const expectations = [
   {
     name: "management project details route exists in app",
     ok: app.includes('path="/management/project-details"'),
+  },
+  {
+    name: "schedule route exists in app",
+    ok: app.includes('path="/management/schedule"'),
+  },
+  {
+    name: "budget route exists in app",
+    ok: app.includes('path="/management/budget-costs"'),
+  },
+  {
+    name: "documents route exists in app",
+    ok: app.includes('path="/management/documents"'),
+  },
+  {
+    name: "compliance route exists in app",
+    ok: app.includes('path="/management/compliance"'),
+  },
+  {
+    name: "reports route exists in app",
+    ok: app.includes('path="/management/reports"'),
+  },
+  {
+    name: "analytics route exists in app",
+    ok: app.includes('path="/management/analytics"'),
+  },
+  {
+    name: "warranty route exists in app",
+    ok: app.includes('path="/management/warranty-reminder"'),
+  },
+  {
+    name: "schedule is enabled in management navigation",
+    ok: management.includes('{ name: "Schedule", page: "schedule", enabled: true }'),
+  },
+  {
+    name: "budget is enabled in management navigation",
+    ok: management.includes('{ name: "Budget & Costs", page: "budget-costs", enabled: true }'),
+  },
+  {
+    name: "documents are enabled in management navigation",
+    ok: management.includes('{ name: "Documents", page: "documents", enabled: true }'),
+  },
+  {
+    name: "compliance is enabled in management navigation",
+    ok: management.includes('{ name: "Compliance", page: "compliance", enabled: true }'),
+  },
+  {
+    name: "reports are enabled in management navigation",
+    ok: management.includes('{ name: "Reports", page: "reports", enabled: true }'),
+  },
+  {
+    name: "analytics is enabled in management navigation",
+    ok: management.includes('{ name: "Analytics", page: "analytics", enabled: true }'),
+  },
+  {
+    name: "warranty reminder is enabled in management navigation",
+    ok: management.includes('{ name: "Warranty Reminder", page: "warranty-reminder", enabled: true }'),
   },
 ];
 

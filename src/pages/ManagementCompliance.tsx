@@ -1,387 +1,196 @@
-import React, { useMemo, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
+import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { FileCheck2, Search, ShieldAlert, TriangleAlert } from "lucide-react";
+import ManagementLayout from "@/components/management/ManagementLayout";
+import Badge from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Input from "@/components/ui/input";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
-  CheckCircle2,
-  Clock,
-  Pencil,
-  Trash2,
-  Loader2,
-  Plus,
-  MapPin,
-} from "lucide-react";
-import ManagementComplianceForm from "@/components/compliance/ManagementComplianceForm";
-
-type User = {
-  id: string;
-  app_role?: string;
-};
-
-type Project = {
-  id: string;
-  project_name?: string;
-  civic_address?: string;
-};
-
-type ComplianceItem = {
-  id: string;
-  project_id?: string;
-  alberta_one_call_status?: string;
-  one_call_ticket_number?: string;
-  development_permit_issued?: boolean;
-  development_permit_number?: string;
-  building_permit_issued?: boolean;
-  building_permit_number?: string;
-  new_home_warranty_enrolled?: boolean;
-  warranty_certificate_number?: string;
-  final_grade_certificate_issued?: boolean;
-  occupancy_permit_issued?: boolean;
-  notes?: string;
-};
-
-async function fetchJson<T>(url: string, options: RequestInit = {}): Promise<T> {
-  const res = await fetch(url, {
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      ...(options.headers || {}),
-    },
-    ...options,
-  });
-
-  if (!res.ok) {
-    let message = "API error";
-    try {
-      const errorData = await res.json();
-      message = errorData?.error || message;
-    } catch {
-      message = `${res.status} ${res.statusText}`;
-    }
-    throw new Error(message);
-  }
-
-  if (res.status === 204) {
-    return {} as T;
-  }
-
-  return res.json();
-}
+  buildProjectCompliance,
+  fetchManagementJson,
+  type ManagementProject,
+} from "@/lib/managementData";
 
 export default function ManagementCompliance() {
   const [search, setSearch] = useState("");
-  const [showForm, setShowForm] = useState(false);
-  const [editingCompliance, setEditingCompliance] = useState<ComplianceItem | null>(null);
-  const [deleteCompliance, setDeleteCompliance] = useState<ComplianceItem | null>(null);
 
-  const queryClient = useQueryClient();
-
-  const { data: sessionData } = useQuery<{ user?: User } | null>({
-    queryKey: ["management-session"],
-    queryFn: () => fetchJson<{ user?: User }>("/api/management/session"),
-    retry: false,
+  const {
+    data: projects = [],
+    error,
+    isLoading,
+  } = useQuery({
+    queryKey: ["management-projects"],
+    queryFn: () => fetchManagementJson<ManagementProject[]>("/api/management/projects"),
   });
 
-  const user = sessionData?.user || null;
-  const userRole = user?.app_role || "Admin";
-  const canEdit = userRole === "Admin" || userRole === "Project Manager";
+  const complianceRows = useMemo(() => buildProjectCompliance(projects), [projects]);
 
-  const { data: compliance = [], isLoading } = useQuery<ComplianceItem[]>({
-    queryKey: ["compliance"],
-    queryFn: () => fetchJson<ComplianceItem[]>("/api/management/compliance"),
-  });
-
-  const { data: projects = [] } = useQuery<Project[]>({
-    queryKey: ["projects"],
-    queryFn: () => fetchJson<Project[]>("/api/management/projects"),
-  });
-
-  const projectMap = useMemo(() => {
-    return projects.reduce<Record<string, Project>>((acc, project: Project) => {
-      acc[project.id] = project;
-      return acc;
-    }, {});
-  }, [projects]);
-
-  const filtered = useMemo(() => {
-    const q = search.toLowerCase().trim();
-
-    return compliance.filter((item: ComplianceItem) => {
-      const project = item.project_id ? projectMap[item.project_id] : undefined;
-      const projectName = project?.project_name || "";
-      const civicAddress = project?.civic_address || "";
-
-      if (!q) return true;
-
-      return (
-        projectName.toLowerCase().includes(q) ||
-        civicAddress.toLowerCase().includes(q) ||
-        item.one_call_ticket_number?.toLowerCase().includes(q) ||
-        item.development_permit_number?.toLowerCase().includes(q) ||
-        item.building_permit_number?.toLowerCase().includes(q) ||
-        item.warranty_certificate_number?.toLowerCase().includes(q) ||
-        item.notes?.toLowerCase().includes(q)
-      );
-    });
-  }, [compliance, projectMap, search]);
-
-  const getScore = (item: ComplianceItem) => {
-    const total = 6;
-    let done = 0;
-
-    if (item.alberta_one_call_status === "Cleared") done++;
-    if (item.development_permit_issued) done++;
-    if (item.building_permit_issued) done++;
-    if (item.new_home_warranty_enrolled) done++;
-    if (item.final_grade_certificate_issued) done++;
-    if (item.occupancy_permit_issued) done++;
-
-    return Math.round((done / total) * 100);
-  };
-
-  const handleDelete = async () => {
-    if (!deleteCompliance?.id) return;
-
-    try {
-      await fetchJson(`/api/management/compliance/${deleteCompliance.id}`, {
-        method: "DELETE",
-      });
-
-      await queryClient.invalidateQueries({ queryKey: ["compliance"] });
-      setDeleteCompliance(null);
-    } catch (error) {
-      console.error("Failed to delete compliance record:", error);
-      alert(
-        error instanceof Error
-          ? error.message
-          : "Failed to delete compliance record."
-      );
+  const filteredRows = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) {
+      return complianceRows;
     }
-  };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
+    return complianceRows.filter(
+      (row) =>
+        row.projectName.toLowerCase().includes(query) ||
+        row.checks.some(
+          (check) =>
+            check.label.toLowerCase().includes(query) ||
+            check.detail.toLowerCase().includes(query)
+        )
     );
-  }
+  }, [complianceRows, search]);
+
+  const averageScore =
+    complianceRows.length > 0
+      ? Math.round(
+          complianceRows.reduce((sum, row) => sum + row.score, 0) /
+            complianceRows.length
+        )
+      : 0;
+  const criticalGaps = complianceRows.filter((row) => row.missingCount >= 3).length;
 
   return (
-    <div className="min-h-screen bg-slate-50 p-8">
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Compliance & Safety</h1>
-          <p className="text-slate-600">
-            Track permits and regulatory requirements
-          </p>
+    <ManagementLayout currentPageName="compliance">
+      <div className="space-y-6">
+        <div className="dashboard-panel overflow-hidden p-8">
+          <div className="absolute inset-y-0 right-0 w-44 bg-gradient-to-l from-enc-yellow/10 via-enc-orange/10 to-transparent" />
+          <div className="relative">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-enc-orange">
+              Compliance Readiness
+            </p>
+            <h1 className="mt-3 text-3xl font-bold text-foreground">Compliance</h1>
+            <p className="mt-4 max-w-3xl text-sm leading-6 text-muted-foreground">
+              This view scores only the compliance signals currently stored in each live project record. It does not invent permit status, inspections, or third-party approvals that are not actually linked.
+            </p>
+          </div>
         </div>
 
-        {canEdit && (
-          <Button
-            onClick={() => {
-              setEditingCompliance(null);
-              setShowForm(true);
-            }}
-            className="bg-slate-900 hover:bg-slate-800"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Add Compliance Record
-          </Button>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <Card className="dashboard-panel p-2">
+            <CardContent className="p-5">
+              <p className="text-sm font-medium text-muted-foreground">Average registry score</p>
+              <p className="mt-3 text-3xl font-semibold text-foreground">{averageScore}%</p>
+            </CardContent>
+          </Card>
+          <Card className="dashboard-panel p-2">
+            <CardContent className="p-5">
+              <p className="text-sm font-medium text-muted-foreground">Projects with critical gaps</p>
+              <p className="mt-3 text-3xl font-semibold text-foreground">{criticalGaps}</p>
+            </CardContent>
+          </Card>
+          <Card className="dashboard-panel p-2">
+            <CardContent className="p-5">
+              <p className="text-sm font-medium text-muted-foreground">Projects reviewed</p>
+              <p className="mt-3 text-3xl font-semibold text-foreground">{complianceRows.length}</p>
+            </CardContent>
+          </Card>
+          <Card className="dashboard-panel p-2">
+            <CardContent className="p-5">
+              <p className="text-sm font-medium text-muted-foreground">Fully documented</p>
+              <p className="mt-3 text-3xl font-semibold text-foreground">
+                {complianceRows.filter((row) => row.missingCount === 0).length}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card className="dashboard-panel p-2">
+          <CardHeader>
+            <CardTitle className="text-xl text-foreground">Filter compliance rows</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                className="pl-10"
+                placeholder="Search by project or compliance requirement"
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {isLoading ? (
+          <Card className="dashboard-panel p-2">
+            <CardContent className="p-6 text-sm text-muted-foreground">
+              Loading compliance readiness...
+            </CardContent>
+          </Card>
+        ) : error ? (
+          <Card className="dashboard-panel p-2">
+            <CardContent className="flex items-start gap-3 p-6 text-sm leading-6 text-muted-foreground">
+              <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-rose-500" />
+              Compliance readiness could not be loaded from the management API.
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="dashboard-panel p-2">
+            <CardHeader className="flex flex-row items-start justify-between gap-4">
+              <div>
+                <CardTitle className="text-xl text-foreground">Project controls</CardTitle>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Readiness is based on what is actually attached to each live record.
+                </p>
+              </div>
+              <Badge className="rounded-full bg-muted text-muted-foreground">
+                {filteredRows.length} shown
+              </Badge>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {filteredRows.length ? (
+                filteredRows.map((row) => (
+                  <div key={row.projectId} className="dashboard-item p-4">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="space-y-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-base font-semibold text-foreground">{row.projectName}</p>
+                          <Badge className="rounded-full bg-muted text-muted-foreground">
+                            {row.score}% ready
+                          </Badge>
+                          {row.missingCount >= 3 ? (
+                            <Badge className="rounded-full bg-rose-500/10 text-rose-700 dark:text-rose-300">
+                              Critical gaps
+                            </Badge>
+                          ) : null}
+                        </div>
+
+                        <div className="grid gap-3 md:grid-cols-2">
+                          {row.checks.map((check) => (
+                            <div key={`${row.projectId}-${check.label}`} className="rounded-2xl border border-border/70 bg-background/80 p-4">
+                              <div className="flex items-center gap-2">
+                                {check.ready ? (
+                                  <FileCheck2 className="h-4 w-4 text-emerald-500" />
+                                ) : (
+                                  <ShieldAlert className="h-4 w-4 text-amber-500" />
+                                )}
+                                <p className="text-sm font-medium text-foreground">{check.label}</p>
+                              </div>
+                              <p className="mt-2 text-sm leading-6 text-muted-foreground">{check.detail}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="min-w-[180px] rounded-2xl border border-border/70 bg-background/80 p-4 text-sm text-muted-foreground">
+                        <p className="font-medium text-foreground">Summary</p>
+                        <p className="mt-2">{row.readyCount} ready</p>
+                        <p className="mt-2">{row.missingCount} missing</p>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="dashboard-item p-6 text-sm leading-6 text-muted-foreground">
+                  No compliance rows match the current filter.
+                </div>
+              )}
+            </CardContent>
+          </Card>
         )}
       </div>
-
-      <Card className="mb-8">
-        <CardContent className="pt-6">
-          <Input
-            placeholder="Search compliance records..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full"
-          />
-        </CardContent>
-      </Card>
-
-      <div className="space-y-4">
-        {filtered.map((item: ComplianceItem) => {
-          const project = item.project_id
-            ? projectMap[item.project_id]
-            : undefined;
-          const score = getScore(item);
-
-          return (
-            <Card key={item.id}>
-              <CardContent className="pt-6">
-                <div className="space-y-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-lg">
-                        {project?.project_name || "—"}
-                      </h3>
-                      {project?.civic_address && (
-                        <div className="flex items-center gap-1 text-sm text-slate-600 mt-1">
-                          <MapPin className="h-3 w-3" />
-                          {project.civic_address}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="text-right">
-                      <p
-                        className={`text-2xl font-bold ${
-                          score >= 80
-                            ? "text-green-600"
-                            : score >= 60
-                            ? "text-amber-600"
-                            : "text-rose-600"
-                        }`}
-                      >
-                        {score}%
-                      </p>
-                      <p className="text-xs text-slate-600">Completion</p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-                    <div className="text-center">
-                      <p className="text-xs text-slate-600 mb-1">One-Call</p>
-                      <p className="text-sm font-medium">
-                        {item.alberta_one_call_status || "Pending"}
-                      </p>
-                    </div>
-
-                    <div className="text-center">
-                      <p className="text-xs text-slate-600 mb-1">Dev Permit</p>
-                      {item.development_permit_issued ? (
-                        <CheckCircle2 className="h-5 w-5 text-green-600 mx-auto" />
-                      ) : (
-                        <Clock className="h-5 w-5 text-slate-400 mx-auto" />
-                      )}
-                    </div>
-
-                    <div className="text-center">
-                      <p className="text-xs text-slate-600 mb-1">Build Permit</p>
-                      {item.building_permit_issued ? (
-                        <CheckCircle2 className="h-5 w-5 text-green-600 mx-auto" />
-                      ) : (
-                        <Clock className="h-5 w-5 text-slate-400 mx-auto" />
-                      )}
-                    </div>
-
-                    <div className="text-center">
-                      <p className="text-xs text-slate-600 mb-1">Warranty</p>
-                      {item.new_home_warranty_enrolled ? (
-                        <CheckCircle2 className="h-5 w-5 text-green-600 mx-auto" />
-                      ) : (
-                        <Clock className="h-5 w-5 text-slate-400 mx-auto" />
-                      )}
-                    </div>
-
-                    <div className="text-center">
-                      <p className="text-xs text-slate-600 mb-1">Final Grade</p>
-                      {item.final_grade_certificate_issued ? (
-                        <CheckCircle2 className="h-5 w-5 text-green-600 mx-auto" />
-                      ) : (
-                        <Clock className="h-5 w-5 text-slate-400 mx-auto" />
-                      )}
-                    </div>
-
-                    <div className="text-center">
-                      <p className="text-xs text-slate-600 mb-1">Occupancy</p>
-                      {item.occupancy_permit_issued ? (
-                        <CheckCircle2 className="h-5 w-5 text-green-600 mx-auto" />
-                      ) : (
-                        <Clock className="h-5 w-5 text-slate-400 mx-auto" />
-                      )}
-                    </div>
-                  </div>
-
-                  {canEdit && (
-                    <div className="flex gap-2 pt-2 border-t">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          setEditingCompliance(item);
-                          setShowForm(true);
-                        }}
-                      >
-                        <Pencil className="mr-1 h-4 w-4" />
-                        Edit
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-rose-600 hover:text-rose-700"
-                        onClick={() => setDeleteCompliance(item)}
-                      >
-                        <Trash2 className="mr-1 h-4 w-4" />
-                        Delete
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-
-      {filtered.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-slate-600">No compliance records found</p>
-        </div>
-      )}
-
-      <ManagementComplianceForm
-        open={showForm}
-        compliance={editingCompliance}
-        projects={projects}
-        onClose={() => {
-          setShowForm(false);
-          setEditingCompliance(null);
-        }}
-        onSaved={() => {
-          queryClient.invalidateQueries({ queryKey: ["compliance"] });
-          setShowForm(false);
-          setEditingCompliance(null);
-        }}
-      />
-
-      <AlertDialog
-        open={!!deleteCompliance}
-        onOpenChange={() => setDeleteCompliance(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Compliance Record</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this compliance record? This action
-              cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-rose-600 hover:bg-rose-700"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
+    </ManagementLayout>
   );
 }
