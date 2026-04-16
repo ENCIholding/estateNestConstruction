@@ -2,8 +2,8 @@ import {
   getCookie,
   getSessionCookieName,
   verifySessionToken,
-} from "../_lib/auth.ts";
-import { getAllProjects } from "../_lib/projects.ts";
+} from "../_lib/auth.js";
+import { getAllProjects } from "../_lib/projects.js";
 
 export default async function handler(req: any, res: any) {
   if (req.method !== "GET") {

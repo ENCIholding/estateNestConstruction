@@ -1,4 +1,4 @@
-import { clearSessionCookie } from "../_lib/auth.ts";
+import { clearSessionCookie } from "../_lib/auth.js";
 
 export default function handler(req: any, res: any) {
   if (req.method !== "POST") {

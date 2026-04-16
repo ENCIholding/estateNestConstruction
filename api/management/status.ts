@@ -2,9 +2,9 @@ import {
   getCookie,
   getSessionCookieName,
   verifySessionToken,
-} from "../_lib/auth.ts";
-import { getSmtpConfig } from "../_lib/email.ts";
-import { getProjectRegistryState } from "../_lib/projects.ts";
+} from "../_lib/auth.js";
+import { getSmtpConfig } from "../_lib/email.js";
+import { getProjectRegistryState } from "../_lib/projects.js";
 
 function isConfigured(value?: string) {
   return Boolean(value && value.trim());

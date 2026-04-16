@@ -1,4 +1,4 @@
-import { buildSessionCookie, createSessionToken } from "../_lib/auth.ts";
+import { buildSessionCookie, createSessionToken } from "../_lib/auth.js";
 
 type LoginBody = {
   username?: string;

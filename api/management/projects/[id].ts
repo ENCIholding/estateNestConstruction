@@ -2,12 +2,12 @@ import {
   getCookie,
   getSessionCookieName,
   verifySessionToken,
-} from "../../_lib/auth.ts";
+} from "../../_lib/auth.js";
 import {
   getProjectById,
   updateProjectById,
   type ManagementProject,
-} from "../../_lib/projects.ts";
+} from "../../_lib/projects.js";
 
 export default async function handler(req: any, res: any) {
   const id = req.query?.id;

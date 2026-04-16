@@ -3,12 +3,12 @@ import {
   getCookie,
   getSessionCookieName,
   verifySessionToken,
-} from "../../_lib/auth.ts";
+} from "../../_lib/auth.js";
 import {
   buildEmailContent,
   getSmtpConfig,
   normalizeEmailList,
-} from "../../_lib/email.ts";
+} from "../../_lib/email.js";
 
 type SendEmailBody = {
   to?: string[] | string;

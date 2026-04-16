@@ -2,7 +2,7 @@ import {
   getCookie,
   getSessionCookieName,
   readSessionToken,
-} from "../_lib/auth.ts";
+} from "../_lib/auth.js";
 
 export default function handler(req: any, res: any) {
   if (req.method !== "GET") {
