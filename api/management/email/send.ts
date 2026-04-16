@@ -3,12 +3,17 @@ import {
   getCookie,
   getSessionCookieName,
   verifySessionToken,
-} from "../../_lib/auth";
+} from "../../_lib/auth.ts";
+import {
+  jsonResponse,
+  methodNotAllowed,
+  readJsonBody,
+} from "../../_lib/http.ts";
 import {
   buildEmailContent,
   getSmtpConfig,
   normalizeEmailList,
-} from "../../_lib/email";
+} from "../../_lib/email.ts";
 
 type SendEmailBody = {
   to?: string[] | string;
@@ -22,26 +27,21 @@ function uniqueEmails(emails: string[]) {
   return [...new Set(emails.map((email) => email.toLowerCase()))];
 }
 
-export default async function handler(req: any, res: any) {
-  if (req.method !== "POST") {
-    res.setHeader("Allow", "POST");
-    return res.status(405).json({ message: "Method not allowed" });
-  }
-
-  res.setHeader("Cache-Control", "no-store");
-
+async function handlePost(request: Request) {
   try {
-    const token = getCookie(req, getSessionCookieName());
+    const token = getCookie(request, getSessionCookieName());
 
     if (!verifySessionToken(token)) {
-      return res.status(401).json({
-        ok: false,
-        message: "Unauthorized",
-      });
+      return jsonResponse(
+        {
+          ok: false,
+          message: "Unauthorized",
+        },
+        { status: 401 }
+      );
     }
 
-    const payload: SendEmailBody =
-      typeof req.body === "string" ? JSON.parse(req.body) : req.body || {};
+    const payload = await readJsonBody<SendEmailBody>(request);
 
     const to = normalizeEmailList(payload.to);
     const cc = normalizeEmailList(payload.cc);
@@ -50,17 +50,23 @@ export default async function handler(req: any, res: any) {
     const body = String(payload.body || "");
 
     if (to.length === 0) {
-      return res.status(400).json({
-        ok: false,
-        message: "At least one recipient is required",
-      });
+      return jsonResponse(
+        {
+          ok: false,
+          message: "At least one recipient is required",
+        },
+        { status: 400 }
+      );
     }
 
     if (!subject) {
-      return res.status(400).json({
-        ok: false,
-        message: "Email subject is required",
-      });
+      return jsonResponse(
+        {
+          ok: false,
+          message: "Email subject is required",
+        },
+        { status: 400 }
+      );
     }
 
     const config = getSmtpConfig();
@@ -97,16 +103,32 @@ export default async function handler(req: any, res: any) {
       html: emailContent.html,
     });
 
-    return res.status(200).json({
-      ok: true,
-      message: "Email sent successfully",
-      messageId: info.messageId,
-      inboxCopy: config.inboxCopy,
-    });
+    return jsonResponse(
+      {
+        ok: true,
+        message: "Email sent successfully",
+        messageId: info.messageId,
+        inboxCopy: config.inboxCopy,
+      },
+      { status: 200 }
+    );
   } catch (error) {
-    return res.status(500).json({
-      ok: false,
-      message: error instanceof Error ? error.message : "Email send failed",
-    });
+    return jsonResponse(
+      {
+        ok: false,
+        message: error instanceof Error ? error.message : "Email send failed",
+      },
+      { status: 500 }
+    );
   }
 }
+
+export default {
+  fetch(request: Request) {
+    if (request.method !== "POST") {
+      return methodNotAllowed(["POST"]);
+    }
+
+    return handlePost(request);
+  },
+};

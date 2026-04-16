@@ -3,7 +3,7 @@ import {
   createSessionToken,
   readSessionToken,
   verifySessionToken,
-} from "./auth";
+} from "./auth.ts";
 
 const originalSecret = process.env.MANAGEMENT_SESSION_SECRET;
 

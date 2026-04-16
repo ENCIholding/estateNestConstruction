@@ -1,15 +1,27 @@
-import { clearSessionCookie } from "../_lib/auth";
+import { clearSessionCookie } from "../_lib/auth.ts";
+import { jsonResponse, methodNotAllowed } from "../_lib/http.ts";
 
-export default function handler(req: any, res: any) {
-  if (req.method !== "POST") {
-    res.setHeader("Allow", "POST");
-    return res.status(405).json({ message: "Method not allowed" });
-  }
-
-  res.setHeader("Set-Cookie", clearSessionCookie());
-
-  return res.status(200).json({
-    ok: true,
-    message: "Logged out successfully",
-  });
+function handlePost() {
+  return jsonResponse(
+    {
+      ok: true,
+      message: "Logged out successfully",
+    },
+    {
+      status: 200,
+      headers: {
+        "Set-Cookie": clearSessionCookie(),
+      },
+    }
+  );
 }
+
+export default {
+  fetch(request: Request) {
+    if (request.method !== "POST") {
+      return methodNotAllowed(["POST"]);
+    }
+
+    return handlePost();
+  },
+};

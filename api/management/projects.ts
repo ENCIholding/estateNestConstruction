@@ -1,27 +1,38 @@
-import { getCookie, getSessionCookieName, verifySessionToken } from "../_lib/auth";
-import { getAllProjects } from "../_lib/projects";
+import {
+  getCookie,
+  getSessionCookieName,
+  verifySessionToken,
+} from "../_lib/auth.ts";
+import { jsonResponse, methodNotAllowed } from "../_lib/http.ts";
+import { getAllProjects } from "../_lib/projects.ts";
 
-export default async function handler(req: any, res: any) {
-  if (req.method !== "GET") {
-    res.setHeader("Allow", "GET");
-    return res.status(405).json({ message: "Method not allowed" });
-  }
-
-  res.setHeader("Cache-Control", "no-store");
-
-  const token = getCookie(req, getSessionCookieName());
+async function handleGet(request: Request) {
+  const token = getCookie(request, getSessionCookieName());
 
   if (!verifySessionToken(token)) {
-    return res.status(401).json({ message: "Unauthorized" });
+    return jsonResponse({ message: "Unauthorized" }, { status: 401 });
   }
 
   try {
     const projects = await getAllProjects();
-    return res.status(200).json(projects);
+    return jsonResponse(projects, { status: 200 });
   } catch (error) {
-    return res.status(500).json({
-      message: "Fetch failed",
-      error: error instanceof Error ? error.message : String(error),
-    });
+    return jsonResponse(
+      {
+        message: "Fetch failed",
+        error: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500 }
+    );
   }
 }
+
+export default {
+  fetch(request: Request) {
+    if (request.method !== "GET") {
+      return methodNotAllowed(["GET"]);
+    }
+
+    return handleGet(request);
+  },
+};

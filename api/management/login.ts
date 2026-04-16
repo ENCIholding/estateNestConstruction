@@ -1,21 +1,18 @@
-import { buildSessionCookie, createSessionToken } from "../_lib/auth";
+import { buildSessionCookie, createSessionToken } from "../_lib/auth.ts";
+import {
+  jsonResponse,
+  methodNotAllowed,
+  readJsonBody,
+} from "../_lib/http.ts";
 
 type LoginBody = {
   username?: string;
   password?: string;
 };
 
-export default async function handler(req: any, res: any) {
-  if (req.method !== "POST") {
-    res.setHeader("Allow", "POST");
-    return res.status(405).json({ message: "Method not allowed" });
-  }
-
-  res.setHeader("Cache-Control", "no-store");
-
+async function handlePost(request: Request) {
   try {
-    const body: LoginBody =
-      typeof req.body === "string" ? JSON.parse(req.body) : req.body || {};
+    const body = await readJsonBody<LoginBody>(request);
 
     const { username, password } = body;
 
@@ -23,31 +20,56 @@ export default async function handler(req: any, res: any) {
     const validPassword = process.env.MANAGEMENT_PASSWORD;
 
     if (!validUsername || !validPassword) {
-      return res.status(500).json({
-        message: "Management login not configured",
-      });
+      return jsonResponse(
+        {
+          message: "Management login not configured",
+        },
+        { status: 500 }
+      );
     }
 
     if (username !== validUsername || password !== validPassword) {
-      return res.status(401).json({
-        message: "Invalid credentials",
-      });
+      return jsonResponse(
+        {
+          message: "Invalid credentials",
+        },
+        { status: 401 }
+      );
     }
 
     const token = createSessionToken(username);
 
-    res.setHeader("Set-Cookie", buildSessionCookie(token));
-
-    return res.status(200).json({
-      ok: true,
-      redirectTo: "/management/dashboard",
-    });
+    return jsonResponse(
+      {
+        ok: true,
+        redirectTo: "/management/dashboard",
+      },
+      {
+        status: 200,
+        headers: {
+          "Set-Cookie": buildSessionCookie(token),
+        },
+      }
+    );
   } catch (error) {
-    return res.status(500).json({
-      authenticated: false,
-      user: null,
-      message: "Server error",
-      error: error instanceof Error ? error.message : String(error),
-    });
+    return jsonResponse(
+      {
+        authenticated: false,
+        user: null,
+        message: "Server error",
+        error: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500 }
+    );
   }
 }
+
+export default {
+  fetch(request: Request) {
+    if (request.method !== "POST") {
+      return methodNotAllowed(["POST"]);
+    }
+
+    return handlePost(request);
+  },
+};

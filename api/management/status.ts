@@ -2,26 +2,20 @@ import {
   getCookie,
   getSessionCookieName,
   verifySessionToken,
-} from "../_lib/auth";
-import { getSmtpConfig } from "../_lib/email";
-import { getProjectRegistryState } from "../_lib/projects";
+} from "../_lib/auth.ts";
+import { getSmtpConfig } from "../_lib/email.ts";
+import { jsonResponse, methodNotAllowed } from "../_lib/http.ts";
+import { getProjectRegistryState } from "../_lib/projects.ts";
 
 function isConfigured(value?: string) {
   return Boolean(value && value.trim());
 }
 
-export default function handler(req: any, res: any) {
-  if (req.method !== "GET") {
-    res.setHeader("Allow", "GET");
-    return res.status(405).json({ message: "Method not allowed" });
-  }
-
-  res.setHeader("Cache-Control", "no-store");
-
-  const token = getCookie(req, getSessionCookieName());
+function handleGet(request: Request) {
+  const token = getCookie(request, getSessionCookieName());
 
   if (!verifySessionToken(token)) {
-    return res.status(401).json({ message: "Unauthorized" });
+    return jsonResponse({ message: "Unauthorized" }, { status: 401 });
   }
 
   const projectRegistry = getProjectRegistryState();
@@ -38,9 +32,22 @@ export default function handler(req: any, res: any) {
     emailConfigured = false;
   }
 
-  return res.status(200).json({
-    authConfigured,
-    emailConfigured,
-    projectRegistry,
-  });
+  return jsonResponse(
+    {
+      authConfigured,
+      emailConfigured,
+      projectRegistry,
+    },
+    { status: 200 }
+  );
 }
+
+export default {
+  fetch(request: Request) {
+    if (request.method !== "GET") {
+      return methodNotAllowed(["GET"]);
+    }
+
+    return handleGet(request);
+  },
+};
