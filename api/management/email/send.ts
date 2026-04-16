@@ -5,11 +5,6 @@ import {
   verifySessionToken,
 } from "../../_lib/auth.ts";
 import {
-  jsonResponse,
-  methodNotAllowed,
-  readJsonBody,
-} from "../../_lib/http.ts";
-import {
   buildEmailContent,
   getSmtpConfig,
   normalizeEmailList,
@@ -27,21 +22,26 @@ function uniqueEmails(emails: string[]) {
   return [...new Set(emails.map((email) => email.toLowerCase()))];
 }
 
-async function handlePost(request: Request) {
+export default async function handler(req: any, res: any) {
+  if (req.method !== "POST") {
+    res.setHeader("Allow", "POST");
+    return res.status(405).json({ message: "Method not allowed" });
+  }
+
+  res.setHeader("Cache-Control", "no-store");
+
   try {
-    const token = getCookie(request, getSessionCookieName());
+    const token = getCookie(req, getSessionCookieName());
 
     if (!verifySessionToken(token)) {
-      return jsonResponse(
-        {
-          ok: false,
-          message: "Unauthorized",
-        },
-        { status: 401 }
-      );
+      return res.status(401).json({
+        ok: false,
+        message: "Unauthorized",
+      });
     }
 
-    const payload = await readJsonBody<SendEmailBody>(request);
+    const payload: SendEmailBody =
+      typeof req.body === "string" ? JSON.parse(req.body) : req.body || {};
 
     const to = normalizeEmailList(payload.to);
     const cc = normalizeEmailList(payload.cc);
@@ -50,23 +50,17 @@ async function handlePost(request: Request) {
     const body = String(payload.body || "");
 
     if (to.length === 0) {
-      return jsonResponse(
-        {
-          ok: false,
-          message: "At least one recipient is required",
-        },
-        { status: 400 }
-      );
+      return res.status(400).json({
+        ok: false,
+        message: "At least one recipient is required",
+      });
     }
 
     if (!subject) {
-      return jsonResponse(
-        {
-          ok: false,
-          message: "Email subject is required",
-        },
-        { status: 400 }
-      );
+      return res.status(400).json({
+        ok: false,
+        message: "Email subject is required",
+      });
     }
 
     const config = getSmtpConfig();
@@ -103,32 +97,16 @@ async function handlePost(request: Request) {
       html: emailContent.html,
     });
 
-    return jsonResponse(
-      {
-        ok: true,
-        message: "Email sent successfully",
-        messageId: info.messageId,
-        inboxCopy: config.inboxCopy,
-      },
-      { status: 200 }
-    );
+    return res.status(200).json({
+      ok: true,
+      message: "Email sent successfully",
+      messageId: info.messageId,
+      inboxCopy: config.inboxCopy,
+    });
   } catch (error) {
-    return jsonResponse(
-      {
-        ok: false,
-        message: error instanceof Error ? error.message : "Email send failed",
-      },
-      { status: 500 }
-    );
+    return res.status(500).json({
+      ok: false,
+      message: error instanceof Error ? error.message : "Email send failed",
+    });
   }
 }
-
-export default {
-  fetch(request: Request) {
-    if (request.method !== "POST") {
-      return methodNotAllowed(["POST"]);
-    }
-
-    return handlePost(request);
-  },
-};

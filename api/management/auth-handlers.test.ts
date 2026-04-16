@@ -24,21 +24,18 @@ describe("management auth handlers", () => {
     process.env.MANAGEMENT_PASSWORD = "ENCIKD$$";
     process.env.MANAGEMENT_SESSION_SECRET = "test-secret-123";
 
-    const request = new Request("https://example.com/api/management/login", {
+    const { req, res, state } = createMockContext({
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+      body: {
         username: "ENCIKD",
         password: "ENCIKD$$",
-      }),
+      },
     });
 
-    const response = await loginHandler.fetch(request);
+    await loginHandler(req, res);
 
-    expect(response.status).toBe(200);
-    expect(response.headers.get("set-cookie")).toContain("enci_mgmt_session=");
+    expect(state.statusCode).toBe(200);
+    expect(state.headers["Set-Cookie"]).toContain("enci_mgmt_session=");
   });
 
   it("returns an authenticated session when the cookie is valid", async () => {
@@ -46,33 +43,31 @@ describe("management auth handlers", () => {
     process.env.MANAGEMENT_PASSWORD = "ENCIKD$$";
     process.env.MANAGEMENT_SESSION_SECRET = "test-secret-123";
 
-    const loginResponse = await loginHandler.fetch(
-      new Request("https://example.com/api/management/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username: "ENCIKD",
-          password: "ENCIKD$$",
-        }),
-      })
-    );
+    const loginContext = createMockContext({
+      method: "POST",
+      body: {
+        username: "ENCIKD",
+        password: "ENCIKD$$",
+      },
+    });
 
-    const cookie = loginResponse.headers.get("set-cookie");
+    await loginHandler(loginContext.req, loginContext.res);
+
+    const cookie = loginContext.state.headers["Set-Cookie"];
 
     expect(cookie).toBeTruthy();
 
-    const sessionResponse = await sessionHandler.fetch(
-      new Request("https://example.com/api/management/session", {
-        headers: {
-          cookie: cookie ?? "",
-        },
-      })
-    );
+    const sessionContext = createMockContext({
+      method: "GET",
+      headers: {
+        cookie: cookie ?? "",
+      },
+    });
 
-    expect(sessionResponse.status).toBe(200);
-    await expect(sessionResponse.json()).resolves.toEqual(
+    await sessionHandler(sessionContext.req, sessionContext.res);
+
+    expect(sessionContext.state.statusCode).toBe(200);
+    expect(sessionContext.state.jsonBody).toEqual(
       expect.objectContaining({
         authenticated: true,
         user: expect.objectContaining({
@@ -82,3 +77,45 @@ describe("management auth handlers", () => {
     );
   });
 });
+
+function createMockContext(options: {
+  body?: unknown;
+  headers?: Record<string, string>;
+  method: string;
+}) {
+  const state: {
+    headers: Record<string, string>;
+    jsonBody: unknown;
+    statusCode: number;
+  } = {
+    headers: {},
+    jsonBody: null,
+    statusCode: 200,
+  };
+
+  const req = {
+    body: options.body,
+    headers: {
+      cookie: options.headers?.cookie ?? "",
+    },
+    method: options.method,
+    query: {},
+  };
+
+  const res = {
+    json(body: unknown) {
+      state.jsonBody = body;
+      return res;
+    },
+    setHeader(key: string, value: string) {
+      state.headers[key] = value;
+      return res;
+    },
+    status(code: number) {
+      state.statusCode = code;
+      return res;
+    },
+  };
+
+  return { req, res, state };
+}
