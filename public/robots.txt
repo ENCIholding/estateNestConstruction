@@ -1,6 +1,7 @@
 User-agent: *
 Allow: /
 Allow: /accessibility
+Disallow: /thank-you
 
 # Disallow specific management paths (using correct slash notation)
 Disallow: /management/login

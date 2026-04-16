@@ -13,19 +13,19 @@ export default function ManagementModuleUnavailable({
   return (
     <ManagementLayout currentPageName={currentPageName}>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">{title}</h1>
-          <p className="mt-2 text-slate-600">
+        <div className="dashboard-panel p-8">
+          <h1 className="text-2xl font-bold text-foreground">{title}</h1>
+          <p className="mt-2 text-muted-foreground">
             This module is intentionally offline until its backend, auth, and
             verification path are fully wired.
           </p>
         </div>
 
-        <Card>
+        <Card className="dashboard-panel p-2">
           <CardHeader>
-            <CardTitle>Temporarily disabled for safety</CardTitle>
+            <CardTitle className="text-foreground">Temporarily disabled for safety</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3 text-sm text-slate-600">
+          <CardContent className="space-y-3 text-sm text-muted-foreground">
             <p>
               The previous version exposed routes that looked live before the
               underlying APIs and server-side authorization were reliable.

@@ -8,10 +8,13 @@
     "build": "vite build",
     "lint": "eslint . --quiet",
     "lint:fix": "eslint . --fix",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "smoke": "node scripts/smoke-check.mjs",
     "typecheck": "tsc -b",
     "preview": "vite preview",
     "verify:env": "node scripts/check-management-env.mjs",
-    "verify": "npm run typecheck && npm run build && npm run verify:env"
+    "verify": "npm run lint && npm run typecheck && npm run test && npm run build && npm run smoke && npm run verify:env"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^17.0.0",
@@ -100,6 +103,8 @@
     "postcss": "^8.5.3",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.8.2",
-    "vite": "^6.1.0"
+    "typescript-eslint": "^8.58.2",
+    "vite": "^6.1.0",
+    "vitest": "^4.1.4"
   }
 }

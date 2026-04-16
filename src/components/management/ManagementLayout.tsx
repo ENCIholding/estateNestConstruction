@@ -209,6 +209,7 @@ export default function ManagementLayout({
                 <input
                   type="text"
                   placeholder="Search menu..."
+                  aria-label="Search management menu"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full rounded-xl border border-border/80 bg-card/80 py-2 pl-10 pr-3 text-sm text-foreground shadow-sm focus:outline-none focus:ring-2 focus:ring-enc-orange/50"
@@ -300,7 +301,7 @@ export default function ManagementLayout({
           </div>
         </aside>
 
-        <main className="min-h-screen pt-16 lg:ml-72 lg:pt-0">
+        <main id="main-content" className="min-h-screen pt-16 lg:ml-72 lg:pt-0">
           <div className="p-4 lg:p-8">{children}</div>
         </main>
       </div>

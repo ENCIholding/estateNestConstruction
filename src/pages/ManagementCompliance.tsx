@@ -137,7 +137,7 @@ export default function ManagementCompliance() {
   }, [compliance, projectMap, search]);
 
   const getScore = (item: ComplianceItem) => {
-    let total = 6;
+    const total = 6;
     let done = 0;
 
     if (item.alberta_one_call_status === "Cleared") done++;

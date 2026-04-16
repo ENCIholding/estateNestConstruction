@@ -1,439 +1,371 @@
-import React, { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, useSearchParams } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { useQuery } from "@tanstack/react-query";
 import {
   ArrowLeft,
-  MapPin,
-  FileText,
-  CheckCircle2,
-  Clock,
-  Loader2,
+  CalendarClock,
   ExternalLink,
-  Pencil,
+  FileText,
+  Mail,
+  MapPin,
+  ShieldCheck,
+  TriangleAlert,
+  UserRound,
 } from "lucide-react";
-import { format, addYears } from "date-fns";
-import ManagementProjectForm from "@/components/projects/ManagementProjectForm";
+import { Link, useSearchParams } from "react-router-dom";
+import ManagementLayout from "@/components/management/ManagementLayout";
+import Badge from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-const statusColors: Record<string, string> = {
-  Planning: "bg-blue-50 text-blue-700 border-blue-200",
-  "Pre-Construction": "bg-amber-50 text-amber-700 border-amber-200",
-  Active: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  Warranty: "bg-purple-50 text-purple-700 border-purple-200",
-  Completed: "bg-slate-100 text-slate-700 border-slate-200",
+type ManagementProject = {
+  id: string;
+  project_name: string;
+  civic_address: string;
+  status: string;
+  estimated_budget?: number;
+  selling_price?: number;
+  start_date?: string;
+  estimated_end_date?: string;
+  actual_end_date?: string;
+  legal_land_description?: string;
+  warranty_start_date?: string;
+  zoning_code?: string;
+  deposit_amount?: number;
+  development_permit_pdf?: string;
+  building_permit_pdf?: string;
+  real_property_report?: string;
+  project_owner?: string;
+  project_manager?: string;
+  primary_contact_email?: string;
+  next_milestone?: string;
+  status_note?: string;
 };
 
-async function fetchJson(url: string, options: RequestInit = {}): Promise<any> {
-  const res = await fetch(url, {
+async function fetchJson<T>(url: string): Promise<T> {
+  const response = await fetch(url, {
+    cache: "no-store",
     credentials: "include",
-    headers: { "Content-Type": "application/json" },
-    ...options,
   });
 
-  if (!res.ok) {
-    let message = "API error";
-    try {
-      const errorData = await res.json();
-      message = errorData?.error || message;
-    } catch {
-      message = `${res.status} ${res.statusText}`;
-    }
-    throw new Error(message);
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error?.message || `Request failed: ${response.status}`);
   }
 
-  return res.json();
+  return response.json();
+}
+
+function formatCurrency(value?: number) {
+  if (!value) {
+    return "Not set";
+  }
+
+  return new Intl.NumberFormat("en-CA", {
+    style: "currency",
+    currency: "CAD",
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
+function formatDate(value?: string) {
+  if (!value) {
+    return "Not set";
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return "Invalid date";
+  }
+
+  return new Intl.DateTimeFormat("en-CA", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(parsed);
+}
+
+function getStatusClass(status?: string) {
+  const normalized = status?.toLowerCase();
+
+  if (normalized === "active") {
+    return "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300";
+  }
+
+  if (normalized === "pre-construction") {
+    return "bg-amber-500/10 text-amber-700 dark:text-amber-300";
+  }
+
+  if (normalized === "completed" || normalized === "warranty") {
+    return "bg-slate-500/10 text-slate-700 dark:text-slate-300";
+  }
+
+  return "bg-muted text-muted-foreground";
 }
 
 export default function ManagementProjectDetails() {
-  const [showForm, setShowForm] = useState(false);
-  const [activeTab, setActiveTab] = useState("overview"); // Replaced Tabs with manual tab state
-  const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
-
   const projectId = searchParams.get("id");
 
-  const { data: sessionData } = useQuery({
-    queryKey: ["session"],
-    queryFn: () => fetchJson("/api/management/session"),
+  const {
+    data: project,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["management-project", projectId],
+    queryFn: () => fetchJson<ManagementProject>(`/api/management/projects/${projectId}`),
+    enabled: Boolean(projectId),
   });
 
-  const user = sessionData?.user;
-  const role = user?.app_role || "Admin";
+  const diligenceLinks = [
+    {
+      href: project?.development_permit_pdf,
+      label: "Development permit",
+    },
+    {
+      href: project?.building_permit_pdf,
+      label: "Building permit",
+    },
+    {
+      href: project?.real_property_report,
+      label: "Real property report",
+    },
+  ].filter((item) => item.href);
 
-  const showFinancials = role === "Admin" || role === "Accountant";
-  const canEdit = role === "Admin";
-
-  const { data: project, isLoading } = useQuery({
-    queryKey: ["project", projectId],
-    queryFn: () => fetchJson(`/api/management/projects/${projectId}`),
-    enabled: !!projectId,
-  });
-
-  const { data: tasks = [] } = useQuery({
-    queryKey: ["tasks", projectId],
-    queryFn: () => fetchJson(`/api/management/tasks?project_id=${projectId}`),
-    enabled: !!projectId,
-  });
-
-  const { data: budgetItems = [] } = useQuery({
-    queryKey: ["budget", projectId],
-    queryFn: () =>
-      fetchJson(`/api/management/budget-items?project_id=${projectId}`),
-    enabled: !!projectId,
-  });
-
-  const { data: compliance = [] } = useQuery({
-    queryKey: ["compliance", projectId],
-    queryFn: () =>
-      fetchJson(`/api/management/compliance?project_id=${projectId}`),
-    enabled: !!projectId,
-  });
-
-  const { data: changeOrders = [] } = useQuery({
-    queryKey: ["changeOrders", projectId],
-    queryFn: () =>
-      fetchJson(`/api/management/change-orders?project_id=${projectId}`),
-    enabled: !!projectId,
-  });
-
-  const { data: documents = [] } = useQuery({
-    queryKey: ["docs", projectId],
-    queryFn: () =>
-      fetchJson(`/api/management/documents?project_id=${projectId}`),
-    enabled: !!projectId,
-  });
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
-
-  if (!project) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-        <p>Project not found</p>
-        <Link to="/management/projects">
-          <Button variant="outline">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Projects
-          </Button>
-        </Link>
-      </div>
-    );
-  }
-
-  const totalActual = budgetItems.reduce(
-    (s: number, i: any) => s + (i.actual_cost || 0),
-    0
-  );
-
-  const grossProfit = (project.selling_price || 0) - totalActual;
-
-  const profitMargin = project.selling_price
-    ? ((grossProfit / project.selling_price) * 100).toFixed(1)
-    : "0";
-
-  const completedTasks = tasks.filter(
-    (t: any) => t.status === "Completed"
-  ).length;
-
-  const taskProgress = tasks.length
-    ? ((completedTasks / tasks.length) * 100).toFixed(0)
-    : "0";
-
-  const warrantyExpiry = project.warranty_start_date
-    ? addYears(new Date(project.warranty_start_date), 1)
-    : null;
+  const controlGaps = project
+    ? [
+        !project.legal_land_description ? "Legal land description is missing." : null,
+        !project.estimated_budget ? "Budget baseline is missing." : null,
+        !project.project_manager && !project.project_owner
+          ? "Project owner or manager is not assigned."
+          : null,
+        !project.primary_contact_email ? "Primary contact email is not set." : null,
+        !diligenceLinks.length ? "No permit or diligence links are attached." : null,
+      ].filter(Boolean)
+    : [];
 
   return (
-    <div className="min-h-screen bg-slate-50 p-8">
-      <div className="mb-8">
-        <Link to="/management/projects" className="mb-4 inline-block">
-          <Button variant="ghost" size="sm">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Projects
-          </Button>
-        </Link>
-
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <h1 className="text-3xl font-bold mb-2">{project.project_name}</h1>
-            <div className="flex items-center gap-4 text-slate-600">
-              {/* Replaced Badge with span */}
-              <span
-                className={`px-3 py-1 rounded text-sm font-medium ${
-                  statusColors[project.status || ""] || ""
-                }`}
-              >
-                {project.status}
-              </span>
-              <div className="flex items-center gap-1">
-                <MapPin className="h-4 w-4" />
-                {project.civic_address}
-              </div>
-            </div>
-          </div>
-
-          {canEdit && (
-            <Button onClick={() => setShowForm(true)}>
-              <Pencil className="mr-2 h-4 w-4" />
-              Edit
+    <ManagementLayout currentPageName="projects">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <Button asChild variant="ghost" className="mb-3 rounded-full px-0 text-muted-foreground hover:bg-transparent">
+              <Link to="/management/projects">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to projects
+              </Link>
             </Button>
-          )}
+
+            <h1 className="text-3xl font-bold text-foreground">
+              {isLoading ? "Loading project..." : project?.project_name || "Project details"}
+            </h1>
+          </div>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Task Progress</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{taskProgress}%</div>
-            {/* Replaced Progress with div */}
-            <div className="w-full bg-slate-200 rounded-full h-2 mt-2">
-              <div
-                className="bg-emerald-600 h-2 rounded-full transition-all"
-                style={{ width: `${taskProgress}%` }}
-              ></div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {showFinancials && (
+        {isLoading ? (
+          <Card className="dashboard-panel p-2">
+            <CardContent className="p-6 text-sm text-muted-foreground">
+              Loading project record...
+            </CardContent>
+          </Card>
+        ) : error || !project ? (
+          <Card className="dashboard-panel p-2">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-foreground">
+                <TriangleAlert className="h-5 w-5 text-rose-500" />
+                Project record unavailable
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm leading-6 text-muted-foreground">
+              <p>The requested project could not be loaded from the management API.</p>
+              <p>Return to the project registry and verify the project ID and source data.</p>
+            </CardContent>
+          </Card>
+        ) : (
           <>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Budget Used
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  ${totalActual.toLocaleString()}
+            <Card className="dashboard-panel p-2">
+              <CardContent className="space-y-4 p-6">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h2 className="text-2xl font-semibold text-foreground">{project.project_name}</h2>
+                      <Badge className={`rounded-full ${getStatusClass(project.status)}`}>
+                        {project.status}
+                      </Badge>
+                    </div>
+                    <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+                      <MapPin className="h-4 w-4 text-enc-orange" />
+                      {project.civic_address}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl border border-border/80 bg-background/80 px-4 py-3 text-sm text-muted-foreground">
+                    Last noted milestone: {project.next_milestone || "Not set"}
+                  </div>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                  <div className="dashboard-item p-4">
+                    <p className="text-sm font-medium text-foreground">Budget baseline</p>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      {formatCurrency(project.estimated_budget)}
+                    </p>
+                  </div>
+                  <div className="dashboard-item p-4">
+                    <p className="text-sm font-medium text-foreground">Target completion</p>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      {formatDate(project.estimated_end_date)}
+                    </p>
+                  </div>
+                  <div className="dashboard-item p-4">
+                    <p className="text-sm font-medium text-foreground">Warranty start</p>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      {formatDate(project.warranty_start_date)}
+                    </p>
+                  </div>
+                  <div className="dashboard-item p-4">
+                    <p className="text-sm font-medium text-foreground">Deposit recorded</p>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      {formatCurrency(project.deposit_amount)}
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Profit</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  ${grossProfit.toLocaleString()}
-                </div>
-                <p className="text-sm text-slate-600 mt-1">
-                  Margin {profitMargin}%
-                </p>
-              </CardContent>
-            </Card>
+            <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.9fr)]">
+              <Card className="dashboard-panel p-2">
+                <CardHeader>
+                  <CardTitle className="text-xl text-foreground">Project controls</CardTitle>
+                </CardHeader>
+                <CardContent className="grid gap-4 md:grid-cols-2">
+                  <div className="dashboard-item p-4">
+                    <p className="text-sm font-medium text-foreground">Start date</p>
+                    <p className="mt-2 text-sm text-muted-foreground">{formatDate(project.start_date)}</p>
+                  </div>
+                  <div className="dashboard-item p-4">
+                    <p className="text-sm font-medium text-foreground">Actual completion</p>
+                    <p className="mt-2 text-sm text-muted-foreground">{formatDate(project.actual_end_date)}</p>
+                  </div>
+                  <div className="dashboard-item p-4">
+                    <p className="text-sm font-medium text-foreground">Selling price</p>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      {formatCurrency(project.selling_price)}
+                    </p>
+                  </div>
+                  <div className="dashboard-item p-4">
+                    <p className="text-sm font-medium text-foreground">Zoning code</p>
+                    <p className="mt-2 text-sm text-muted-foreground">{project.zoning_code || "Not set"}</p>
+                  </div>
+                  <div className="dashboard-item p-4 md:col-span-2">
+                    <p className="text-sm font-medium text-foreground">Legal land description</p>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                      {project.legal_land_description || "No legal land description has been recorded in the current registry."}
+                    </p>
+                  </div>
+                  <div className="dashboard-item p-4 md:col-span-2">
+                    <p className="text-sm font-medium text-foreground">Status note</p>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                      {project.status_note || "No internal status note has been captured for this project yet."}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
 
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Change Orders
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{changeOrders.length}</div>
-              </CardContent>
-            </Card>
+              <Card className="dashboard-panel p-2">
+                <CardHeader>
+                  <CardTitle className="text-xl text-foreground">Ownership & communications</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="dashboard-item p-4">
+                    <p className="flex items-center gap-2 text-sm font-medium text-foreground">
+                      <UserRound className="h-4 w-4 text-enc-orange" />
+                      Project owner
+                    </p>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      {project.project_owner || "Not assigned"}
+                    </p>
+                  </div>
+                  <div className="dashboard-item p-4">
+                    <p className="flex items-center gap-2 text-sm font-medium text-foreground">
+                      <ShieldCheck className="h-4 w-4 text-enc-orange" />
+                      Project manager
+                    </p>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      {project.project_manager || "Not assigned"}
+                    </p>
+                  </div>
+                  <div className="dashboard-item p-4">
+                    <p className="flex items-center gap-2 text-sm font-medium text-foreground">
+                      <Mail className="h-4 w-4 text-enc-orange" />
+                      Primary contact
+                    </p>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      {project.primary_contact_email || "No project contact email has been recorded."}
+                    </p>
+                  </div>
+                  <div className="dashboard-item p-4">
+                    <p className="flex items-center gap-2 text-sm font-medium text-foreground">
+                      <CalendarClock className="h-4 w-4 text-enc-orange" />
+                      Next milestone
+                    </p>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      {project.next_milestone || "No upcoming milestone is recorded yet."}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.9fr)]">
+              <Card className="dashboard-panel p-2">
+                <CardHeader>
+                  <CardTitle className="text-xl text-foreground">Documents & diligence</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {diligenceLinks.length ? (
+                    diligenceLinks.map((item) => (
+                      <a
+                        key={item.label}
+                        href={item.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="dashboard-item flex items-center justify-between gap-4 p-4"
+                      >
+                        <div className="flex items-center gap-3">
+                          <FileText className="h-4 w-4 text-enc-orange" />
+                          <span className="text-sm font-medium text-foreground">{item.label}</span>
+                        </div>
+                        <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                      </a>
+                    ))
+                  ) : (
+                    <div className="dashboard-item p-4 text-sm leading-6 text-muted-foreground">
+                      No permit or diligence links are attached to this project yet. Keep lender/client-facing references offline until these records are linked.
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card className="dashboard-panel p-2">
+                <CardHeader>
+                  <CardTitle className="text-xl text-foreground">Readiness gaps</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {controlGaps.length ? (
+                    controlGaps.map((gap) => (
+                      <div key={gap} className="dashboard-item p-4 text-sm leading-6 text-muted-foreground">
+                        {gap}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="dashboard-item p-4 text-sm leading-6 text-muted-foreground">
+                      No obvious project-control gaps were detected from the current record.
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           </>
         )}
       </div>
-
-      {/* Replaced Tabs with div and buttons */}
-      <div className="space-y-4">
-        <div className="flex gap-2 border-b">
-          <button
-            onClick={() => setActiveTab("overview")}
-            className={`px-4 py-2 font-medium ${
-              activeTab === "overview"
-                ? "border-b-2 border-blue-600 text-blue-600"
-                : "text-slate-600"
-            }`}
-          >
-            Overview
-          </button>
-          <button
-            onClick={() => setActiveTab("tasks")}
-            className={`px-4 py-2 font-medium ${
-              activeTab === "tasks"
-                ? "border-b-2 border-blue-600 text-blue-600"
-                : "text-slate-600"
-            }`}
-          >
-            Tasks
-          </button>
-          {showFinancials && (
-            <button
-              onClick={() => setActiveTab("financials")}
-              className={`px-4 py-2 font-medium ${
-                activeTab === "financials"
-                  ? "border-b-2 border-blue-600 text-blue-600"
-                  : "text-slate-600"
-              }`}
-            >
-              Financials
-            </button>
-          )}
-          <button
-            onClick={() => setActiveTab("documents")}
-            className={`px-4 py-2 font-medium ${
-              activeTab === "documents"
-                ? "border-b-2 border-blue-600 text-blue-600"
-                : "text-slate-600"
-            }`}
-          >
-            Documents
-          </button>
-        </div>
-
-        {activeTab === "overview" && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Project Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-slate-600 mb-1">Start Date</p>
-                  <p className="font-medium">{project.start_date || "—"}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-slate-600 mb-1">Estimated End</p>
-                  <p className="font-medium">
-                    {project.estimated_end_date || "—"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-slate-600 mb-1">Warranty Expiry</p>
-                  <p className="font-medium">
-                    {warrantyExpiry
-                      ? format(warrantyExpiry, "MMM d, yyyy")
-                      : "—"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-slate-600 mb-1">
-                    Legal Description
-                  </p>
-                  <p className="font-medium">
-                    {project.legal_land_description || "—"}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {activeTab === "tasks" && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Tasks ({tasks.length})</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {tasks.length > 0 ? (
-                <div className="space-y-2">
-                  {tasks.map((t: any) => (
-                    <div
-                      key={t.id}
-                      className="flex items-center justify-between p-3 bg-slate-50 rounded"
-                    >
-                      <span className="font-medium">{t.task_name}</span>
-                      <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                        {t.status}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-slate-600">No tasks found</p>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {showFinancials && activeTab === "financials" && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Budget Items</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {budgetItems.length > 0 ? (
-                <div className="space-y-2">
-                  {budgetItems.map((b: any) => (
-                    <div
-                      key={b.id}
-                      className="flex items-center justify-between p-3 bg-slate-50 rounded"
-                    >
-                      <span className="font-medium">{b.category_name}</span>
-                      <span>${(b.actual_cost || 0).toLocaleString()}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-slate-600">No budget items found</p>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {activeTab === "documents" && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Documents</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {documents.length > 0 ? (
-                <div className="space-y-2">
-                  {documents.map((doc: any) => (
-                    <a
-                      key={doc.id}
-                      href={doc.file_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-between p-3 bg-slate-50 rounded hover:bg-slate-100"
-                    >
-                      <div className="flex items-center gap-2">
-                        <FileText className="h-4 w-4" />
-                        <span className="font-medium">{doc.file_name}</span>
-                      </div>
-                      <ExternalLink className="h-4 w-4" />
-                    </a>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-slate-600">No documents found</p>
-              )}
-            </CardContent>
-          </Card>
-        )}
-      </div>
-
-      {showForm && (
-        <ManagementProjectForm
-          project={project}
-          open={showForm}
-          onClose={() => setShowForm(false)}
-          onSaved={() => {
-            queryClient.invalidateQueries({
-              queryKey: ["project", projectId],
-            });
-            setShowForm(false);
-          }}
-        />
-      )}
-    </div>
+    </ManagementLayout>
   );
 }

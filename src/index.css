@@ -1,8 +1,4 @@
 
-
-body {
-  /* background: red !important; */
-}
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -47,23 +43,23 @@ All colors MUST be HSL.
     --enc-red: 0 85% 60%;
     --enc-red-light: 0 85% 75%;
     --enc-red-foreground: 0 0% 100%;
-    --enc-orange: 25 95% 60%;
+    --enc-orange: 24 88% 48%;
     --enc-orange-light: 25 95% 75%;
     --enc-orange-foreground: 0 0% 100%;
-    --enc-yellow: 50 100% 60%;
+    --enc-yellow: 40 88% 44%;
     --enc-yellow-light: 50 100% 80%;
     --enc-yellow-foreground: 220 50% 10%;
     --enc-coral: 10 90% 65%;
     --enc-coral-light: 10 90% 80%;
     --enc-text-primary: 220 50% 10%;
-    --enc-text-secondary: 220 9% 46%;
+    --enc-text-secondary: 220 18% 32%;
 
     /* Logo-inspired gradients */
     --gradient-hero: linear-gradient(135deg, hsl(0 85% 60%), hsl(25 95% 60%), hsl(50 100% 60%));
     --gradient-warm: linear-gradient(135deg, hsl(10 90% 65%), hsl(25 95% 75%));
     --gradient-accent: linear-gradient(135deg, hsl(25 95% 60%), hsl(50 100% 60%));
-    --gradient-text: linear-gradient(135deg, hsl(0 85% 60%), hsl(25 95% 60%), hsl(50 100% 60%));
-    --gradient-text-alt: linear-gradient(135deg, hsl(25 95% 60%), hsl(10 90% 65%));
+    --gradient-text: linear-gradient(135deg, hsl(0 68% 44%), hsl(20 82% 38%), hsl(33 85% 34%));
+    --gradient-text-alt: linear-gradient(135deg, hsl(20 82% 38%), hsl(5 74% 44%));
     
     /* Modern shadows and effects */
     --shadow-glow: 0 0 40px hsl(var(--enc-orange) / 0.3);
@@ -120,16 +116,16 @@ All colors MUST be HSL.
     --enc-red: 0 85% 60%;
     --enc-red-light: 0 85% 75%;
     --enc-red-foreground: 0 0% 100%;
-    --enc-orange: 25 95% 60%;
+    --enc-orange: 25 92% 62%;
     --enc-orange-light: 25 95% 75%;
     --enc-orange-foreground: 0 0% 100%;
-    --enc-yellow: 50 100% 60%;
+    --enc-yellow: 44 100% 64%;
     --enc-yellow-light: 50 100% 80%;
     --enc-yellow-foreground: 220 50% 10%;
     --enc-coral: 10 90% 65%;
     --enc-coral-light: 10 90% 80%;
     --enc-text-primary: 0 0% 100%;
-    --enc-text-secondary: 220 14% 70%;
+    --enc-text-secondary: 220 22% 78%;
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -148,10 +144,40 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    line-height: 1.6;
+  }
+
+  a,
+  button,
+  input,
+  select,
+  textarea,
+  [role="button"],
+  [tabindex]:not([tabindex="-1"]) {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-enc-orange focus-visible:ring-offset-2 focus-visible:ring-offset-background;
   }
 }
 
 @layer components {
+  .skip-link {
+    position: fixed;
+    left: 1rem;
+    top: 1rem;
+    z-index: 100;
+    transform: translateY(-160%);
+    border-radius: 9999px;
+    background: hsl(var(--foreground));
+    color: hsl(var(--background));
+    padding: 0.75rem 1rem;
+    font-weight: 700;
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.22);
+    transition: transform 0.2s ease;
+  }
+
+  .skip-link:focus {
+    transform: translateY(0);
+  }
+
   .gradient-text {
     background: var(--gradient-text);
     background-clip: text;
@@ -261,4 +287,54 @@ All colors MUST be HSL.
     transform: scale(1.05) rotate(-3deg);
     box-shadow: 0 20px 38px hsl(var(--enc-red) / 0.24);
   }
+}
+
+html.a11y-enhanced .gradient-text,
+html.a11y-enhanced .gradient-text-alt {
+  background: none;
+  color: hsl(var(--foreground));
+  -webkit-text-fill-color: currentColor;
+  animation: none;
+}
+
+html.a11y-enhanced .card-hover,
+html.a11y-enhanced .dashboard-panel,
+html.a11y-enhanced .dashboard-item,
+html.a11y-enhanced .dashboard-icon {
+  transition-duration: 0.15s;
+}
+
+html.a11y-enhanced .card-hover:hover,
+html.a11y-enhanced .dashboard-panel:hover,
+html.a11y-enhanced .dashboard-item:hover,
+html.a11y-enhanced .group:hover .dashboard-icon {
+  transform: none;
+  box-shadow: var(--shadow-card);
+}
+
+html.a11y-enhanced .float-animation,
+html.a11y-enhanced .pulse-glow,
+html.a11y-enhanced .gradient-text {
+  animation: none !important;
+}
+
+html.a11y-enhanced .dashboard-shell {
+  background:
+    radial-gradient(circle at top left, hsl(var(--enc-orange) / 0.06), transparent 24%),
+    radial-gradient(circle at top right, hsl(var(--enc-yellow) / 0.05), transparent 20%),
+    linear-gradient(180deg, hsl(var(--background)), hsl(var(--background)));
+}
+
+html.a11y-enhanced a {
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+html.a11y-enhanced .dashboard-icon {
+  background: hsl(var(--enc-text-primary));
+  box-shadow: none;
+}
+
+html.a11y-enhanced .dashboard-panel::before {
+  opacity: 0.55;
 }

@@ -7,37 +7,38 @@ export type ManagementProject = {
   selling_price?: number;
   start_date?: string;
   estimated_end_date?: string;
+  actual_end_date?: string;
   legal_land_description?: string;
   warranty_start_date?: string;
+  zoning_code?: string;
+  deposit_amount?: number;
+  development_permit_pdf?: string;
+  building_permit_pdf?: string;
+  real_property_report?: string;
+  project_owner?: string;
+  project_manager?: string;
+  primary_contact_email?: string;
+  next_milestone?: string;
+  status_note?: string;
 };
 
-const fallbackProjects: ManagementProject[] = [
-  {
-    id: "p1",
-    project_name: "Parkallen Fourplex",
-    civic_address: "109 Street NW, Edmonton",
-    status: "Active",
-    estimated_budget: 2300000,
-    selling_price: 2650000,
-    start_date: "2026-03-01",
-    estimated_end_date: "2026-10-30",
-    legal_land_description: "Plan 1221KS, Block 12, Lot 4",
-    warranty_start_date: "2026-11-01",
-  },
-  {
-    id: "p2",
-    project_name: "Corner Daycare Concept",
-    civic_address: "80 Ave NW, Edmonton",
-    status: "Pre-Construction",
-    estimated_budget: 1200000,
-    selling_price: 1480000,
-    start_date: "2026-05-15",
-    estimated_end_date: "2027-01-31",
-    legal_land_description: "Plan 7621981, Block 8, Lot 16",
-  },
-];
+export type ProjectRegistryState = {
+  editable: boolean;
+  projectCount: number;
+  source: "environment" | "temporary" | "unconfigured";
+};
 
-let inMemoryProjects = fallbackProjects.map((project) => ({ ...project }));
+let inMemoryProjects: ManagementProject[] = [];
+
+function isProjectRecord(project: unknown): project is ManagementProject {
+  return (
+    !!project &&
+    typeof project === "object" &&
+    typeof (project as ManagementProject).id === "string" &&
+    typeof (project as ManagementProject).project_name === "string" &&
+    typeof (project as ManagementProject).civic_address === "string"
+  );
+}
 
 function readProjectsFromEnv(): ManagementProject[] | null {
   const raw = process.env.MANAGEMENT_PROJECTS_JSON;
@@ -52,16 +53,36 @@ function readProjectsFromEnv(): ManagementProject[] | null {
       return null;
     }
 
-    return parsed.filter(
-      (project): project is ManagementProject =>
-        !!project &&
-        typeof project.id === "string" &&
-        typeof project.project_name === "string" &&
-        typeof project.civic_address === "string"
-    );
+    return parsed.filter(isProjectRecord);
   } catch {
     return null;
   }
+}
+
+export function getProjectRegistryState(): ProjectRegistryState {
+  const envProjects = readProjectsFromEnv();
+
+  if (envProjects?.length) {
+    return {
+      editable: false,
+      projectCount: envProjects.length,
+      source: "environment",
+    };
+  }
+
+  if (inMemoryProjects.length) {
+    return {
+      editable: false,
+      projectCount: inMemoryProjects.length,
+      source: "temporary",
+    };
+  }
+
+  return {
+    editable: false,
+    projectCount: 0,
+    source: "unconfigured",
+  };
 }
 
 export async function getAllProjects(): Promise<ManagementProject[]> {

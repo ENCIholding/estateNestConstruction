@@ -1,94 +1,79 @@
-import { Users, Building2, FileCheck, MessageSquare } from "lucide-react";
+import { Building2, FileCheck, MessageSquare, Users } from "lucide-react";
 
-const ProjectManagement = () => {
+const controls = [
+  {
+    icon: Users,
+    title: "Trade coordination",
+    description:
+      "Sequencing, accountability, and field communication need to be visible if a project is going to stay on track.",
+  },
+  {
+    icon: Building2,
+    title: "Vendor and cost discipline",
+    description:
+      "Procurement, vendor follow-up, and cost baselines need to be reviewed against actual project conditions, not assumed from template data.",
+  },
+  {
+    icon: FileCheck,
+    title: "Permits and compliance tracking",
+    description:
+      "Permit references, legal details, and compliance notes should be linked to the project record before being treated as complete.",
+  },
+  {
+    icon: MessageSquare,
+    title: "Client and lender communication",
+    description:
+      "The goal is to keep updates, questions, and approvals tied to the actual project rather than scattered across inboxes and spreadsheets.",
+  },
+];
+
+export default function ProjectManagement() {
   return (
-    <section 
-      id="project-management" 
-      className="py-24 bg-muted/30"
-    >
+    <section id="project-management" className="bg-muted/30 py-24">
       <div className="container mx-auto px-6">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-4xl md:text-5xl font-bold text-center mb-4">
-            <span className="gradient-text">Project Management</span>
-            <span className="text-enc-text-primary"> & Governance</span>
-          </h2>
-          <p className="text-lg text-center text-muted-foreground mb-12 max-w-3xl mx-auto">
-            ENCI manages projects under the PMP framework, ensuring they are delivered on time, within budget, and without compromising safety or code. Our stakeholder management spans:
-          </p>
-          
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="bg-card border border-border rounded-3xl p-8 group hover:scale-105 transition-all duration-500 hover:shadow-glow hover:bg-gradient-warm">
-              <div className="flex items-start space-x-4">
-                <div className="bg-gradient-to-br from-enc-orange to-enc-yellow p-3 rounded-lg flex-shrink-0">
-                  <Users className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold mb-2 text-foreground group-hover:text-white transition-all">
-                    Trades Level
-                  </h3>
-                  <p className="text-muted-foreground leading-relaxed group-hover:text-white/90 transition-colors">
-                    Coordinating skilled professionals to ensure seamless sequencing and quality assurance.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-card border border-border rounded-3xl p-8 group hover:scale-105 transition-all duration-500 hover:shadow-glow hover:bg-gradient-warm">
-              <div className="flex items-start space-x-4">
-                <div className="bg-gradient-to-br from-enc-orange to-enc-yellow p-3 rounded-lg flex-shrink-0">
-                  <Building2 className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold mb-2 text-foreground group-hover:text-white transition-all">
-                    Vendor Level
-                  </h3>
-                  <p className="text-muted-foreground leading-relaxed group-hover:text-white/90 transition-colors">
-                    Managing suppliers to secure timely materials and avoid budget overruns.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-card border border-border rounded-3xl p-8 group hover:scale-105 transition-all duration-500 hover:shadow-glow hover:bg-gradient-warm">
-              <div className="flex items-start space-x-4">
-                <div className="bg-gradient-to-br from-enc-orange to-enc-yellow p-3 rounded-lg flex-shrink-0">
-                  <FileCheck className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold mb-2 text-foreground group-hover:text-white transition-all">
-                    Compliance Level
-                  </h3>
-                  <p className="text-muted-foreground leading-relaxed group-hover:text-white/90 transition-colors">
-                    Continuous adherence to municipal bylaws, Alberta Building Code, OHS, and lender requirements.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-card border border-border rounded-3xl p-8 group hover:scale-105 transition-all duration-500 hover:shadow-glow hover:bg-gradient-warm">
-              <div className="flex items-start space-x-4">
-                <div className="bg-gradient-to-br from-enc-orange to-enc-yellow p-3 rounded-lg flex-shrink-0">
-                  <MessageSquare className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold mb-2 text-foreground group-hover:text-white transition-all">
-                    Client Level
-                  </h3>
-                  <p className="text-muted-foreground leading-relaxed group-hover:text-white/90 transition-colors">
-                    Transparent communication, milestone approvals, and documented trust conditions.
-                  </p>
-                </div>
-              </div>
-            </div>
+        <div className="mx-auto max-w-6xl">
+          <div className="text-center">
+            <h2 className="text-4xl font-bold md:text-5xl">
+              <span className="gradient-text">Project Management</span>
+              <span className="text-enc-text-primary"> & Governance</span>
+            </h2>
+            <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
+              Estate Nest Capital is building around the controls that matter most to delivery: schedules that can be trusted, documentation that can be reviewed, and responsibilities that are visible.
+            </p>
           </div>
-          
-          <p className="text-lg text-center text-muted-foreground mt-12 leading-relaxed max-w-3xl mx-auto">
-            Every build is monitored through MS Project, Gantt charts, and Procore, giving clients and lenders visibility into real-time progress. This multi-tiered approach ensures projects are delivered on time, within budget, and to the highest standards of quality while protecting profitability for the company and satisfaction for the client.
+
+          <div className="mt-12 grid gap-8 md:grid-cols-2">
+            {controls.map((control) => {
+              const Icon = control.icon;
+
+              return (
+                <div
+                  key={control.title}
+                  className="rounded-[1.75rem] border border-border bg-card p-8 shadow-lg transition-transform duration-300 hover:scale-[1.01]"
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-hero text-white shadow-glow">
+                      <Icon className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-foreground">
+                        {control.title}
+                      </h3>
+                      <p className="mt-3 leading-7 text-muted-foreground">
+                        {control.description}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <p className="mx-auto mt-12 max-w-4xl text-center text-lg leading-8 text-muted-foreground">
+            Specific software and reporting tools may vary by project stage. What matters is that the project controls are real, current, and reviewable by the people relying on them.
           </p>
         </div>
       </div>
     </section>
   );
-};
-
-export default ProjectManagement;
+}

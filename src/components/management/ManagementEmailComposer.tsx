@@ -109,7 +109,8 @@ export default function ManagementEmailComposer() {
           <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
             Send branded emails from <strong>hello@estatenest.capital</strong>.
             The Estate Nest signature and confidentiality notice are appended
-            automatically, and a copy is always sent back to your inbox.
+            automatically, and a copy is always sent back to your inbox. This
+            composer does not yet file messages back into a project activity log.
           </p>
         </div>
 

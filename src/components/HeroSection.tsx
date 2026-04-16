@@ -1,60 +1,58 @@
 import { Link } from "react-router-dom";
 import heroImage from "@/assets/hero-building.jpg";
 
-const HeroSection = () => {
+export default function HeroSection() {
   return (
     <section id="home" className="relative min-h-screen overflow-hidden">
       <div className="absolute inset-0">
         <img
           src={heroImage}
-          alt="Estate Nest Capital modern construction project - luxury residential and commercial building development in Edmonton Alberta"
-          className="w-full h-full object-cover"
+          alt="Estate Nest Capital concept image representing residential and commercial development work in Edmonton, Alberta"
+          className="h-full w-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/45 to-black/75" />
       </div>
 
-      <div className="relative container mx-auto px-6 py-20 pt-32">
-        <div className="max-w-5xl mx-auto">
-          <div className="space-y-16">
-            <div className="space-y-8 float-animation text-left">
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight">
-                <span className="text-white">Building</span>
-                <br />
-                <span className="gradient-text">Community</span>
-              </h1>
-              <p className="text-xl md:text-2xl text-white/90 max-w-3xl leading-relaxed">
-                Edmonton-rooted development and construction firm creating lasting value
-                through strategic projects.
-              </p>
-            </div>
+      <div className="relative container mx-auto px-6 py-24 pt-36">
+        <div className="max-w-5xl">
+          <div className="space-y-8">
+            <p className="text-sm font-semibold uppercase tracking-[0.35em] text-white/75">
+              Edmonton construction and development
+            </p>
+            <h1 className="max-w-4xl text-5xl font-bold tracking-tight text-white md:text-6xl lg:text-7xl">
+              Project delivery with
+              <span className="block gradient-text"> clearer controls and real accountability</span>
+            </h1>
+            <p className="max-w-3xl text-xl leading-8 text-white/90 md:text-2xl">
+              Estate Nest Capital Inc. is building a practical platform for pre-construction planning,
+              project execution, and stakeholder communication across residential and commercial work.
+            </p>
+          </div>
 
-            <div className="grid md:grid-cols-2 gap-12 mt-20">
-              <Link to="/investor-relations" className="block">
-                <div className="space-y-4 group hover:scale-105 transition-transform duration-500 p-8 rounded-2xl hover:bg-white/10 backdrop-blur-sm cursor-pointer">
-                  <h2 className="text-3xl md:text-4xl font-bold">
-                    <span className="gradient-text-alt">Investment</span>
-                    <span className="text-white"> Excellence</span>
-                  </h2>
-                  <p className="text-lg text-white/90 group-hover:text-white transition-colors">
-                    Strategic real estate investments focused on long-term value creation
-                    and sustainable growth.
-                  </p>
-                </div>
-              </Link>
+          <div className="mt-12 grid gap-6 md:grid-cols-2">
+            <Link to="/builder-profile" className="block">
+              <div className="rounded-[1.75rem] border border-white/15 bg-white/8 p-8 backdrop-blur-sm transition-transform duration-300 hover:scale-[1.02] hover:bg-white/12">
+                <h2 className="text-3xl font-bold text-white">
+                  Builder
+                  <span className="gradient-text-alt"> Profile</span>
+                </h2>
+                <p className="mt-4 text-lg leading-7 text-white/85">
+                  Review how Estate Nest approaches planning, project controls, documentation, and lender/client communication.
+                </p>
+              </div>
+            </Link>
 
-              <Link to="/investor-relations" className="block">
-                <div className="space-y-4 group hover:scale-105 transition-transform duration-500 p-8 rounded-2xl hover:bg-white/10 backdrop-blur-sm cursor-pointer">
-                  <h2 className="text-3xl md:text-4xl font-bold">
-                    <span className="gradient-text-alt">Capital</span>
-                    <span className="text-white"> Solutions</span>
-                  </h2>
-                  <p className="text-lg text-white/90 group-hover:text-white transition-colors">
-                    Comprehensive financial strategies tailored to maximize your real
-                    estate portfolio potential.
-                  </p>
-                </div>
-              </Link>
-            </div>
+            <Link to="/investor-relations" className="block">
+              <div className="rounded-[1.75rem] border border-white/15 bg-white/8 p-8 backdrop-blur-sm transition-transform duration-300 hover:scale-[1.02] hover:bg-white/12">
+                <h2 className="text-3xl font-bold text-white">
+                  Investor
+                  <span className="gradient-text-alt"> Relations</span>
+                </h2>
+                <p className="mt-4 text-lg leading-7 text-white/85">
+                  Understand how diligence materials, opportunity reviews, and partnership discussions are handled before capital is committed.
+                </p>
+              </div>
+            </Link>
           </div>
         </div>
       </div>
@@ -62,6 +60,4 @@ const HeroSection = () => {
       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-b from-transparent to-background" />
     </section>
   );
-};
-
-export default HeroSection;
+}
