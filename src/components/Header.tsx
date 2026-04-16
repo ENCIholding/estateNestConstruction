@@ -14,10 +14,10 @@ const Header = () => {
 
   const navigationItems = [
     { label: "Home", path: "/" },
-    { label: "Projects", path: "/#projects" },
-    { label: "Builder Profile", path: "/builder-profile" },
-    { label: "Investor Relations", path: "/investor-relations" },
     { label: "About Us", path: "/#about" },
+    { label: "Builder Profile", path: "/builder-profile" },
+    { label: "Projects", path: "/#projects" },
+    { label: "Investor Relations", path: "/investor-relations" },
     { label: "Contact", path: "/#appointment", isContact: true },
     { label: "Management", path: "/management/login" },
   ];

@@ -1,6 +1,7 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Globe, Mail, MapPin, Phone } from "lucide-react";
 import BrandLockup from "@/components/BrandLockup";
+import { scrollToHashTarget } from "@/lib/scroll";
 
 type FooterLink = {
   label: string;
@@ -40,10 +41,26 @@ const footerSections: FooterSection[] = [
 ];
 
 function FooterLinkItem({ link }: { link: FooterLink }) {
+  const location = useLocation();
+
   return (
     <Link
       to={link.path}
       className="text-sm text-white/75 transition-colors hover:text-enc-orange-light"
+      onClick={(event) => {
+        const [targetPath, targetHash] = link.path.split("#");
+
+        if (targetHash && location.pathname === "/") {
+          event.preventDefault();
+          scrollToHashTarget(targetHash, "smooth");
+          return;
+        }
+
+        if (!targetHash && targetPath === location.pathname) {
+          event.preventDefault();
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+      }}
     >
       {link.label}
     </Link>

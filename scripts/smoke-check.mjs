@@ -14,6 +14,16 @@ const management = read("src/lib/management.ts");
 const header = read("src/components/Header.tsx");
 const careers = read("src/pages/Careers.tsx");
 
+const navOrderChecks = [
+  '{ label: "Home", path: "/" }',
+  '{ label: "About Us", path: "/#about" }',
+  '{ label: "Builder Profile", path: "/builder-profile" }',
+  '{ label: "Projects", path: "/#projects" }',
+  '{ label: "Investor Relations", path: "/investor-relations" }',
+  '{ label: "Contact", path: "/#appointment", isContact: true }',
+  '{ label: "Management", path: "/management/login" }',
+];
+
 const expectations = [
   {
     name: "accessibility route in sitemap",
@@ -114,6 +124,17 @@ const expectations = [
   {
     name: "projects navigation exists in public header",
     ok: header.includes('{ label: "Projects", path: "/#projects" }'),
+  },
+  {
+    name: "public header navigation order matches requested order",
+    ok: navOrderChecks.every((entry, index) => {
+      const currentIndex = header.indexOf(entry);
+      const nextIndex = navOrderChecks[index + 1]
+        ? header.indexOf(navOrderChecks[index + 1])
+        : Number.POSITIVE_INFINITY;
+
+      return currentIndex !== -1 && currentIndex < nextIndex;
+    }),
   },
   {
     name: "careers form supports resume upload",

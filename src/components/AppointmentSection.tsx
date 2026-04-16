@@ -109,9 +109,12 @@ export default function AppointmentSection() {
   };
 
   return (
-    <section id="appointment" className="scroll-mt-32 bg-muted/30 py-20 md:scroll-mt-36">
+    <section
+      id="appointment"
+      className="scroll-mt-32 bg-muted/30 pb-20 pt-10 md:scroll-mt-36 md:pt-14"
+    >
       <div className="container mx-auto px-6">
-        <div className="mb-16 text-center">
+        <div className="mb-12 text-center md:mb-14">
           <h2 className="text-4xl font-bold md:text-5xl">
             <span className="gradient-text">Schedule</span>
             <span className="text-enc-text-primary"> a consultation</span>
@@ -121,8 +124,8 @@ export default function AppointmentSection() {
           </p>
         </div>
 
-        <div className="mx-auto max-w-4xl">
-          <div className="grid gap-12 lg:grid-cols-2">
+        <div className="mx-auto max-w-5xl">
+          <div className="grid gap-8 lg:grid-cols-2 xl:gap-10">
             <Card className="card-hover">
               <CardHeader>
                 <CardTitle className="flex items-center gap-3 text-2xl text-enc-text-primary">
