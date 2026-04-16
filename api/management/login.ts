@@ -1,5 +1,4 @@
-import { createSessionToken, buildSessionCookie } from "../_lib/auth";
-import { getAllProjects } from "../_lib/projects";
+import { buildSessionCookie, createSessionToken } from "../_lib/auth";
 
 type LoginBody = {
   username?: string;
@@ -11,6 +10,8 @@ export default async function handler(req: any, res: any) {
     res.setHeader("Allow", "POST");
     return res.status(405).json({ message: "Method not allowed" });
   }
+
+  res.setHeader("Cache-Control", "no-store");
 
   try {
     const body: LoginBody =
@@ -39,7 +40,7 @@ export default async function handler(req: any, res: any) {
 
     return res.status(200).json({
       ok: true,
-      redirectTo: "/management/dashboard", // Corrected path
+      redirectTo: "/management/dashboard",
     });
   } catch (error) {
     return res.status(500).json({

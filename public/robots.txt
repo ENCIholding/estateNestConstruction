@@ -1,10 +1,12 @@
 User-agent: *
 Allow: /
+Allow: /accessibility
 
 # Disallow specific management paths (using correct slash notation)
 Disallow: /management/login
 Disallow: /management/dashboard
 Disallow: /management/projects
+Disallow: /management/tasks
 Disallow: /management/vendors
 Disallow: /management/documents
 Disallow: /management/reports
@@ -18,6 +20,12 @@ Disallow: /management/compliance
 Disallow: /management/estimator
 Disallow: /management/master-database
 Disallow: /management/mobile-tasks
+Disallow: /management/warranty-reminder
+Disallow: /management/automation
+Disallow: /management/analytics
+Disallow: /management/daily-log
+Disallow: /management/deficiency-punch-list
+Disallow: /management/license
 Disallow: /management/project-details
 Disallow: /management/vendor-details
 Disallow: /management/vendor-bills

@@ -1,68 +1,50 @@
 import { getCookie, getSessionCookieName, verifySessionToken } from "../../_lib/auth";
-import { updateProjectById } from "../../_lib/projects";
+import { getProjectById, updateProjectById } from "../../_lib/projects";
 
-type RouteContext = {
-  params: {
-    id: string;
-  };
-};
+export default async function handler(req: any, res: any) {
+  const id = req.query?.id;
 
-export async function PUT(request: Request, { params }: RouteContext) {
-  const cookieHeader = request.headers.get("cookie") || "";
-  const token = getCookie({ headers: { cookie: cookieHeader } }, getSessionCookieName());
+  if (!id || typeof id !== "string") {
+    return res.status(400).json({ message: "Project id is required" });
+  }
+
+  res.setHeader("Cache-Control", "no-store");
+
+  const token = getCookie(req, getSessionCookieName());
 
   if (!verifySessionToken(token)) {
-    return new Response(JSON.stringify({ message: "Unauthorized" }), {
-      status: 401,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    return res.status(401).json({ message: "Unauthorized" });
   }
 
-  const { id } = params;
+  if (req.method === "GET") {
+    const project = await getProjectById(id);
 
-  if (!id) {
-    return new Response(JSON.stringify({ message: "Project id is required" }), {
-      status: 400,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-  }
-
-  try {
-    const body = await request.json();
-
-    const updatedProject = await updateProjectById(id, body);
-
-    if (!updatedProject) {
-      return new Response(JSON.stringify({ message: "Project not found" }), {
-        status: 404,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+    if (!project) {
+      return res.status(404).json({ message: "Project not found" });
     }
 
-    return new Response(JSON.stringify(updatedProject), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-  } catch (error) {
-    return new Response(
-      JSON.stringify({
+    return res.status(200).json(project);
+  }
+
+  if (req.method === "PUT") {
+    try {
+      const body =
+        typeof req.body === "string" ? JSON.parse(req.body) : req.body || {};
+      const updatedProject = await updateProjectById(id, body);
+
+      if (!updatedProject) {
+        return res.status(404).json({ message: "Project not found" });
+      }
+
+      return res.status(200).json(updatedProject);
+    } catch (error) {
+      return res.status(500).json({
         message: "Update failed",
         error: error instanceof Error ? error.message : String(error),
-      }),
-      {
-        status: 500,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+      });
+    }
   }
+
+  res.setHeader("Allow", "GET, PUT");
+  return res.status(405).json({ message: "Method not allowed" });
 }

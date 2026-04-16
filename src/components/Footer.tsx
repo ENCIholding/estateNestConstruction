@@ -1,9 +1,7 @@
 import { Link } from "react-router-dom";
 import { Mail, Phone, Globe, MapPin } from "lucide-react";
+import BrandLockup from "@/components/BrandLockup";
 
-/* =======================
-   Types
-======================= */
 type FooterLink = {
   label: string;
   path: string;
@@ -21,56 +19,61 @@ const Footer = () => {
       title: "Services",
       links: [
         { label: "Investment Excellence", path: "/investor-relations" },
-        { label: "Capital Solutions", path: "/investor-relations" }
-      ]
+        { label: "Capital Solutions", path: "/investor-relations" },
+      ],
     },
     {
       title: "Company",
       links: [
         { label: "About Us", path: "/#about" },
         { label: "Careers", path: "/careers" },
-        { label: "Contact", path: "/#appointment", isContact: true }
-      ]
-    }
+        { label: "Contact", path: "/#appointment", isContact: true },
+      ],
+    },
+    {
+      title: "Accessibility",
+      links: [
+        { label: "Accessibility Statement", path: "/accessibility" },
+        { label: "Digital Access Support", path: "/accessibility" },
+        { label: "Feedback & Assistance", path: "/accessibility" },
+      ],
+    },
   ];
 
   return (
     <footer className="bg-enc-text-primary text-white">
       <div className="container mx-auto px-6 py-20">
-        {/* Tagline */}
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold gradient-text">
-            Let's Build Something Amazing
+        <div className="mb-12 text-center">
+          <h2 className="gradient-text text-3xl font-bold md:text-4xl">
+            Let&apos;s Build Something Amazing
           </h2>
         </div>
 
-        {/* Main Footer Content */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
-          {/* Logo and Description */}
+        <div className="mb-16 grid gap-12 md:grid-cols-2 xl:grid-cols-5">
           <div className="space-y-4">
-            <h3 className="text-2xl font-bold tracking-wide">
-              ESTATE NEST
-              <br />
-              CAPITAL
-            </h3>
-            <p className="text-white/80 leading-relaxed text-sm">
+            <BrandLockup
+              to="/"
+              subtitle="Construction & Capital"
+              className="max-w-[240px]"
+              subtitleClassName="text-white/70"
+            />
+            <p className="text-sm leading-relaxed text-white/80">
               Strategic real estate investments and capital solutions. We bring
               quality craftsmanship and professional excellence to every
               project.
             </p>
           </div>
 
-          {/* Footer Links */}
-          {footerSections.map((section, index) => (
-            <div key={index} className="space-y-4">
+          {footerSections.map((section) => (
+            <div key={section.title} className="space-y-4">
               <h3 className="text-lg font-semibold">{section.title}</h3>
               <ul className="space-y-3">
-                {section.links.map((link, linkIndex) => (
-                  <li key={linkIndex}>
+                {section.links.map((link) => (
+                  <li key={link.label}>
                     {link.isContact ? (
                       <a
                         href={link.path}
-                        className="text-white/70 hover:text-enc-orange-light transition-colors text-sm"
+                        className="text-sm text-white/70 transition-colors hover:text-enc-orange-light"
                         onClick={(e) => {
                           e.preventDefault();
                           document
@@ -83,14 +86,14 @@ const Footer = () => {
                     ) : link.path.startsWith("/#") ? (
                       <a
                         href={link.path}
-                        className="text-white/70 hover:text-enc-orange-light transition-colors text-sm"
+                        className="text-sm text-white/70 transition-colors hover:text-enc-orange-light"
                       >
                         {link.label}
                       </a>
                     ) : (
                       <Link
                         to={link.path}
-                        className="text-white/70 hover:text-enc-orange-light transition-colors text-sm"
+                        className="text-sm text-white/70 transition-colors hover:text-enc-orange-light"
                       >
                         {link.label}
                       </Link>
@@ -101,41 +104,40 @@ const Footer = () => {
             </div>
           ))}
 
-          {/* Connect Section */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Connect</h3>
             <ul className="space-y-3">
               <li className="flex items-start gap-2">
-                <MapPin className="w-4 h-4 mt-0.5 text-enc-orange-light" />
-                <span className="text-white/70 text-sm">
+                <MapPin className="mt-0.5 h-4 w-4 text-enc-orange-light" />
+                <span className="text-sm text-white/70">
                   Edmonton, Alberta, Canada
                 </span>
               </li>
               <li className="flex items-start gap-2">
-                <Mail className="w-4 h-4 mt-0.5 text-enc-orange-light" />
+                <Mail className="mt-0.5 h-4 w-4 text-enc-orange-light" />
                 <a
                   href="mailto:hello@estatenest.capital"
-                  className="text-white/70 hover:text-enc-orange-light transition-colors text-sm"
+                  className="text-sm text-white/70 transition-colors hover:text-enc-orange-light"
                 >
                   hello@estatenest.capital
                 </a>
               </li>
               <li className="flex items-start gap-2">
-                <Phone className="w-4 h-4 mt-0.5 text-enc-orange-light" />
+                <Phone className="mt-0.5 h-4 w-4 text-enc-orange-light" />
                 <a
                   href="tel:780-860-3191"
-                  className="text-white/70 hover:text-enc-orange-light transition-colors text-sm"
+                  className="text-sm text-white/70 transition-colors hover:text-enc-orange-light"
                 >
                   780-860-3191
                 </a>
               </li>
               <li className="flex items-start gap-2">
-                <Globe className="w-4 h-4 mt-0.5 text-enc-orange-light" />
+                <Globe className="mt-0.5 h-4 w-4 text-enc-orange-light" />
                 <a
                   href="https://www.estatenest.capital"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-white/70 hover:text-enc-orange-light transition-colors text-sm"
+                  className="text-sm text-white/70 transition-colors hover:text-enc-orange-light"
                 >
                   www.estatenest.capital
                 </a>
@@ -144,10 +146,9 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Bottom Footer */}
-        <div className="border-t border-white/20 mt-16 pt-8 text-center text-sm text-white/60">
+        <div className="mt-16 border-t border-white/20 pt-8 text-center text-sm text-white/60">
           <p className="mb-1">Building Dreams</p>
-          <p>© 2025 Estate Nest Capital Inc. All rights reserved.</p>
+          <p>Copyright 2025 Estate Nest Capital Inc. All rights reserved.</p>
         </div>
       </div>
     </footer>

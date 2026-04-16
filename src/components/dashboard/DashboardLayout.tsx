@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import BrandLockup from "@/components/BrandLockup";
 import {
   LayoutDashboard,
   Receipt,
@@ -38,7 +39,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       }
 
       toast.success("Logged out successfully");
-      navigate("/management-login", { replace: true });
+      navigate("/management/login", { replace: true });
     } catch (err) {
       console.error("Unexpected logout error:", err);
       toast.error("Something went wrong during logout");
@@ -61,25 +62,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       {/* Sidebar */}
       <aside className="w-64 border-r bg-card flex flex-col">
         <div className="p-6 border-b">
-          <Link to="/dashboard" className="block">
-            <div className="flex items-center space-x-3">
-              <div className="bg-white rounded-full p-1 flex items-center justify-center">
-                <img
-                  src="/lovable-uploads/65d67880-f4ae-4ca0-841d-1a60dd73a2d5.png"
-                  alt="Estate Nest Capital Logo"
-                  className="h-10 w-10"
-                />
-              </div>
-              <div>
-                <h2 className="text-lg font-bold bg-gradient-to-r from-enc-orange to-enc-yellow bg-clip-text text-transparent">
-                  ENCI
-                </h2>
-                <p className="text-xs text-muted-foreground">
-                  Estate Nest Capital
-                </p>
-              </div>
-            </div>
-          </Link>
+          <BrandLockup to="/dashboard" compact subtitle="Management" />
         </div>
 
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">

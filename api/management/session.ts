@@ -2,13 +2,15 @@ import {
   getCookie,
   getSessionCookieName,
   verifySessionToken,
-} from "./_lib/auth.ts"; // Corrected path and added .ts extension
+} from "../_lib/auth";
 
 export default function handler(req: any, res: any) {
   if (req.method !== "GET") {
     res.setHeader("Allow", "GET");
     return res.status(405).json({ message: "Method not allowed" });
   }
+
+  res.setHeader("Cache-Control", "no-store");
 
   try {
     const token = getCookie(req, getSessionCookieName());
@@ -26,7 +28,7 @@ export default function handler(req: any, res: any) {
         username: process.env.MANAGEMENT_USERNAME || "ENCIKD",
         app_role: "Admin",
       },
-      redirectTo: "/management-dashboard",
+      redirectTo: "/management/dashboard",
     });
   } catch (error) {
     return res.status(500).json({

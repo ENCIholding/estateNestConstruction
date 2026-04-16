@@ -85,20 +85,17 @@ const CodeExport = () => {
                 vite.config.ts
               </h3>
               <pre className="bg-gray-50 p-4 rounded-lg overflow-x-auto text-sm text-black font-mono whitespace-pre-wrap break-words">{`import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react-swc";
+import react from "@vitejs/plugin-react";
 import path from "path";
-import { componentTagger } from "lovable-tagger";
 
-export default defineConfig(({ mode }) => ({
+export default defineConfig(() => ({
   server: {
     host: "::",
     port: 8080,
   },
   plugins: [
     react(),
-    mode === 'development' &&
-    componentTagger(),
-  ].filter(Boolean),
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

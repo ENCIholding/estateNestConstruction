@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
 import { Menu } from "lucide-react";
 import { useState } from "react";
+import BrandLockup from "@/components/BrandLockup";
 import { 
   Sheet, 
   SheetContent, 
@@ -35,18 +36,12 @@ const Header = () => {
       <div className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-4">
-            <div className="bg-white rounded-full p-1 flex items-center justify-center">
-              <img 
-                src="/lovable-uploads/65d67880-f4ae-4ca0-841d-1a60dd73a2d5.png" 
-                alt="Estate Nest Capital Logo" 
-                className="h-10 w-10" 
-              />
-            </div>
-            <h1 className="text-xl font-bold tracking-wide bg-gradient-to-r from-enc-orange to-enc-yellow bg-clip-text text-transparent">
-              ESTATE NEST<br />CAPITAL
-            </h1>
-          </Link>
+          <BrandLockup
+            to="/"
+            subtitle="Edmonton Construction"
+            className="max-w-[270px]"
+            subtitleClassName="text-white/70"
+          />
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
@@ -90,6 +85,14 @@ const Header = () => {
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-[280px] bg-enc-text-primary border-enc-orange/20">
+                <div className="mt-6 px-1">
+                  <BrandLockup
+                    to="/"
+                    compact
+                    subtitle="Edmonton Construction"
+                    subtitleClassName="text-white/70"
+                  />
+                </div>
                 <nav className="flex flex-col gap-4 mt-8">
                   {navigationItems.map((item) => {
                     if (item.path === "/builder-profile" || item.path === "/management/login") {

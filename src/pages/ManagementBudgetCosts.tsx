@@ -71,12 +71,12 @@ export default function ManagementBudgetCosts() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [deleteBudget, setDeleteBudget] = useState<BudgetItem | null>(null);
 
-  const { data: budgetItems = [], isLoading: loadingBudgets } = useQuery({
+  const { data: budgetItems = [], isLoading: loadingBudgets } = useQuery<BudgetItem[]>({
     queryKey: ["budgetItems"],
     queryFn: () => fetchJson("/api/management/budget-items"),
   });
 
-  const { data: projects = [] } = useQuery({
+  const { data: projects = [] } = useQuery<Project[]>({
     queryKey: ["projects"],
     queryFn: () => fetchJson("/api/management/projects"),
   });

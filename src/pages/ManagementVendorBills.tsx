@@ -51,7 +51,7 @@ const statusColors: Record<string, string> = {
   Paid: "bg-emerald-50 text-emerald-700",
 };
 
-async function fetchJson(url: string, options: RequestInit = {}): Promise<any> {
+async function fetchJson<T>(url: string, options: RequestInit = {}): Promise<T> {
   const response = await fetch(url, {
     credentials: "include",
     headers: {
@@ -85,9 +85,9 @@ export default function ManagementVendorBills() {
 
   const queryClient = useQueryClient();
 
-  const { data: sessionData } = useQuery({
+  const { data: sessionData } = useQuery<{ user?: { app_role?: string } } | null>({
     queryKey: ["management-session"],
-    queryFn: () => fetchJson("/api/management/session"),
+    queryFn: () => fetchJson<{ user?: { app_role?: string } }>("/api/management/session"),
     retry: false,
   });
 
@@ -95,17 +95,17 @@ export default function ManagementVendorBills() {
   const userRole = user?.app_role || "Admin";
   const canEdit = userRole === "Admin" || userRole === "Accountant";
 
-  const { data: bills = [], isLoading } = useQuery({
+  const { data: bills = [], isLoading } = useQuery<VendorBill[]>({
     queryKey: ["vendorBills"],
     queryFn: () => fetchJson("/api/management/vendor-bills"),
   });
 
-  const { data: vendors = [] } = useQuery({
+  const { data: vendors = [] } = useQuery<Vendor[]>({
     queryKey: ["vendors"],
     queryFn: () => fetchJson("/api/management/vendors"),
   });
 
-  const { data: projects = [] } = useQuery({
+  const { data: projects = [] } = useQuery<Project[]>({
     queryKey: ["projects"],
     queryFn: () => fetchJson("/api/management/projects"),
   });
@@ -328,6 +328,8 @@ export default function ManagementVendorBills() {
       <ManagementVendorBillForm
         open={showForm}
         bill={editingBill}
+        vendors={vendors}
+        projects={projects}
         onClose={() => {
           setShowForm(false);
           setEditingBill(null);

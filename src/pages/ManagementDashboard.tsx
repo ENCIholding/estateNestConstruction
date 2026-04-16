@@ -11,6 +11,7 @@ import ProjectsOverview from "@/components/dashboard/ProjectsOverview";
 import UpcomingTasks from "@/components/dashboard/UpcomingTasks";
 import PendingInvoices from "@/components/dashboard/PendingInvoices";
 import BudgetChart from "@/components/dashboard/BudgetChart";
+import ManagementEmailComposer from "@/components/management/ManagementEmailComposer";
 
 export default function ManagementDashboard() {
   const projects = useMemo(
@@ -123,16 +124,23 @@ export default function ManagementDashboard() {
   return (
     <ManagementLayout currentPageName="dashboard">
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-slate-900">
-            Dashboard
-          </h1>
-          <p className="text-slate-500 mt-1">
-            Welcome back. Here&apos;s what&apos;s happening with your projects.
-          </p>
+        <div className="dashboard-panel overflow-hidden p-8">
+          <div className="absolute inset-y-0 right-0 w-48 bg-gradient-to-l from-enc-yellow/10 via-enc-orange/10 to-transparent" />
+          <div className="relative">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-enc-orange">
+              Estate Nest Capital
+            </p>
+            <h1 className="mt-3 text-3xl font-bold text-foreground lg:text-4xl">
+              Dashboard
+            </h1>
+            <div className="mt-4 h-1 w-24 rounded-full bg-gradient-hero" />
+            <p className="mt-4 text-muted-foreground">
+              Welcome back. Here&apos;s what&apos;s happening with your projects.
+            </p>
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <StatsCard
             title="Active Projects"
             value={activeProjects}
@@ -140,14 +148,14 @@ export default function ManagementDashboard() {
             icon={FolderKanban}
           />
 
-          {showFinancials && (
+          {showFinancials ? (
             <StatsCard
               title="Total Budget"
               value={`$${(totalBudget / 1000000).toFixed(1)}M`}
               subtitle={`$${(totalActual / 1000000).toFixed(1)}M spent`}
               icon={DollarSign}
             />
-          )}
+          ) : null}
 
           <StatsCard
             title="Pending Tasks"
@@ -158,17 +166,17 @@ export default function ManagementDashboard() {
             icon={CheckSquare}
           />
 
-          {showFinancials && (
+          {showFinancials ? (
             <StatsCard
               title="Pending Invoices"
               value={pendingInvoices}
               subtitle="Awaiting action"
               icon={AlertTriangle}
             />
-          )}
+          ) : null}
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-6">
+        <div className="grid gap-6 lg:grid-cols-2">
           <ProjectsOverview
             projects={projects}
             showFinancials={showFinancials}
@@ -176,8 +184,8 @@ export default function ManagementDashboard() {
           <UpcomingTasks tasks={tasks} projects={projects} />
         </div>
 
-        {showFinancials && (
-          <div className="grid lg:grid-cols-2 gap-6">
+        {showFinancials ? (
+          <div className="grid gap-6 lg:grid-cols-2">
             <BudgetChart projects={projects} budgetItems={budgetItems} />
             <PendingInvoices
               budgetItems={budgetItems}
@@ -185,7 +193,9 @@ export default function ManagementDashboard() {
               vendors={vendors}
             />
           </div>
-        )}
+        ) : null}
+
+        <ManagementEmailComposer />
       </div>
     </ManagementLayout>
   );

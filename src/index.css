@@ -185,4 +185,80 @@ All colors MUST be HSL.
   .pulse-glow {
     animation: pulse-glow 2s ease-in-out infinite;
   }
+
+  .dashboard-shell {
+    background:
+      radial-gradient(circle at top left, hsl(var(--enc-orange) / 0.12), transparent 28%),
+      radial-gradient(circle at top right, hsl(var(--enc-yellow) / 0.1), transparent 24%),
+      linear-gradient(180deg, hsl(var(--background)), hsl(var(--background)));
+  }
+
+  .dashboard-panel {
+    position: relative;
+    overflow: hidden;
+    border-radius: 1.75rem;
+    border: 1px solid hsl(var(--border) / 0.9);
+    background:
+      linear-gradient(180deg, hsl(var(--card) / 0.96), hsl(var(--card) / 0.9));
+    box-shadow: var(--shadow-card);
+    backdrop-filter: blur(16px);
+    transition:
+      transform 0.35s ease,
+      box-shadow 0.35s ease,
+      border-color 0.35s ease,
+      background 0.35s ease;
+  }
+
+  .dashboard-panel::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto auto 0;
+    height: 4px;
+    width: 100%;
+    background: var(--gradient-hero);
+    opacity: 0.9;
+  }
+
+  .dashboard-panel:hover {
+    transform: translateY(-6px);
+    border-color: hsl(var(--enc-orange) / 0.28);
+    box-shadow: var(--shadow-card-hover);
+  }
+
+  .dashboard-item {
+    border-radius: 1.25rem;
+    border: 1px solid hsl(var(--border) / 0.75);
+    background:
+      linear-gradient(180deg, hsl(var(--background) / 0.92), hsl(var(--background) / 0.78));
+    transition:
+      transform 0.25s ease,
+      border-color 0.25s ease,
+      background 0.25s ease,
+      box-shadow 0.25s ease;
+  }
+
+  .dashboard-item:hover {
+    transform: translateY(-3px);
+    border-color: hsl(var(--enc-orange) / 0.25);
+    background:
+      linear-gradient(135deg, hsl(var(--enc-orange) / 0.08), hsl(var(--enc-yellow) / 0.08));
+    box-shadow: 0 14px 30px hsl(var(--enc-orange) / 0.12);
+  }
+
+  .dashboard-icon {
+    display: flex;
+    height: 3.25rem;
+    width: 3.25rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 1rem;
+    background: var(--gradient-hero);
+    box-shadow: 0 16px 34px hsl(var(--enc-orange) / 0.28);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .group:hover .dashboard-icon {
+    transform: scale(1.05) rotate(-3deg);
+    box-shadow: 0 20px 38px hsl(var(--enc-red) / 0.24);
+  }
 }

@@ -43,16 +43,16 @@ export default function PendingInvoices({
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-slate-900">Pending Invoices</h2>
-        <button className="text-sm text-slate-500 hover:text-slate-900">
+    <div className="dashboard-panel p-6">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-foreground">Pending Invoices</h2>
+        <button className="text-sm text-muted-foreground transition-colors hover:text-enc-orange">
           View All →
         </button>
       </div>
 
       {pendingItems.length === 0 ? (
-        <div className="text-sm text-slate-400 py-10 text-center">
+        <div className="py-10 text-center text-sm text-muted-foreground/80">
           No pending invoices
         </div>
       ) : (
@@ -60,23 +60,23 @@ export default function PendingInvoices({
           {pendingItems.map((item, index) => (
             <div
               key={item.id || index}
-              className="border border-slate-100 rounded-xl p-4"
+              className="dashboard-item p-4"
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <h3 className="font-medium text-slate-900">
+                  <h3 className="font-medium text-foreground">
                     {getVendorName(item)}
                   </h3>
-                  <p className="text-sm text-slate-500 mt-1">
+                  <p className="mt-1 text-sm text-muted-foreground">
                     {getProjectName(item)}
                   </p>
                 </div>
 
                 <div className="text-right">
-                  <p className="font-semibold text-slate-900">
+                  <p className="font-semibold text-foreground">
                     ${Number(item.actual_cost || 0).toLocaleString()}
                   </p>
-                  <span className="text-xs px-2 py-1 rounded-full bg-amber-50 text-amber-700 inline-block mt-2">
+                  <span className="mt-2 inline-block rounded-full bg-enc-yellow/10 px-3 py-1 text-xs text-amber-700 dark:text-enc-yellow-light">
                     Pending
                   </span>
                 </div>

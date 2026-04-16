@@ -116,32 +116,32 @@ export default function ManagementReports() {
   const reportRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
-  const { data: projects = [], isLoading: loadingProjects } = useQuery({
+  const { data: projects = [], isLoading: loadingProjects } = useQuery<Project[]>({
     queryKey: ["projects"],
     queryFn: () => fetchJson("/api/management/projects"),
   });
 
-  const { data: tasks = [] } = useQuery({
+  const { data: tasks = [] } = useQuery<Task[]>({
     queryKey: ["tasks"],
     queryFn: () => fetchJson("/api/management/tasks"),
   });
 
-  const { data: budgetItems = [] } = useQuery({
+  const { data: budgetItems = [] } = useQuery<BudgetItem[]>({
     queryKey: ["budgetItems"],
     queryFn: () => fetchJson("/api/management/budget-items"),
   });
 
-  const { data: compliance = [] } = useQuery({
+  const { data: compliance = [] } = useQuery<Compliance[]>({
     queryKey: ["compliance"],
     queryFn: () => fetchJson("/api/management/compliance"),
   });
 
-  const { data: changeOrders = [] } = useQuery({
+  const { data: changeOrders = [] } = useQuery<ChangeOrder[]>({
     queryKey: ["changeOrders"],
     queryFn: () => fetchJson("/api/management/change-orders"),
   });
 
-  const { data: vendors = [] } = useQuery({
+  const { data: vendors = [] } = useQuery<Vendor[]>({
     queryKey: ["vendors"],
     queryFn: () => fetchJson("/api/management/vendors"),
   });
@@ -259,7 +259,7 @@ export default function ManagementReports() {
         heightLeft -= pdfHeight;
       }
 
-      const pageCount = pdf.internal.getNumberOfPages();
+      const pageCount = pdf.getNumberOfPages();
       for (let i = 1; i <= pageCount; i++) {
         pdf.setPage(i);
         pdf.setFontSize(10);

@@ -37,35 +37,35 @@ export default function BudgetChart({
   });
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-slate-900">Budget Overview</h2>
+    <div className="dashboard-panel p-6">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-foreground">Budget Overview</h2>
       </div>
 
       {topProjects.length === 0 ? (
-        <div className="text-sm text-slate-400 py-10 text-center">
+        <div className="py-10 text-center text-sm text-muted-foreground/80">
           No budget data available
         </div>
       ) : (
         <div className="space-y-5">
           {topProjects.map((project) => (
             <div key={project.id || project.name}>
-              <div className="flex items-center justify-between mb-2 gap-4">
+              <div className="mb-2 flex items-center justify-between gap-4">
                 <div>
-                  <p className="font-medium text-slate-900">{project.name}</p>
-                  <p className="text-sm text-slate-500">
+                  <p className="font-medium text-foreground">{project.name}</p>
+                  <p className="text-sm text-muted-foreground">
                     ${project.spent.toLocaleString()} spent of $
                     {project.budget.toLocaleString()}
                   </p>
                 </div>
-                <p className="text-sm font-medium text-slate-700">
+                <p className="text-sm font-medium text-foreground">
                   {project.percent.toFixed(0)}%
                 </p>
               </div>
 
-              <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+              <div className="h-3 w-full overflow-hidden rounded-full bg-muted">
                 <div
-                  className="h-full bg-slate-900 rounded-full transition-all"
+                  className="h-full rounded-full bg-gradient-to-r from-enc-red via-enc-orange to-enc-yellow transition-all"
                   style={{ width: `${project.percent}%` }}
                 />
               </div>

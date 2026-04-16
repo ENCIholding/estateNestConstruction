@@ -9,7 +9,9 @@
     "lint": "eslint . --quiet",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc -b",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "verify:env": "node scripts/check-management-env.mjs",
+    "verify": "npm run typecheck && npm run build && npm run verify:env"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^17.0.0",
@@ -43,6 +45,7 @@
     "@radix-ui/react-tooltip": "^1.1.8",
     "@stripe/react-stripe-js": "^3.0.0",
     "@stripe/stripe-js": "^5.2.0",
+    "@supabase/supabase-js": "^2.103.2",
     "@tanstack/react-query": "^5.84.1",
     "@vercel/speed-insights": "^1.1.0",
     "canvas-confetti": "^1.9.4",
@@ -59,6 +62,7 @@
     "lucide-react": "^0.475.0",
     "moment": "^2.30.1",
     "next-themes": "^0.4.4",
+    "nodemailer": "^8.0.5",
     "react": "^18.2.0",
     "react-day-picker": "^8.10.1",
     "react-dom": "^18.2.0",
@@ -81,6 +85,7 @@
   "devDependencies": {
     "@eslint/js": "^9.19.0",
     "@types/node": "^22.13.5",
+    "@types/nodemailer": "^8.0.0",
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
     "@vitejs/plugin-react": "^4.3.4",

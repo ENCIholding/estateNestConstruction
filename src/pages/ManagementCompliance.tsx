@@ -87,9 +87,9 @@ export default function ManagementCompliance() {
 
   const queryClient = useQueryClient();
 
-  const { data: sessionData } = useQuery({
+  const { data: sessionData } = useQuery<{ user?: User } | null>({
     queryKey: ["management-session"],
-    queryFn: () => fetchJson("/api/management/session"),
+    queryFn: () => fetchJson<{ user?: User }>("/api/management/session"),
     retry: false,
   });
 
@@ -97,14 +97,14 @@ export default function ManagementCompliance() {
   const userRole = user?.app_role || "Admin";
   const canEdit = userRole === "Admin" || userRole === "Project Manager";
 
-  const { data: compliance = [], isLoading } = useQuery({
+  const { data: compliance = [], isLoading } = useQuery<ComplianceItem[]>({
     queryKey: ["compliance"],
-    queryFn: () => fetchJson("/api/management/compliance"),
+    queryFn: () => fetchJson<ComplianceItem[]>("/api/management/compliance"),
   });
 
-  const { data: projects = [] } = useQuery({
+  const { data: projects = [] } = useQuery<Project[]>({
     queryKey: ["projects"],
-    queryFn: () => fetchJson("/api/management/projects"),
+    queryFn: () => fetchJson<Project[]>("/api/management/projects"),
   });
 
   const projectMap = useMemo(() => {

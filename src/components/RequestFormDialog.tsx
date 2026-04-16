@@ -1,7 +1,7 @@
 import { useState } from "react";
-import Dialog,{  DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import Dialog, { DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import Input  from "@/components/ui/input";
+import Input from "@/components/ui/input";
 import Label from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
@@ -27,8 +27,6 @@ const RequestFormDialog = ({
     message: ""
   });
 
-  const [isVerified, setIsVerified] = useState(false);
-
   const validateEmail = (email: string) => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return re.test(email);
@@ -39,26 +37,7 @@ const RequestFormDialog = ({
     return re.test(phone) && phone.replace(/\D/g, "").length >= 10;
   };
 
-  const handleVerification = () => {
-    const a = Math.floor(Math.random() * 10);
-    const b = Math.floor(Math.random() * 10);
-    const userAnswer = prompt(`Human Verification: What is ${a} + ${b}?`);
-
-    if (userAnswer && parseInt(userAnswer, 10) === a + b) {
-      setIsVerified(true);
-      return true;
-    }
-
-    toast({
-      title: "Verification Failed",
-      description: "Please answer the verification question correctly.",
-      variant: "destructive"
-    });
-
-    return false;
-  };
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!formData.firstName.trim() || !formData.lastName.trim()) {
@@ -97,36 +76,48 @@ const RequestFormDialog = ({
       return;
     }
 
-    if (!isVerified && !handleVerification()) return;
+    try {
+      const response = await fetch("https://formspree.io/f/xojpnvbz", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          phone: formData.phone,
+          requestType,
+          message: formData.message,
+          _subject: `${requestType} Request - ${formData.firstName} ${formData.lastName}`,
+        }),
+      });
 
-    const subject = encodeURIComponent(
-      `${requestType} Request - ${formData.firstName} ${formData.lastName}`
-    );
+      if (!response.ok) {
+        throw new Error("Failed to submit request.");
+      }
 
-    const body = encodeURIComponent(
-      `Name: ${formData.firstName} ${formData.lastName}\n` +
-        `Email: ${formData.email}\n` +
-        `Phone: ${formData.phone}\n\n` +
-        `Message:\n${formData.message}`
-    );
+      toast({
+        title: "Request Submitted",
+        description: "Your request was sent successfully. We will follow up shortly.",
+      });
 
-    window.location.href = `mailto:hello@estatenest.capital?subject=${subject}&body=${body}`;
-
-    toast({
-      title: "Success",
-      description: "Your request has been prepared. Please send the email."
-    });
-
-    setFormData({
-      firstName: "",
-      lastName: "",
-      email: "",
-      phone: "",
-      message: ""
-    });
-
-    setIsVerified(false);
-    onOpenChange(false);
+      setFormData({
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        message: "",
+      });
+      onOpenChange(false);
+    } catch {
+      toast({
+        title: "Submission Failed",
+        description: "Something went wrong while sending your request. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (

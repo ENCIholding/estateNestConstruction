@@ -47,12 +47,12 @@ export default function ManagementMobileTasks() {
   const [projectFilter, setProjectFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  const { data: tasks = [], isLoading: loadingTasks } = useQuery({
+  const { data: tasks = [], isLoading: loadingTasks } = useQuery<Task[]>({
     queryKey: ["tasks"],
     queryFn: () => fetchJson("/api/management/tasks"),
   });
 
-  const { data: projects = [] } = useQuery({
+  const { data: projects = [] } = useQuery<Project[]>({
     queryKey: ["projects"],
     queryFn: () => fetchJson("/api/management/projects"),
   });

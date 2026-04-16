@@ -1,43 +1,27 @@
-import { getCookie, getSessionCookieName, verifySessionToken } from "./_lib/auth.ts"; // Corrected path and added .ts extension
-import { getAllProjects } from "./_lib/projects.ts"; // Corrected path and added .ts extension
+import { getCookie, getSessionCookieName, verifySessionToken } from "../_lib/auth";
+import { getAllProjects } from "../_lib/projects";
 
-export async function GET(request: Request) {
-  const cookieHeader = request.headers.get("cookie") || "";
-  const token = getCookie(
-    { headers: { cookie: cookieHeader } },
-    getSessionCookieName()
-  );
+export default async function handler(req: any, res: any) {
+  if (req.method !== "GET") {
+    res.setHeader("Allow", "GET");
+    return res.status(405).json({ message: "Method not allowed" });
+  }
+
+  res.setHeader("Cache-Control", "no-store");
+
+  const token = getCookie(req, getSessionCookieName());
 
   if (!verifySessionToken(token)) {
-    return new Response(JSON.stringify({ message: "Unauthorized" }), {
-      status: 401,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    return res.status(401).json({ message: "Unauthorized" });
   }
 
   try {
     const projects = await getAllProjects();
-
-    return new Response(JSON.stringify(projects), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    return res.status(200).json(projects);
   } catch (error) {
-    return new Response(
-      JSON.stringify({
-        message: "Fetch failed",
-        error: error instanceof Error ? error.message : String(error),
-      }),
-      {
-        status: 500,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    return res.status(500).json({
+      message: "Fetch failed",
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 }
