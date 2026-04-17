@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, Clock3, Pencil, Plus, Search } from "lucide-react";
+import { CheckCircle2, Clock3, FileText, Pencil, Plus, Search, ShieldAlert, Users } from "lucide-react";
+import { Link } from "react-router-dom";
 import ManagementLayout from "@/components/management/ManagementLayout";
 import BuildOsTaskForm, {
   createTaskFormState,
@@ -74,6 +75,20 @@ export default function ManagementMobileTasks() {
     });
   }, [projectMap, search, statusFilter, tasks]);
 
+  const mobileSummary = useMemo(() => {
+    const dueSoon = tasks.filter((task) => isTaskDueSoon(task)).length;
+    const overdue = tasks.filter((task) => isTaskOverdue(task)).length;
+    const blocked = tasks.filter((task) => task.status === "Blocked").length;
+    const review = tasks.filter((task) => task.status === "Waiting Review").length;
+
+    return {
+      dueSoon,
+      overdue,
+      blocked,
+      review,
+    };
+  }, [tasks]);
+
   const openForm = (record?: BuildOsTask | null) => {
     setEditingRecord(record || null);
     setForm(createTaskFormState(record));
@@ -141,6 +156,93 @@ export default function ManagementMobileTasks() {
               <option value="Waiting Review">Waiting Review</option>
               <option value="Completed">Completed</option>
             </select>
+          </CardContent>
+        </Card>
+
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <Card className="dashboard-panel p-2">
+            <CardContent className="p-5">
+              <p className="text-sm font-medium text-muted-foreground">Due soon</p>
+              <p className="mt-3 text-3xl font-semibold text-foreground">{mobileSummary.dueSoon}</p>
+            </CardContent>
+          </Card>
+          <Card className="dashboard-panel p-2">
+            <CardContent className="p-5">
+              <p className="text-sm font-medium text-muted-foreground">Overdue</p>
+              <p className="mt-3 text-3xl font-semibold text-foreground">{mobileSummary.overdue}</p>
+            </CardContent>
+          </Card>
+          <Card className="dashboard-panel p-2">
+            <CardContent className="p-5">
+              <p className="text-sm font-medium text-muted-foreground">Blocked</p>
+              <p className="mt-3 text-3xl font-semibold text-foreground">{mobileSummary.blocked}</p>
+            </CardContent>
+          </Card>
+          <Card className="dashboard-panel p-2">
+            <CardContent className="p-5">
+              <p className="text-sm font-medium text-muted-foreground">Waiting review</p>
+              <p className="mt-3 text-3xl font-semibold text-foreground">{mobileSummary.review}</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card className="dashboard-panel p-2">
+          <CardHeader>
+            <CardTitle className="text-xl text-foreground">Field quick actions</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <Button asChild variant="outline" className="h-auto min-h-24 rounded-2xl justify-start px-5 py-4">
+              <Link to="/management/daily-log">
+                <div className="text-left">
+                  <p className="flex items-center gap-2 text-base font-semibold">
+                    <Clock3 className="h-4 w-4" />
+                    Daily Log
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                    Capture weather, crews, blockers, and site notes without leaving the field workflow.
+                  </p>
+                </div>
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="h-auto min-h-24 rounded-2xl justify-start px-5 py-4">
+              <Link to="/management/deficiency-punch-list">
+                <div className="text-left">
+                  <p className="flex items-center gap-2 text-base font-semibold">
+                    <ShieldAlert className="h-4 w-4" />
+                    Deficiencies
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                    Open, assign, and close field issues tied back to the real project and responsible party.
+                  </p>
+                </div>
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="h-auto min-h-24 rounded-2xl justify-start px-5 py-4">
+              <Link to="/management/documents">
+                <div className="text-left">
+                  <p className="flex items-center gap-2 text-base font-semibold">
+                    <FileText className="h-4 w-4" />
+                    Documents
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                    Pull permits, insurance, drawings, and support files without hunting through email.
+                  </p>
+                </div>
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="h-auto min-h-24 rounded-2xl justify-start px-5 py-4">
+              <Link to="/management/vendors">
+                <div className="text-left">
+                  <p className="flex items-center gap-2 text-base font-semibold">
+                    <Users className="h-4 w-4" />
+                    Vendors (Trades)
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                    Reach the right trade, check notes, and stay relationship-aware while work is moving onsite.
+                  </p>
+                </div>
+              </Link>
+            </Button>
           </CardContent>
         </Card>
 

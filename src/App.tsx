@@ -1,8 +1,9 @@
 import { Suspense, lazy } from "react";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { AccessibilityProvider } from "./components/accessibility/AccessibilityProvider";
 import RequireManagementAuth from "./components/management/RequireManagementAuth";
+import ManagementRouteFallback from "./components/management/ManagementRouteFallback";
 import ScrollToTop from "./components/ScrollToTop";
 import { Toaster } from "./components/ui/toaster";
 import { Toaster as SonnerToaster } from "./components/ui/sonner";
@@ -46,6 +47,16 @@ const ManagementModuleUnavailable = lazy(
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 function RouteFallback() {
+  const location = useLocation();
+
+  if (location.pathname === "/management/login") {
+    return <ManagementRouteFallback variant="login" />;
+  }
+
+  if (location.pathname.startsWith("/management")) {
+    return <ManagementRouteFallback variant="workspace" />;
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-6">
       <p className="text-sm text-muted-foreground">Loading page...</p>

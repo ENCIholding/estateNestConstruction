@@ -235,12 +235,16 @@ export default function ManagementDocuments() {
     const expiring = displayDocuments.filter((document) => isExpiringSoon(document.expiryDate));
     const required = displayDocuments.filter((document) => document.requiredForProject);
     const customOnly = displayDocuments.filter((document) => document.source === "buildos");
+    const versioned = displayDocuments.filter((document) => document.versionLabel).length;
+    const linkedEntities = displayDocuments.filter((document) => document.linkedRecordId).length;
 
     return {
       total: displayDocuments.length,
       customOnly: customOnly.length,
       required: required.length,
       expiring: expiring.length,
+      versioned,
+      linkedEntities,
     };
   }, [displayDocuments]);
 
@@ -334,7 +338,7 @@ export default function ManagementDocuments() {
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
           <Card className="dashboard-panel p-2">
             <CardContent className="p-5">
               <p className="text-sm font-medium text-muted-foreground">Tracked documents</p>
@@ -362,6 +366,22 @@ export default function ManagementDocuments() {
               <p className="text-sm font-medium text-muted-foreground">Expiring / due soon</p>
               <p className="mt-3 text-3xl font-semibold text-foreground">
                 {documentSummary.expiring}
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="dashboard-panel p-2">
+            <CardContent className="p-5">
+              <p className="text-sm font-medium text-muted-foreground">Version-labelled docs</p>
+              <p className="mt-3 text-3xl font-semibold text-foreground">
+                {documentSummary.versioned}
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="dashboard-panel p-2">
+            <CardContent className="p-5">
+              <p className="text-sm font-medium text-muted-foreground">Linked relationship files</p>
+              <p className="mt-3 text-3xl font-semibold text-foreground">
+                {documentSummary.linkedEntities}
               </p>
             </CardContent>
           </Card>
@@ -397,30 +417,58 @@ export default function ManagementDocuments() {
             </CardContent>
           </Card>
 
-          <Card className="dashboard-panel p-2">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-xl text-foreground">
-                <Clock3 className="h-5 w-5 text-enc-orange" />
-                Project readiness snapshot
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {projectReadiness.length ? (
-                projectReadiness.map((project) => (
-                  <div key={project.id} className="dashboard-item p-4 text-sm text-muted-foreground">
-                    <p className="font-medium text-foreground">{project.name}</p>
-                    <p className="mt-2">{project.linkedCount} linked document(s)</p>
-                    <p className="mt-1">{project.requiredCount} marked as required</p>
-                    <p className="mt-1">{project.expiringCount} expiring or due soon</p>
+          <div className="space-y-6">
+            <Card className="dashboard-panel p-2">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-xl text-foreground">
+                  <Clock3 className="h-5 w-5 text-enc-orange" />
+                  Project readiness snapshot
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {projectReadiness.length ? (
+                  projectReadiness.map((project) => (
+                    <div key={project.id} className="dashboard-item p-4 text-sm text-muted-foreground">
+                      <p className="font-medium text-foreground">{project.name}</p>
+                      <p className="mt-2">{project.linkedCount} linked document(s)</p>
+                      <p className="mt-1">{project.requiredCount} marked as required</p>
+                      <p className="mt-1">{project.expiringCount} expiring or due soon</p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="dashboard-item p-4 text-sm leading-6 text-muted-foreground">
+                    Add project records first to start building the document control register.
                   </div>
-                ))
-              ) : (
-                <div className="dashboard-item p-4 text-sm leading-6 text-muted-foreground">
-                  Add project records first to start building the document control register.
+                )}
+              </CardContent>
+            </Card>
+
+            <Card className="dashboard-panel p-2">
+              <CardHeader>
+                <CardTitle className="text-xl text-foreground">Versioning & audit posture</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm text-muted-foreground">
+                <div className="dashboard-item p-4">
+                  <p className="font-medium text-foreground">Tracked today</p>
+                  <p className="mt-2 leading-6">
+                    Version label, version group, uploader, upload date, linked project, linked relationship record, expiry awareness, and preview URL are all visible in the register.
+                  </p>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+                <div className="dashboard-item p-4">
+                  <p className="font-medium text-foreground">Builder-first use</p>
+                  <p className="mt-2 leading-6">
+                    This keeps permit, insurance, vendor, lender, lawyer, realtor, and client files tied back to the job instead of living in disconnected folders.
+                  </p>
+                </div>
+                <div className="dashboard-item p-4">
+                  <p className="font-medium text-foreground">Next hardening target</p>
+                  <p className="mt-2 leading-6">
+                    Full binary storage, richer version diffing, and enterprise-grade retention rules remain future upgrades. BuildOS stays honest about that instead of pretending it already has them.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         {isLoading ? (
@@ -507,11 +555,19 @@ export default function ManagementDocuments() {
                             <p className="mt-1 text-sm text-muted-foreground">
                               {document.versionLabel || "Current"}
                             </p>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              {document.editable
+                                ? `Group ${customDocuments.find((item) => item.id === document.id)?.versionGroup || "unassigned"}`
+                                : "Registry source"}
+                            </p>
                           </div>
                           <div>
                             <p className="text-sm font-medium text-foreground">Audit trail</p>
                             <p className="mt-1 text-sm text-muted-foreground">
                               {document.uploader || "Unknown"} on {formatDate(document.uploadDate)}
+                            </p>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              Last updated {formatDate(customDocuments.find((item) => item.id === document.id)?.updatedAt)}
                             </p>
                           </div>
                         </div>

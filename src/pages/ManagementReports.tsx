@@ -119,6 +119,60 @@ export default function ManagementReports() {
     queryFn: async () => loadBuildOsDocuments(),
   });
 
+  const documentCsv = useMemo(
+    () =>
+      buildCsv(
+        [
+          "Title",
+          "Project ID",
+          "Linked Record",
+          "Type",
+          "Version",
+          "Upload Date",
+          "Expiry Date",
+        ],
+        documents.map((item) => [
+          item.title,
+          item.projectId,
+          item.linkedRecordId,
+          item.documentType,
+          item.versionLabel,
+          item.uploadDate,
+          item.expiryDate,
+        ])
+      ),
+    [documents]
+  );
+
+  const masterDatabaseCsv = useMemo(
+    () =>
+      buildCsv(
+        [
+          "Type",
+          "Company",
+          "Person",
+          "Trade",
+          "Phone",
+          "Email",
+          "Status",
+          "Work Again",
+          "Recommended",
+        ],
+        records.map((item) => [
+          item.type,
+          item.companyName,
+          item.personName,
+          item.tradeCategory,
+          item.phone,
+          item.email,
+          item.status,
+          item.workAgain,
+          item.recommended,
+        ])
+      ),
+    [records]
+  );
+
   const portfolioOverview = useMemo(
     () =>
       getPortfolioFinancialOverview(projects, changeOrders, clientInvoices, vendorBills),
@@ -367,6 +421,20 @@ export default function ManagementReports() {
       filename: "enci-buildos-project-tasks.csv",
       content: tasksCsv,
     },
+    {
+      title: "Document Register",
+      detail: "Version labels, linked entities, expiry dates, and preview references.",
+      count: documents.length,
+      filename: "enci-buildos-documents.csv",
+      content: documentCsv,
+    },
+    {
+      title: "Master Database",
+      detail: "Relationship intelligence across trades, clients, realtors, lawyers, lenders, and investors.",
+      count: records.length,
+      filename: "enci-buildos-master-database.csv",
+      content: masterDatabaseCsv,
+    },
   ];
 
   return (
@@ -484,6 +552,32 @@ export default function ManagementReports() {
             </CardContent>
           </Card>
         </div>
+
+        <Card className="dashboard-panel p-2">
+          <CardHeader>
+            <CardTitle className="text-xl text-foreground">Reporting depth that stays builder-friendly</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-4 lg:grid-cols-3">
+            <div className="dashboard-item p-4">
+              <p className="text-sm font-semibold text-foreground">Relationship-aware exports</p>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                BuildOS is not only tasks and schedules. Reports can now include vendors, stakeholders, lawyers, realtors, lenders, and investors from the same operating register.
+              </p>
+            </div>
+            <div className="dashboard-item p-4">
+              <p className="text-sm font-semibold text-foreground">Audit-ready summaries</p>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                Financials, change orders, deficiencies, documents, and task health all export from the same structured records instead of disconnected spreadsheets.
+              </p>
+            </div>
+            <div className="dashboard-item p-4">
+              <p className="text-sm font-semibold text-foreground">Supportable rollout</p>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                The reporting layer stays lean: real CSV and PDF outputs today, with room for deeper lender/admin packs as more verified project data is added.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
 
         {isLoading ? (
           <Card className="dashboard-panel p-2">

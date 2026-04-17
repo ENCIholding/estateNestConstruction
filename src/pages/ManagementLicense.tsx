@@ -115,6 +115,41 @@ export default function ManagementLicense() {
           </CardContent>
         </Card>
 
+        <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
+          <Card className="dashboard-panel p-2">
+            <CardContent className="p-5">
+              <p className="text-sm font-semibold text-foreground">Human builder logic</p>
+              <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                ENCI BuildOS stays differentiated by tracking lawyers, realtors, stakeholders, buyers, lenders, and investors alongside vendors and project execution.
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="dashboard-panel p-2">
+            <CardContent className="p-5">
+              <p className="text-sm font-semibold text-foreground">Admin controls</p>
+              <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                Tenant status, plan tier, seats, feature access, admin notes, and usage audit fields are all kept visible for controlled rollout and future licensing.
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="dashboard-panel p-2">
+            <CardContent className="p-5">
+              <p className="text-sm font-semibold text-foreground">Onboarding & supportability</p>
+              <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                The internal docs center gives the team a moderated, plain-English place to understand legal, subscription, and operating boundaries before wider rollout.
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="dashboard-panel p-2">
+            <CardContent className="p-5">
+              <p className="text-sm font-semibold text-foreground">Integration readiness</p>
+              <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                BuildOS is staying lean while preparing for shared storage, PDF workflows, email delivery, and future Adobe/document integrations rather than pretending all of that is already finished.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
         <div className="grid gap-6 xl:grid-cols-[300px_minmax(0,1fr)]">
           <Card className="dashboard-panel p-2">
             <CardHeader>

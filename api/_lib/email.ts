@@ -63,15 +63,29 @@ function getBoolean(value: string | undefined, fallback: boolean): boolean {
 export function getSmtpConfig(): SmtpConfig {
   const user =
     process.env.EMAIL_SMTP_USER?.trim() ||
+    process.env.EMAIL_SMTP_USERNAME?.trim() ||
     process.env.EMAIL_FROM_ADDRESS?.trim() ||
+    process.env.EMAIL_USERNAME?.trim() ||
     process.env.EMAIL_USER?.trim() ||
-    process.env.SMTP_USER?.trim();
+    process.env.SMTP_USER?.trim() ||
+    process.env.SMTP_USERNAME?.trim() ||
+    process.env.GMAIL_USER?.trim() ||
+    process.env.GOOGLE_WORKSPACE_USER?.trim() ||
+    process.env.MAIL_USER?.trim();
   const pass =
     process.env.EMAIL_SMTP_PASS?.trim() ||
+    process.env.EMAIL_SMTP_PASSWORD?.trim() ||
     process.env.EMAIL_APP_PASSWORD?.trim() ||
+    process.env.EMAIL_PASSWORD?.trim() ||
+    process.env.EMAIL_PASS?.trim() ||
     process.env.GOOGLE_APP_PASSWORD?.trim() ||
     process.env.GMAIL_APP_PASSWORD?.trim() ||
-    process.env.SMTP_PASSWORD?.trim();
+    process.env.GMAIL_PASS?.trim() ||
+    process.env.GOOGLE_WORKSPACE_APP_PASSWORD?.trim() ||
+    process.env.SMTP_PASSWORD?.trim() ||
+    process.env.SMTP_PASS?.trim() ||
+    process.env.MAIL_PASSWORD?.trim() ||
+    process.env.MAIL_PASS?.trim();
 
   if (!user || !pass) {
     throw new Error(
