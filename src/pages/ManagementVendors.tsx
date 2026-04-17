@@ -2,17 +2,16 @@ import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AlertTriangle,
-  ExternalLink,
   Mail,
   Pencil,
   Phone,
   Plus,
   Search,
-  ShieldCheck,
+  ShieldAlert,
   Trash2,
 } from "lucide-react";
 import ManagementLayout from "@/components/management/ManagementLayout";
-import ManagementVendorForm from "@/components/vendors/ManagementVendorForm";
+import MasterRecordForm from "@/components/master-database/MasterRecordForm";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,141 +26,88 @@ import Badge from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Input from "@/components/ui/input";
+import { getVendorRiskStatus } from "@/lib/buildosIntelligence";
 import {
-  deleteVendorFromWorkspace,
-  loadWorkspaceVendors,
-  saveVendorToWorkspace,
-  type ManagementVendor,
-} from "@/lib/managementWorkspace";
+  deleteMasterDatabaseRecord,
+  loadMasterDatabaseRecords,
+  saveMasterDatabaseRecord,
+  type BuildOsMasterRecord,
+} from "@/lib/buildosShared";
 
-const TRADE_TYPES = [
-  "Architect",
-  "Engineer",
-  "Excavation",
-  "Foundation",
-  "Framing",
-  "Electrical",
-  "Plumbing",
-  "HVAC",
-  "Insulation",
-  "Drywall",
-  "Painting",
-  "Flooring",
-  "Cabinets",
-  "Countertops",
-  "Finishing",
-  "Roofing",
-  "Siding",
-  "Windows & Doors",
-  "Landscaping",
-  "Concrete",
-  "Masonry",
-  "General Labour",
-  "Other",
-] as const;
+function getOverallRating(record: BuildOsMasterRecord) {
+  const scores = [
+    record.qualityScore,
+    record.pricingScore,
+    record.reliabilityScore,
+    record.communicationScore,
+    record.timelinessScore,
+    record.professionalismScore,
+  ].filter((value): value is number => typeof value === "number");
 
-function normalizeWhatsAppPhone(phone?: string | null) {
-  if (!phone) {
-    return "";
+  if (!scores.length) {
+    return "Not scored";
   }
 
-  const digits = phone.replace(/\D/g, "");
-  if (!digits) {
-    return "";
-  }
-
-  return digits.startsWith("1") ? digits : `1${digits}`;
-}
-
-function formatDate(value?: string | null) {
-  if (!value) {
-    return "Not recorded";
-  }
-
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) {
-    return "Invalid date";
-  }
-
-  return new Intl.DateTimeFormat("en-CA", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  }).format(parsed);
-}
-
-function getStatusClass(status?: string | null) {
-  switch ((status || "").toLowerCase()) {
-    case "preferred":
-      return "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300";
-    case "watchlist":
-      return "bg-amber-500/10 text-amber-700 dark:text-amber-300";
-    case "inactive":
-      return "bg-slate-500/10 text-slate-700 dark:text-slate-300";
-    default:
-      return "bg-blue-500/10 text-blue-700 dark:text-blue-300";
-  }
+  return `${(scores.reduce((total, value) => total + value, 0) / scores.length).toFixed(1)} / 5`;
 }
 
 export default function ManagementVendors() {
   const queryClient = useQueryClient();
-  const [workspaceRevision, setWorkspaceRevision] = useState(0);
   const [search, setSearch] = useState("");
   const [tradeFilter, setTradeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showForm, setShowForm] = useState(false);
-  const [editingVendor, setEditingVendor] = useState<ManagementVendor | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<ManagementVendor | null>(null);
+  const [editingRecord, setEditingRecord] = useState<BuildOsMasterRecord | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<BuildOsMasterRecord | null>(null);
 
-  const { data: vendors = [] } = useQuery({
-    queryKey: ["management-vendors", workspaceRevision],
-    queryFn: async () => loadWorkspaceVendors(),
+  const { data: records = [] } = useQuery({
+    queryKey: ["buildos-master-database"],
+    queryFn: async () => loadMasterDatabaseRecords(),
   });
+
+  const vendors = useMemo(
+    () => records.filter((record) => record.type === "Vendor (Trade)"),
+    [records]
+  );
 
   const filteredVendors = useMemo(() => {
     const query = search.trim().toLowerCase();
-
     return vendors.filter((vendor) => {
       const matchesSearch =
         !query ||
-        (vendor.company_name || "").toLowerCase().includes(query) ||
-        (vendor.contact_person || "").toLowerCase().includes(query) ||
-        (vendor.trade_type || "").toLowerCase().includes(query) ||
+        (vendor.companyName || "").toLowerCase().includes(query) ||
+        vendor.personName.toLowerCase().includes(query) ||
+        (vendor.tradeCategory || "").toLowerCase().includes(query) ||
         (vendor.email || "").toLowerCase().includes(query);
-      const matchesTrade =
-        tradeFilter === "all" || vendor.trade_type === tradeFilter;
-      const matchesStatus =
-        statusFilter === "all" ||
-        (vendor.status || "Active").toLowerCase() === statusFilter;
-
+      const matchesTrade = tradeFilter === "all" || vendor.tradeCategory === tradeFilter;
+      const matchesStatus = statusFilter === "all" || vendor.status === statusFilter;
       return matchesSearch && matchesTrade && matchesStatus;
     });
   }, [search, statusFilter, tradeFilter, vendors]);
 
-  const handleSave = async (vendor: ManagementVendor) => {
-    saveVendorToWorkspace(vendor);
-    setWorkspaceRevision((value) => value + 1);
+  const tradeOptions = Array.from(
+    new Set(vendors.map((vendor) => vendor.tradeCategory).filter(Boolean))
+  ) as string[];
+
+  const handleSave = async (record: Partial<BuildOsMasterRecord>) => {
+    await saveMasterDatabaseRecord({ ...record, type: "Vendor (Trade)" });
     await queryClient.invalidateQueries({
       predicate: (query) =>
         Array.isArray(query.queryKey) &&
         typeof query.queryKey[0] === "string" &&
-        query.queryKey[0].startsWith("management"),
+        (query.queryKey[0].startsWith("buildos") || query.queryKey[0].startsWith("management")),
     });
   };
 
   const handleDelete = async () => {
-    if (!deleteTarget?.id) {
-      return;
-    }
-
-    deleteVendorFromWorkspace(deleteTarget.id);
+    if (!deleteTarget) return;
+    await deleteMasterDatabaseRecord(deleteTarget.id);
     setDeleteTarget(null);
-    setWorkspaceRevision((value) => value + 1);
     await queryClient.invalidateQueries({
       predicate: (query) =>
         Array.isArray(query.queryKey) &&
         typeof query.queryKey[0] === "string" &&
-        query.queryKey[0].startsWith("management"),
+        (query.queryKey[0].startsWith("buildos") || query.queryKey[0].startsWith("management")),
     });
   };
 
@@ -173,45 +119,59 @@ export default function ManagementVendors() {
           <div className="relative flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.3em] text-enc-orange">
-                Vendor Registry
+                Filtered Master Database View
               </p>
-              <h1 className="mt-3 text-3xl font-bold text-foreground">Vendors</h1>
-              <p className="mt-4 max-w-3xl text-sm leading-6 text-muted-foreground">
-                Vendor records are now editable in your browser workspace on this device. This gives the team a working registry today without pretending a durable vendor backend already exists.
+              <h1 className="mt-3 text-3xl font-bold text-foreground">Vendors (Trades)</h1>
+              <p className="mt-4 max-w-4xl text-sm leading-6 text-muted-foreground">
+                This is no longer a disconnected vendor list. Vendors (Trades) now run as a filtered operational view of Master Database so project relationships, ratings, and risk signals stay aligned.
               </p>
             </div>
 
             <Button
               className="rounded-full bg-gradient-to-r from-enc-red via-enc-orange to-enc-yellow text-white shadow-glow"
               onClick={() => {
-                setEditingVendor(null);
+                setEditingRecord(null);
                 setShowForm(true);
               }}
             >
               <Plus className="mr-2 h-4 w-4" />
-              Add Record
+              Add Vendor
             </Button>
           </div>
         </div>
 
-        <Card className="dashboard-panel p-2">
-          <CardHeader>
-            <CardTitle className="text-xl text-foreground">Registry status</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm leading-6 text-muted-foreground">
-            <p>
-              Vendor records are stored in this browser workspace for now. They are operational for your current team device, but they are not yet shared across all devices until a server-backed vendor registry is added.
-            </p>
-            <div className="flex flex-wrap gap-2">
-              <Badge className="rounded-full bg-enc-orange/10 text-enc-orange">
-                Workspace Drafts
-              </Badge>
-              <Badge className="rounded-full bg-muted text-muted-foreground">
-                Durable backend pending
-              </Badge>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <Card className="dashboard-panel p-2">
+            <CardContent className="p-5">
+              <p className="text-sm font-medium text-muted-foreground">Vendor records</p>
+              <p className="mt-3 text-3xl font-semibold text-foreground">{vendors.length}</p>
+            </CardContent>
+          </Card>
+          <Card className="dashboard-panel p-2">
+            <CardContent className="p-5">
+              <p className="text-sm font-medium text-muted-foreground">Preferred</p>
+              <p className="mt-3 text-3xl font-semibold text-foreground">
+                {vendors.filter((vendor) => getVendorRiskStatus(vendor) === "Preferred").length}
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="dashboard-panel p-2">
+            <CardContent className="p-5">
+              <p className="text-sm font-medium text-muted-foreground">Use with caution</p>
+              <p className="mt-3 text-3xl font-semibold text-foreground">
+                {vendors.filter((vendor) => getVendorRiskStatus(vendor) === "Use with Caution").length}
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="dashboard-panel p-2">
+            <CardContent className="p-5">
+              <p className="text-sm font-medium text-muted-foreground">High risk vendor</p>
+              <p className="mt-3 text-3xl font-semibold text-foreground">
+                {vendors.filter((vendor) => getVendorRiskStatus(vendor) === "High Risk Vendor").length}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
 
         <Card className="dashboard-panel p-2">
           <CardHeader>
@@ -224,7 +184,7 @@ export default function ManagementVendors() {
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 className="pl-10"
-                placeholder="Search by vendor, contact, trade, or email"
+                placeholder="Search vendor, contact, trade, or email"
               />
             </div>
             <select
@@ -233,9 +193,9 @@ export default function ManagementVendors() {
               className="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
             >
               <option value="all">All trades</option>
-              {TRADE_TYPES.map((type) => (
-                <option key={type} value={type}>
-                  {type}
+              {tradeOptions.map((trade) => (
+                <option key={trade} value={trade}>
+                  {trade}
                 </option>
               ))}
             </select>
@@ -245,10 +205,9 @@ export default function ManagementVendors() {
               className="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
             >
               <option value="all">All statuses</option>
-              <option value="active">Active</option>
-              <option value="preferred">Preferred</option>
-              <option value="watchlist">Watchlist</option>
-              <option value="inactive">Inactive</option>
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+              <option value="Do Not Use">Do Not Use</option>
             </select>
           </CardContent>
         </Card>
@@ -256,8 +215,7 @@ export default function ManagementVendors() {
         {filteredVendors.length ? (
           <div className="grid gap-4">
             {filteredVendors.map((vendor) => {
-              const whatsappPhone = normalizeWhatsAppPhone(vendor.phone);
-
+              const risk = getVendorRiskStatus(vendor);
               return (
                 <Card key={vendor.id} className="dashboard-panel p-2">
                   <CardContent className="space-y-4 p-6">
@@ -265,69 +223,63 @@ export default function ManagementVendors() {
                       <div className="space-y-3">
                         <div className="flex flex-wrap items-center gap-2">
                           <h2 className="text-xl font-semibold text-foreground">
-                            {vendor.company_name || "Unnamed Vendor"}
+                            {vendor.companyName || vendor.personName}
                           </h2>
-                          <Badge className={`rounded-full ${getStatusClass(vendor.status)}`}>
-                            {vendor.status || "Active"}
+                          <Badge className="rounded-full bg-muted text-muted-foreground">
+                            {vendor.tradeCategory || "Trade not set"}
                           </Badge>
-                          <Badge className="rounded-full bg-enc-orange/10 text-enc-orange">
-                            Workspace Draft
+                          <Badge
+                            className={
+                              risk === "High Risk Vendor"
+                                ? "rounded-full bg-rose-500/10 text-rose-700 dark:text-rose-300"
+                                : risk === "Use with Caution"
+                                  ? "rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                                  : "rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                            }
+                          >
+                            {risk}
                           </Badge>
                         </div>
 
                         <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                          <span>{vendor.trade_type || "Trade not set"}</span>
-                          <span>
-                            Contact: {vendor.contact_person || "Not assigned"}
-                          </span>
-                          <span>
-                            Insurance expiry: {formatDate(vendor.insurance_expiry_date)}
-                          </span>
+                          <span>{vendor.personName}</span>
+                          <span>{vendor.role || "Trade partner"}</span>
+                          <span>{vendor.linkedProjectIds.length} linked project(s)</span>
                         </div>
 
                         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                           <div className="dashboard-item p-3">
-                            <p className="text-sm font-medium text-foreground">Phone</p>
+                            <p className="text-sm font-medium text-foreground">Overall rating</p>
                             <p className="mt-2 text-sm text-muted-foreground">
-                              {vendor.phone || "Not set"}
-                            </p>
-                          </div>
-                          <div className="dashboard-item p-3">
-                            <p className="text-sm font-medium text-foreground">Email</p>
-                            <p className="mt-2 text-sm text-muted-foreground">
-                              {vendor.email || "Not set"}
-                            </p>
-                          </div>
-                          <div className="dashboard-item p-3">
-                            <p className="text-sm font-medium text-foreground">Rating</p>
-                            <p className="mt-2 text-sm text-muted-foreground">
-                              {vendor.vendor_rating || "Not set"}
+                              {getOverallRating(vendor)}
                             </p>
                           </div>
                           <div className="dashboard-item p-3">
                             <p className="text-sm font-medium text-foreground">Work again</p>
                             <p className="mt-2 text-sm text-muted-foreground">
-                              {vendor.work_again === false ? "No" : "Yes"}
+                              {vendor.workAgain || "Not set"}
+                            </p>
+                          </div>
+                          <div className="dashboard-item p-3">
+                            <p className="text-sm font-medium text-foreground">Recommended</p>
+                            <p className="mt-2 text-sm text-muted-foreground">
+                              {vendor.recommended ? "Yes" : "No"}
+                            </p>
+                          </div>
+                          <div className="dashboard-item p-3">
+                            <p className="text-sm font-medium text-foreground">Insurance expiry</p>
+                            <p className="mt-2 text-sm text-muted-foreground">
+                              {vendor.insuranceExpiry || "Not set"}
                             </p>
                           </div>
                         </div>
 
-                        {vendor.notes || vendor.internal_notes ? (
-                          <div className="grid gap-3 md:grid-cols-2">
-                            <div className="dashboard-item p-3">
-                              <p className="text-sm font-medium text-foreground">Notes</p>
-                              <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                                {vendor.notes || "No notes added"}
-                              </p>
-                            </div>
-                            <div className="dashboard-item p-3">
-                              <p className="text-sm font-medium text-foreground">
-                                Internal notes
-                              </p>
-                              <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                                {vendor.internal_notes || "No internal notes added"}
-                              </p>
-                            </div>
+                        {vendor.notes ? (
+                          <div className="dashboard-item p-3">
+                            <p className="text-sm font-medium text-foreground">Notes</p>
+                            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                              {vendor.notes}
+                            </p>
                           </div>
                         ) : null}
                       </div>
@@ -341,23 +293,11 @@ export default function ManagementVendors() {
                             </a>
                           </Button>
                         ) : null}
-                        {whatsappPhone ? (
+                        {vendor.phone ? (
                           <Button asChild variant="outline" className="rounded-full">
-                            <a
-                              href={`https://wa.me/${whatsappPhone}`}
-                              rel="noopener noreferrer"
-                              target="_blank"
-                            >
+                            <a href={`tel:${vendor.phone}`}>
                               <Phone className="mr-2 h-4 w-4" />
-                              WhatsApp
-                            </a>
-                          </Button>
-                        ) : null}
-                        {vendor.website ? (
-                          <Button asChild variant="outline" className="rounded-full">
-                            <a href={vendor.website} rel="noopener noreferrer" target="_blank">
-                              <ExternalLink className="mr-2 h-4 w-4" />
-                              Website
+                              Call
                             </a>
                           </Button>
                         ) : null}
@@ -365,7 +305,7 @@ export default function ManagementVendors() {
                           variant="outline"
                           className="rounded-full"
                           onClick={() => {
-                            setEditingVendor(vendor);
+                            setEditingRecord(vendor);
                             setShowForm(true);
                           }}
                         >
@@ -389,45 +329,29 @@ export default function ManagementVendors() {
           </div>
         ) : (
           <Card className="dashboard-panel p-2">
-            <CardContent className="space-y-4 p-6">
+            <CardContent className="p-6 text-sm leading-6 text-muted-foreground">
               <div className="flex items-start gap-3">
-                <AlertTriangle className="mt-0.5 h-5 w-5 text-enc-orange" />
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-enc-orange" />
                 <div>
-                  <p className="text-base font-semibold text-foreground">
-                    No vendor records match the current view
-                  </p>
-                  <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
-                    Add your first vendor record to start tracking trade partners, contacts, and status. This module is now usable even though the larger accounting workflows remain offline.
-                  </p>
+                  No vendors match the current filter yet. Add your trade partners here or through Master Database so vendor history, risk signals, and project links all stay aligned.
                 </div>
               </div>
             </CardContent>
           </Card>
         )}
-
-        <Card className="dashboard-panel p-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-xl text-foreground">
-              <ShieldCheck className="h-5 w-5 text-enc-orange" />
-              What still stays offline
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm leading-6 text-muted-foreground">
-            Vendor bills, certificate uploads, approval workflows, and cross-device shared vendor history still need a durable backend before they should be treated as production recordkeeping.
-          </CardContent>
-        </Card>
       </div>
 
-      <ManagementVendorForm
+      <MasterRecordForm
         open={showForm}
-        vendor={editingVendor}
+        record={editingRecord}
+        forcedType="Vendor (Trade)"
         onClose={() => {
           setShowForm(false);
-          setEditingVendor(null);
+          setEditingRecord(null);
         }}
         onSaved={() => {
           setShowForm(false);
-          setEditingVendor(null);
+          setEditingRecord(null);
         }}
         onSubmitRecord={handleSave}
       />
@@ -435,17 +359,14 @@ export default function ManagementVendors() {
       <AlertDialog open={Boolean(deleteTarget)} onOpenChange={() => setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Remove vendor record</AlertDialogTitle>
+            <AlertDialogTitle>Remove vendor</AlertDialogTitle>
             <AlertDialogDescription>
-              Remove "{deleteTarget?.company_name || "this vendor"}" from the current browser workspace registry?
+              Remove "{deleteTarget?.companyName || deleteTarget?.personName}" from Vendors (Trades) and Master Database?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-rose-600 hover:bg-rose-700"
-              onClick={() => void handleDelete()}
-            >
+            <AlertDialogAction className="bg-rose-600 hover:bg-rose-700" onClick={() => void handleDelete()}>
               Remove
             </AlertDialogAction>
           </AlertDialogFooter>

@@ -1,4 +1,5 @@
 import { buildSessionCookie, createSessionToken } from "../_lib/auth.js";
+import { authenticateManagementUser } from "../_lib/managementUsers.js";
 
 type LoginBody = {
   username?: string;
@@ -19,27 +20,27 @@ export default async function handler(req: any, res: any) {
 
     const { username, password } = body;
 
-    const validUsername = process.env.MANAGEMENT_USERNAME;
-    const validPassword = process.env.MANAGEMENT_PASSWORD;
+    const authenticatedUser = authenticateManagementUser(username, password);
 
-    if (!validUsername || !validPassword) {
+    if (!process.env.MANAGEMENT_USERS_JSON && !process.env.MANAGEMENT_USERNAME) {
       return res.status(500).json({
         message: "Management login not configured",
       });
     }
 
-    if (username !== validUsername || password !== validPassword) {
+    if (!authenticatedUser) {
       return res.status(401).json({
         message: "Invalid credentials",
       });
     }
 
-    const token = createSessionToken(username);
+    const token = createSessionToken(authenticatedUser);
 
     res.setHeader("Set-Cookie", buildSessionCookie(token));
 
     return res.status(200).json({
       ok: true,
+      role: authenticatedUser.role,
       redirectTo: "/management/dashboard",
     });
   } catch (error) {

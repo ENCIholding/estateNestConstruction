@@ -3,6 +3,11 @@ import {
   getSessionCookieName,
   readSessionToken,
 } from "../_lib/auth.js";
+import {
+  findManagementUser,
+  getPermissionsForRole,
+  type ManagementRole,
+} from "../_lib/managementUsers.js";
 
 export default function handler(req: any, res: any) {
   if (req.method !== "GET") {
@@ -27,8 +32,13 @@ export default function handler(req: any, res: any) {
     return res.status(200).json({
       authenticated: true,
       user: {
+        displayName: session.displayName,
+        permissions: getPermissionsForRole(
+          ((session.role || findManagementUser(session.username)?.role || "Admin") as ManagementRole)
+        ),
+        app_role:
+          session.role || findManagementUser(session.username)?.role || "Admin",
         username: session.username,
-        app_role: "Admin",
       },
       redirectTo: "/management/dashboard",
     });

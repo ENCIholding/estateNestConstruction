@@ -17,23 +17,31 @@ import Badge from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
+  type DashboardStatus,
   fetchManagementJson,
   fetchManagementProjects,
   type ManagementProject,
 } from "@/lib/managementData";
+import {
+  buildPortfolioAlerts,
+  getPortfolioFinancialOverview,
+  getProjectFinancialSummary,
+  getProjectHealthStatus,
+  getSuggestedNextActions,
+} from "@/lib/buildosIntelligence";
+import {
+  loadChangeOrders,
+  loadClientInvoices,
+  loadBuildOsDocuments,
+  loadDeficiencies,
+  loadTasks,
+  loadVendorBills,
+} from "@/lib/buildosShared";
 import { managementModules } from "@/lib/management";
-
-type DashboardStatus = {
-  authConfigured: boolean;
-  emailConfigured: boolean;
-  projectRegistry: {
-    editable: boolean;
-    projectCount: number;
-    source: "environment" | "temporary" | "unconfigured";
-  };
-};
+import { getTaskSummary } from "@/lib/buildosTasks";
 
 type ActionItem = {
+  projectId?: string;
   detail: string;
   severity: "critical" | "warning" | "info";
   title: string;
@@ -119,6 +127,30 @@ export default function ManagementDashboard() {
     queryKey: ["management-status"],
     queryFn: () => fetchManagementJson<DashboardStatus>("/api/management/status"),
   });
+  const { data: changeOrders = [] } = useQuery({
+    queryKey: ["buildos-change-orders"],
+    queryFn: async () => loadChangeOrders(),
+  });
+  const { data: clientInvoices = [] } = useQuery({
+    queryKey: ["buildos-client-invoices"],
+    queryFn: async () => loadClientInvoices(),
+  });
+  const { data: vendorBills = [] } = useQuery({
+    queryKey: ["buildos-vendor-bills"],
+    queryFn: async () => loadVendorBills(),
+  });
+  const { data: deficiencies = [] } = useQuery({
+    queryKey: ["buildos-deficiencies"],
+    queryFn: async () => loadDeficiencies(),
+  });
+  const { data: tasks = [] } = useQuery({
+    queryKey: ["buildos-tasks"],
+    queryFn: async () => loadTasks(),
+  });
+  const { data: documents = [] } = useQuery({
+    queryKey: ["buildos-documents"],
+    queryFn: async () => loadBuildOsDocuments(),
+  });
 
   const activeProjects = useMemo(
     () =>
@@ -128,9 +160,27 @@ export default function ManagementDashboard() {
     [projects]
   );
 
+  const portfolioFinancials = useMemo(
+    () => getPortfolioFinancialOverview(projects, changeOrders, clientInvoices, vendorBills),
+    [changeOrders, clientInvoices, projects, vendorBills]
+  );
+  const portfolioAlerts = useMemo(
+    () =>
+      buildPortfolioAlerts(
+        projects,
+        changeOrders,
+        clientInvoices,
+        vendorBills,
+        deficiencies,
+        documents,
+        tasks
+      ),
+    [changeOrders, clientInvoices, deficiencies, documents, projects, tasks, vendorBills]
+  );
+  const taskSummary = useMemo(() => getTaskSummary(tasks), [tasks]);
+
   const operationalActions = useMemo<ActionItem[]>(() => {
     const actions: ActionItem[] = [];
-    const today = new Date();
 
     if (!status?.emailConfigured) {
       actions.push({
@@ -142,61 +192,31 @@ export default function ManagementDashboard() {
     }
 
     if (!projects.length) {
-          actions.push({
-            severity: "warning",
-            title: "No project records are loaded yet",
-            detail:
-              "Use Projects to add a deployment-backed record or a browser workspace draft so the operational views stop staying empty.",
-          });
+      actions.push({
+        severity: "warning",
+        title: "No project records are loaded yet",
+        detail:
+          "Use Projects to add a deployment-backed record or a browser workspace draft so the operational views stop staying empty.",
+      });
     }
 
-    projects.forEach((project) => {
-      if (project.estimated_end_date) {
-        const estimatedEnd = new Date(project.estimated_end_date);
-        if (
-          !Number.isNaN(estimatedEnd.getTime()) &&
-          estimatedEnd < today &&
-          !["completed", "warranty"].includes(project.status.toLowerCase())
-        ) {
-          actions.push({
-            severity: "warning",
-            title: `${project.project_name} is past its target completion date`,
-            detail: `Estimated end date ${formatDate(project.estimated_end_date)} should be reviewed and updated.`,
-          });
-        }
-      }
+    if (!status?.buildOsStorage.configured) {
+      actions.push({
+        severity: "warning",
+        title: "Shared BuildOS persistence is not configured",
+        detail:
+          "Newer BuildOS modules can still fall back locally, but durable shared recordkeeping needs Supabase service-role storage and the BuildOS migration applied before the system is fully multi-user safe.",
+      });
+    }
 
-      if (!project.estimated_budget) {
-        actions.push({
-          severity: "warning",
-          title: `${project.project_name} has no budget baseline`,
-          detail:
-            "Budget and cost reporting should stay offline until a verified cost baseline is entered.",
-        });
-      }
-
-      if (
-        !project.legal_land_description ||
-        !project.building_permit_pdf ||
-        !project.development_permit_pdf
-      ) {
-        actions.push({
-          severity: "info",
-          title: `${project.project_name} is missing diligence references`,
-          detail:
-            "Add permit links and legal land details before using the dashboard as a lender/client-facing project reference.",
-        });
-      }
-
-      if (!project.project_manager && !project.primary_contact_email) {
-        actions.push({
-          severity: "info",
-          title: `${project.project_name} has no assigned owner in the registry`,
-          detail:
-            "Assign a project manager or contact so the dashboard reflects clear operational accountability.",
-        });
-      }
-    });
+    portfolioAlerts.forEach((alert) =>
+      actions.push({
+        projectId: alert.projectId,
+        severity: alert.severity,
+        title: alert.title,
+        detail: alert.detail,
+      })
+    );
 
     if (disabledModules.length) {
       actions.push({
@@ -207,8 +227,24 @@ export default function ManagementDashboard() {
       });
     }
 
+    if (!tasks.length) {
+      actions.push({
+        severity: "warning",
+        title: "Task execution layer is still empty",
+        detail:
+          "Add the first real task records so schedule pressure, mobile updates, and automation warnings can reflect live execution work.",
+      });
+    }
+
     return actions.slice(0, 6);
-  }, [disabledModules.length, projects, status?.emailConfigured]);
+  }, [
+    disabledModules.length,
+    portfolioAlerts,
+    projects.length,
+    status?.buildOsStorage.configured,
+    status?.emailConfigured,
+    tasks.length,
+  ]);
 
   const blockers = operationalActions.filter(
     (action) => action.severity === "critical" || action.severity === "warning"
@@ -254,45 +290,43 @@ export default function ManagementDashboard() {
           <div className="absolute inset-y-0 right-0 w-48 bg-gradient-to-l from-enc-yellow/10 via-enc-orange/10 to-transparent" />
           <div className="relative">
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-enc-orange">
-              Estate Nest Capital
+              ENCI BuildOS
             </p>
             <h1 className="mt-3 text-3xl font-bold text-foreground lg:text-4xl">
-              Operational Dashboard
+              Operational Command Center
             </h1>
             <div className="mt-4 h-1 w-24 rounded-full bg-gradient-hero" />
-              <p className="mt-4 max-w-3xl text-muted-foreground">
-              This dashboard now reports only live readiness, connected project records, browser workspace drafts, and explicitly offline modules. Decorative demo stats have been removed.
-              </p>
-            </div>
+            <p className="mt-4 max-w-3xl text-muted-foreground">
+              This command center reports only live readiness, connected project
+              records, browser workspace drafts, and explicitly limited modules.
+              Decorative demo stats have been removed in favor of operational signals.
+            </p>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <StatsCard
-            title="Project Registry"
-            value={projects.length}
-            subtitle={getRegistryLabel(status.projectRegistry.source)}
+            title="Revised Budget"
+            value={formatCurrency(portfolioFinancials.revisedBudget)}
+            subtitle="Original budget plus approved changes"
             icon={FolderKanban}
           />
           <StatsCard
             title="Active Projects"
             value={activeProjects}
-            subtitle={`${projects.length} total configured`}
+            subtitle={`${projects.length} projects in registry`}
             icon={ShieldCheck}
           />
           <StatsCard
-            title="Email Delivery"
-            value={status.emailConfigured ? "Ready" : "Needs Setup"}
-            subtitle={
-              status.emailConfigured
-                ? "Dashboard email can send through Gmail SMTP"
-                : "SMTP must be verified before live use"
-            }
+            title="Unpaid Client Invoices"
+            value={formatCurrency(portfolioFinancials.unpaidClientInvoices)}
+            subtitle="Open inflow pressure across the portfolio"
             icon={Mail}
           />
           <StatsCard
-            title="Open Blockers"
-            value={blockers}
-            subtitle={`${disabledModules.length} modules still safely offline`}
+            title="Execution Pressure"
+            value={taskSummary.overdue + taskSummary.blocked}
+            subtitle={`${taskSummary.overdue} overdue · ${taskSummary.blocked} blocked`}
             icon={AlertTriangle}
           />
         </div>
@@ -303,7 +337,7 @@ export default function ManagementDashboard() {
               <div>
                 <CardTitle className="text-2xl text-foreground">Action Center</CardTitle>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  Operational issues are generated from live configuration and project records only.
+                  Operational issues are generated from live configuration, project data, invoices, bills, change orders, and deficiencies only.
                 </p>
               </div>
               <Badge className="rounded-full bg-foreground text-background">
@@ -375,9 +409,31 @@ export default function ManagementDashboard() {
               </div>
 
               <div className="dashboard-item p-4">
+                <p className="text-sm font-semibold text-foreground">BuildOS shared storage</p>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  {status.buildOsStorage.configured
+                    ? `${status.buildOsStorage.provider} is configured for workspace ${status.buildOsStorage.workspaceSlug}. Newer BuildOS modules can use durable shared persistence.`
+                    : "Shared BuildOS persistence is not configured yet. Newer modules will fall back to local browser storage until the Supabase service-role env and migration are applied."}
+                </p>
+              </div>
+
+              <div className="dashboard-item p-4">
+                <p className="text-sm font-semibold text-foreground">Financial command center</p>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  Portfolio revised budget: {formatCurrency(portfolioFinancials.revisedBudget)}. Pending change exposure: {formatCurrency(portfolioFinancials.pendingChangeOrderExposure)}. Paid-out costs: {formatCurrency(portfolioFinancials.cashOutflows)}.
+                </p>
+              </div>
+
+              <div className="dashboard-item p-4">
                 <p className="text-sm font-semibold text-foreground">Visible modules</p>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
                   {enabledModules.length} modules are live. {disabledModules.length} modules stay offline until their backend and validation paths are complete.
+                </p>
+              </div>
+              <div className="dashboard-item p-4">
+                <p className="text-sm font-semibold text-foreground">Execution layer</p>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  {tasks.length} tasks loaded across BuildOS. {taskSummary.milestones} milestone checkpoint(s) are currently being tracked.
                 </p>
               </div>
 
@@ -387,6 +443,12 @@ export default function ManagementDashboard() {
               <Button asChild variant="outline" className="w-full rounded-full">
                 <Link to="/management/vendors">Open Vendor Registry</Link>
               </Button>
+              <Button asChild variant="outline" className="w-full rounded-full">
+                <Link to="/management/master-database">Open Master Database</Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full rounded-full">
+                <Link to="/management/tasks">Open Project Tasks</Link>
+              </Button>
             </CardContent>
           </Card>
         </div>
@@ -395,17 +457,37 @@ export default function ManagementDashboard() {
           <CardHeader className="flex flex-row items-start justify-between gap-4">
             <div>
               <CardTitle className="text-2xl text-foreground">Project Registry</CardTitle>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Only configured project records and browser workspace drafts are shown. When no real records exist, the dashboard stays empty on purpose.
-              </p>
-            </div>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Only configured project records and browser workspace drafts are shown. When no real records exist, the dashboard stays empty on purpose.
+                </p>
+              </div>
             <Badge className="rounded-full bg-muted text-muted-foreground">
               {getRegistryLabel(status.projectRegistry.source)}
             </Badge>
           </CardHeader>
           <CardContent className="space-y-3">
             {projects.length ? (
-              projects.map((project) => (
+              projects.map((project) => {
+                const projectSummary = getProjectFinancialSummary(
+                  project,
+                  changeOrders,
+                  clientInvoices,
+                  vendorBills
+                );
+                const health = getProjectHealthStatus(
+                  project,
+                  projectSummary,
+                  deficiencies,
+                  portfolioAlerts
+                );
+                const nextActions = getSuggestedNextActions(
+                  project,
+                  projectSummary,
+                  portfolioAlerts
+                );
+                const projectTasks = tasks.filter((item) => item.projectId === project.id);
+
+                return (
                 <div key={project.id} className="dashboard-item p-5">
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div>
@@ -414,15 +496,38 @@ export default function ManagementDashboard() {
                         <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getStatusBadge(project.status)}`}>
                           {project.status}
                         </span>
+                        <Badge
+                          className={
+                            health === "Critical"
+                              ? "rounded-full bg-rose-500/10 text-rose-700 dark:text-rose-300"
+                              : health === "Warning"
+                                ? "rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                                : "rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                          }
+                        >
+                          {health}
+                        </Badge>
                       </div>
                       <p className="mt-2 text-sm text-muted-foreground">{project.civic_address}</p>
                       <div className="mt-3 flex flex-wrap gap-4 text-sm text-muted-foreground">
-                        <span>Budget: {formatCurrency(project.estimated_budget)}</span>
+                        <span>Original budget: {formatCurrency(projectSummary.originalBudget)}</span>
+                        <span>Revised budget: {formatCurrency(projectSummary.revisedBudget)}</span>
                         <span>Target completion: {formatDate(project.estimated_end_date)}</span>
+                        <span>{projectTasks.length} live task(s)</span>
                         <span>
                           Manager: {project.project_manager || project.primary_contact_email || "Unassigned"}
                         </span>
                       </div>
+                      {nextActions.length ? (
+                        <div className="mt-3 rounded-2xl border border-border/70 bg-background/80 p-3">
+                          <p className="text-sm font-medium text-foreground">Suggested next actions</p>
+                          <ul className="mt-2 space-y-1 text-sm leading-6 text-muted-foreground">
+                            {nextActions.map((action) => (
+                              <li key={`${project.id}-${action}`}>{action}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : null}
                     </div>
 
                     <Button asChild variant="outline" className="rounded-full">
@@ -432,7 +537,7 @@ export default function ManagementDashboard() {
                     </Button>
                   </div>
                 </div>
-              ))
+              )})
             ) : (
               <div className="dashboard-item p-6">
                 <p className="text-base font-semibold text-foreground">No live projects are loaded</p>

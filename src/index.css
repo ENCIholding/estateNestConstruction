@@ -174,8 +174,20 @@ All colors MUST be HSL.
     transition: transform 0.2s ease;
   }
 
-  .skip-link:focus {
+.skip-link:focus {
     transform: translateY(0);
+  }
+
+  .buildos-font-default {
+    font-size: 1rem;
+  }
+
+  .buildos-font-large {
+    font-size: 1.04rem;
+  }
+
+  .buildos-font-xlarge {
+    font-size: 1.08rem;
   }
 
   .gradient-text {
@@ -287,6 +299,27 @@ All colors MUST be HSL.
     transform: scale(1.05) rotate(-3deg);
     box-shadow: 0 20px 38px hsl(var(--enc-red) / 0.24);
   }
+}
+
+.buildos-density-compact .dashboard-panel {
+  border-radius: 1.35rem;
+}
+
+.buildos-density-compact .dashboard-item {
+  border-radius: 1rem;
+}
+
+.buildos-density-compact .dashboard-icon {
+  height: 2.75rem;
+  width: 2.75rem;
+}
+
+.buildos-reduced-motion *,
+.buildos-reduced-motion *::before,
+.buildos-reduced-motion *::after {
+  animation: none !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
 }
 
 html.a11y-enhanced .gradient-text,

@@ -3,7 +3,9 @@ import {
   getSessionCookieName,
   verifySessionToken,
 } from "../_lib/auth.js";
+import { getBuildOsStorageStatus } from "../_lib/buildosStore.js";
 import { getSmtpConfig } from "../_lib/email.js";
+import { getManagementUsers } from "../_lib/managementUsers.js";
 import { getProjectRegistryState } from "../_lib/projects.js";
 
 function isConfigured(value?: string) {
@@ -26,8 +28,7 @@ export default function handler(req: any, res: any) {
 
   const projectRegistry = getProjectRegistryState();
   const authConfigured =
-    isConfigured(process.env.MANAGEMENT_USERNAME) &&
-    isConfigured(process.env.MANAGEMENT_PASSWORD) &&
+    getManagementUsers().length > 0 &&
     isConfigured(process.env.MANAGEMENT_SESSION_SECRET);
 
   let emailConfigured = true;
@@ -40,6 +41,7 @@ export default function handler(req: any, res: any) {
 
   return res.status(200).json({
     authConfigured,
+    buildOsStorage: getBuildOsStorageStatus(),
     emailConfigured,
     projectRegistry,
   });

@@ -25,6 +25,11 @@ import {
   mergeProjectsWithWorkspace,
   saveProjectToWorkspace,
 } from "@/lib/managementWorkspace";
+import {
+  loadBuildOsProjectParticipantAssignments,
+  loadBuildOsDocuments,
+  loadBuildOsTasks,
+} from "@/lib/buildosShared";
 
 type ProjectsStatus = {
   projectRegistry: {
@@ -110,6 +115,18 @@ export default function ManagementProjects() {
   const { data: status } = useQuery({
     queryKey: ["management-status"],
     queryFn: () => fetchManagementJson<ProjectsStatus>("/api/management/status"),
+  });
+  const { data: tasks = [] } = useQuery({
+    queryKey: ["buildos-tasks"],
+    queryFn: async () => loadBuildOsTasks(),
+  });
+  const { data: documents = [] } = useQuery({
+    queryKey: ["buildos-documents"],
+    queryFn: async () => loadBuildOsDocuments(),
+  });
+  const { data: participantAssignments = [] } = useQuery({
+    queryKey: ["buildos-project-participants"],
+    queryFn: async () => loadBuildOsProjectParticipantAssignments(),
   });
 
   const mergedRegistry = useMemo(
@@ -253,6 +270,44 @@ export default function ManagementProjects() {
                             <p className="mt-2 flex items-center gap-2">
                               <FileCheck2 className="h-4 w-4 text-enc-orange" />
                               {diligenceLinks} linked document{diligenceLinks === 1 ? "" : "s"}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="grid gap-3 text-sm text-muted-foreground md:grid-cols-3">
+                          <div className="dashboard-item p-3">
+                            <p className="font-medium text-foreground">Execution tasks</p>
+                            <p className="mt-2">
+                              {tasks.filter((task) => task.projectId === project.id).length} linked task(s)
+                            </p>
+                          </div>
+                          <div className="dashboard-item p-3">
+                            <p className="font-medium text-foreground">BuildOS documents</p>
+                            <p className="mt-2">
+                              {documents.filter((item) => item.projectId === project.id).length} linked record(s)
+                            </p>
+                          </div>
+                          <div className="dashboard-item p-3">
+                            <p className="font-medium text-foreground">Deal participants</p>
+                            <p className="mt-2">
+                              {(() => {
+                                const assignment = participantAssignments.find(
+                                  (item) => item.projectId === project.id
+                                );
+                                if (!assignment) return "Not assigned";
+                                return (
+                                  [
+                                    assignment.sellerSideRealtorId,
+                                    assignment.buyerSideRealtorId,
+                                    assignment.sellerSideLawyerId,
+                                    assignment.buyerSideLawyerId,
+                                    ...assignment.stakeholderClientIds,
+                                    ...assignment.buyerIds,
+                                    ...assignment.lenderIds,
+                                    ...assignment.investorIds,
+                                    ...assignment.otherRecordIds,
+                                  ].filter(Boolean).length || "Not assigned"
+                                );
+                              })()}
                             </p>
                           </div>
                         </div>

@@ -66,6 +66,14 @@ const expectations = [
     ok: app.includes('path="/management/schedule"'),
   },
   {
+    name: "tasks route exists in app",
+    ok: app.includes('path="/management/tasks"'),
+  },
+  {
+    name: "gantt route exists in app",
+    ok: app.includes('path="/management/gantt-chart"'),
+  },
+  {
     name: "budget route exists in app",
     ok: app.includes('path="/management/budget-costs"'),
   },
@@ -86,6 +94,14 @@ const expectations = [
     ok: app.includes('path="/management/analytics"'),
   },
   {
+    name: "automation route exists in app",
+    ok: app.includes('path="/management/automation"'),
+  },
+  {
+    name: "mobile tasks route exists in app",
+    ok: app.includes('path="/management/mobile-tasks"'),
+  },
+  {
     name: "warranty route exists in app",
     ok: app.includes('path="/management/warranty-reminder"'),
   },
@@ -94,8 +110,16 @@ const expectations = [
     ok: app.includes("<ScrollToTop />"),
   },
   {
+    name: "tasks are enabled in management navigation",
+    ok: management.includes('{ name: "Project Tasks", page: "tasks", enabled: true }'),
+  },
+  {
     name: "schedule is enabled in management navigation",
     ok: management.includes('{ name: "Schedule", page: "schedule", enabled: true }'),
+  },
+  {
+    name: "gantt is enabled in management navigation",
+    ok: management.includes('{ name: "Gantt Chart", page: "gantt-chart", enabled: true }'),
   },
   {
     name: "budget is enabled in management navigation",
@@ -114,8 +138,16 @@ const expectations = [
     ok: management.includes('{ name: "Reports", page: "reports", enabled: true }'),
   },
   {
+    name: "automation is enabled in management navigation",
+    ok: management.includes('{ name: "Automation", page: "automation", enabled: true }'),
+  },
+  {
     name: "analytics is enabled in management navigation",
     ok: management.includes('{ name: "Analytics", page: "analytics", enabled: true }'),
+  },
+  {
+    name: "mobile tasks are enabled in management navigation",
+    ok: management.includes('{ name: "Mobile Tasks", page: "mobile-tasks", enabled: true }'),
   },
   {
     name: "warranty reminder is enabled in management navigation",

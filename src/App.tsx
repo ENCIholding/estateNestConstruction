@@ -16,17 +16,30 @@ const ThankYou = lazy(() => import("./pages/ThankYou"));
 const ManagementLogin = lazy(() => import("./pages/ManagementLogin"));
 const ManagementDashboard = lazy(() => import("./pages/ManagementDashboard"));
 const ManagementProjects = lazy(() => import("./pages/ManagementProjects"));
+const ManagementProjectTasks = lazy(() => import("./pages/ManagementProjectTasks"));
 const ManagementVendors = lazy(() => import("./pages/ManagementVendors"));
 const ManagementProjectDetails = lazy(() => import("./pages/ManagementProjectDetails"));
 const ManagementSchedule = lazy(() => import("./pages/ManagementSchedule"));
+const ManagementGanttChart = lazy(() => import("./pages/ManagementGanttChart"));
 const ManagementBudgetCosts = lazy(() => import("./pages/ManagementBudgetCosts"));
+const ManagementChangeOrders = lazy(() => import("./pages/ManagementChangeOrders"));
+const ManagementClientInvoices = lazy(() => import("./pages/ManagementClientInvoices"));
 const ManagementDocuments = lazy(() => import("./pages/ManagementDocuments"));
 const ManagementCompliance = lazy(() => import("./pages/ManagementCompliance"));
+const ManagementDailyLog = lazy(() => import("./pages/ManagementDailyLog"));
+const ManagementDeficiencyPunchList = lazy(
+  () => import("./pages/ManagementDeficiencyPunchList")
+);
+const ManagementLicense = lazy(() => import("./pages/ManagementLicense"));
+const ManagementMasterDatabase = lazy(() => import("./pages/ManagementMasterDatabase"));
 const ManagementReports = lazy(() => import("./pages/ManagementReports"));
 const ManagementAnalytics = lazy(() => import("./pages/ManagementAnalytics"));
+const ManagementAutomation = lazy(() => import("./pages/ManagementAutomation"));
+const ManagementVendorBills = lazy(() => import("./pages/ManagementVendorBills"));
 const ManagementWarrantyReminder = lazy(
   () => import("./pages/ManagementWarrantyReminder")
 );
+const ManagementMobileTasks = lazy(() => import("./pages/ManagementMobileTasks"));
 const ManagementModuleUnavailable = lazy(
   () => import("./pages/ManagementModuleUnavailable")
 );
@@ -160,7 +173,7 @@ export default function App() {
               path="/management/gantt-chart"
               element={
                 <RequireManagementAuth>
-                  <ManagementModuleUnavailable currentPageName="gantt-chart" title="Gantt Chart" />
+                  <ManagementGanttChart />
                 </RequireManagementAuth>
               }
             />
@@ -168,7 +181,7 @@ export default function App() {
               path="/management/change-orders"
               element={
                 <RequireManagementAuth>
-                  <ManagementModuleUnavailable currentPageName="change-orders" title="Change Orders" />
+                  <ManagementChangeOrders />
                 </RequireManagementAuth>
               }
             />
@@ -176,7 +189,7 @@ export default function App() {
               path="/management/client-invoices"
               element={
                 <RequireManagementAuth>
-                  <ManagementModuleUnavailable currentPageName="client-invoices" title="Client Invoices" />
+                  <ManagementClientInvoices />
                 </RequireManagementAuth>
               }
             />
@@ -200,7 +213,7 @@ export default function App() {
               path="/management/master-database"
               element={
                 <RequireManagementAuth>
-                  <ManagementModuleUnavailable currentPageName="master-database" title="Master Database" />
+                  <ManagementMasterDatabase />
                 </RequireManagementAuth>
               }
             />
@@ -208,7 +221,7 @@ export default function App() {
               path="/management/mobile-tasks"
               element={
                 <RequireManagementAuth>
-                  <ManagementModuleUnavailable currentPageName="mobile-tasks" title="Mobile Tasks" />
+                  <ManagementMobileTasks />
                 </RequireManagementAuth>
               }
             />
@@ -216,7 +229,7 @@ export default function App() {
               path="/management/vendor-bills"
               element={
                 <RequireManagementAuth>
-                  <ManagementModuleUnavailable currentPageName="vendor-bills" title="Vendor Bills" />
+                  <ManagementVendorBills />
                 </RequireManagementAuth>
               }
             />
@@ -224,7 +237,7 @@ export default function App() {
               path="/management/tasks"
               element={
                 <RequireManagementAuth>
-                  <ManagementModuleUnavailable currentPageName="tasks" title="Project Tasks" />
+                  <ManagementProjectTasks />
                 </RequireManagementAuth>
               }
             />
@@ -232,7 +245,7 @@ export default function App() {
               path="/management/automation"
               element={
                 <RequireManagementAuth>
-                  <ManagementModuleUnavailable currentPageName="automation" title="Automation" />
+                  <ManagementAutomation />
                 </RequireManagementAuth>
               }
             />
@@ -240,7 +253,7 @@ export default function App() {
               path="/management/daily-log"
               element={
                 <RequireManagementAuth>
-                  <ManagementModuleUnavailable currentPageName="daily-log" title="Daily Log" />
+                  <ManagementDailyLog />
                 </RequireManagementAuth>
               }
             />
@@ -248,10 +261,7 @@ export default function App() {
               path="/management/deficiency-punch-list"
               element={
                 <RequireManagementAuth>
-                  <ManagementModuleUnavailable
-                    currentPageName="deficiency-punch-list"
-                    title="Deficiency Punch List"
-                  />
+                  <ManagementDeficiencyPunchList />
                 </RequireManagementAuth>
               }
             />
@@ -259,7 +269,7 @@ export default function App() {
               path="/management/license"
               element={
                 <RequireManagementAuth>
-                  <ManagementModuleUnavailable currentPageName="license" title="License" />
+                  <ManagementLicense />
                 </RequireManagementAuth>
               }
             />

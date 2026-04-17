@@ -19,6 +19,7 @@
 - `MANAGEMENT_USERNAME`
 - `MANAGEMENT_PASSWORD`
 - `MANAGEMENT_SESSION_SECRET`
+- `MANAGEMENT_USERS_JSON` optional if you want role-based multi-user management accounts instead of a single admin login
 - `EMAIL_SMTP_USER`
 - `EMAIL_SMTP_PASS`
 - `EMAIL_SMTP_HOST` optional, defaults to `smtp.gmail.com`
@@ -30,8 +31,13 @@
 - `EMAIL_INBOX_COPY` optional, defaults to `hello@estatenest.capital`
 - `EMAIL_LOGO_URL` optional, defaults to the public Estate Nest logo URL
 - `MANAGEMENT_PROJECTS_JSON` optional if you want to override the fallback management project dataset
+- `SUPABASE_URL` or `VITE_SUPABASE_URL` or `NEXT_PUBLIC_SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY` preferred for the BuildOS server API, with `SUPABASE_SECRET_API_KEY` supported as an alternative if your Supabase project uses the newer secret-key format
+- `BUILDOS_WORKSPACE_SLUG` optional, defaults to `estate-nest-capital`
 
 For Google Workspace or Gmail SMTP, create an app password for `hello@estatenest.capital` and store it in `EMAIL_SMTP_PASS`.
+
+For shared BuildOS persistence, apply `supabase/migrations/20260417_buildos_shared_persistence.sql` before enabling the service-role storage envs in preview or production.
 
 ## GitHub and Vercel settings to apply
 

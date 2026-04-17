@@ -71,6 +71,11 @@ describe("management auth handlers", () => {
       expect.objectContaining({
         authenticated: true,
         user: expect.objectContaining({
+          app_role: "Admin",
+          permissions: expect.arrayContaining([
+            "buildos:master-database:write",
+            "buildos:restricted-notes:read",
+          ]),
           username: "ENCIKD",
         }),
       })
