@@ -58,7 +58,16 @@ function FooterLinkItem({ link }: { link: FooterLink }) {
 
         if (!targetHash && targetPath === location.pathname) {
           event.preventDefault();
-          window.scrollTo({ top: 0, behavior: "smooth" });
+          window.scrollTo({ top: 0, behavior: "auto" });
+          return;
+        }
+
+        if (!targetHash) {
+          window.requestAnimationFrame(() => {
+            window.setTimeout(() => {
+              window.scrollTo({ top: 0, behavior: "auto" });
+            }, 0);
+          });
         }
       }}
     >

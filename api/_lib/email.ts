@@ -3,6 +3,8 @@ const DEFAULT_LOGO_URL =
   "https://www.estatenest.capital/brand/estate-nest-capital-logo.jpg";
 const DEFAULT_FROM_NAME = "Estate Nest Capital Inc.";
 const DEFAULT_INBOX_COPY = "hello@estatenest.capital";
+const CONFIDENTIALITY_NOTICE =
+  "The contents of this email message and any attachments are intended solely for the addressee(s) and may contain confidential and/or privileged information and may be legally protected from disclosure. If you are not the intended recipient of this message or their agent, or if this message has been addressed to you in error, please immediately alert the sender by reply email and then delete this message and any attachments. If you are not the intended recipient, you are hereby notified that any use, dissemination, copying, or storage of this message or its attachments is strictly prohibited. Please note that any views or opinions presented in this email are solely those of the author and do not necessarily represent those of Estate Nest Capital Inc. Finally, the recipient should check this email and any attachments for the presence of viruses. Estate Nest Capital Inc accepts no liability for any damage caused by any virus transmitted by this email.";
 
 type SmtpConfig = {
   host: string;
@@ -59,11 +61,22 @@ function getBoolean(value: string | undefined, fallback: boolean): boolean {
 }
 
 export function getSmtpConfig(): SmtpConfig {
-  const user = process.env.EMAIL_SMTP_USER?.trim();
-  const pass = process.env.EMAIL_SMTP_PASS?.trim();
+  const user =
+    process.env.EMAIL_SMTP_USER?.trim() ||
+    process.env.EMAIL_FROM_ADDRESS?.trim() ||
+    process.env.EMAIL_USER?.trim() ||
+    process.env.SMTP_USER?.trim();
+  const pass =
+    process.env.EMAIL_SMTP_PASS?.trim() ||
+    process.env.EMAIL_APP_PASSWORD?.trim() ||
+    process.env.GOOGLE_APP_PASSWORD?.trim() ||
+    process.env.GMAIL_APP_PASSWORD?.trim() ||
+    process.env.SMTP_PASSWORD?.trim();
 
   if (!user || !pass) {
-    throw new Error("EMAIL_SMTP_USER and EMAIL_SMTP_PASS are required");
+    throw new Error(
+      "Dashboard email is not configured on this deployment yet. EMAIL_SMTP_USER and EMAIL_SMTP_PASS are required for the system to send email."
+    );
   }
 
   const host = process.env.EMAIL_SMTP_HOST?.trim() || "smtp.gmail.com";
@@ -130,7 +143,7 @@ function getSignatureText(fromAddress: string): string {
     fromAddress.toUpperCase(),
     "www.estatenest.capital",
     "",
-    "Confidentiality Notice: The contents of this email message and any attachments are intended solely for the addressee(s) and may contain confidential and/or privileged information and may be legally protected from disclosure. If you are not the intended recipient of this message or their agent, or if this message has been addressed to you in error, please immediately alert the sender by reply email and then delete this message and any attachments. If you are not the intended recipient, you are hereby notified that any use, dissemination, copying, or storage of this message or its attachments is strictly prohibited. Please note that any views or opinions presented in this email are solely those of the author and do not necessarily represent those of Estate Nest Capital Inc. Finally, the recipient should check this email and any attachments for the presence of viruses. Estate Nest Capital Investments accepts no liability for any damage caused by any virus transmitted by this email.",
+    CONFIDENTIALITY_NOTICE,
   ].join("\n");
 }
 
@@ -166,7 +179,7 @@ function getSignatureHtml(config: Pick<SmtpConfig, "fromAddress" | "logoUrl">) {
       </div>
 
       <p style="margin:24px 0 0;color:#64748b;font-size:12px;line-height:1.7;">
-        Confidentiality Notice: The contents of this email message and any attachments are intended solely for the addressee(s) and may contain confidential and/or privileged information and may be legally protected from disclosure. If you are not the intended recipient of this message or their agent, or if this message has been addressed to you in error, please immediately alert the sender by reply email and then delete this message and any attachments. If you are not the intended recipient, you are hereby notified that any use, dissemination, copying, or storage of this message or its attachments is strictly prohibited. Please note that any views or opinions presented in this email are solely those of the author and do not necessarily represent those of Estate Nest Capital Inc. Finally, the recipient should check this email and any attachments for the presence of viruses. Estate Nest Capital Investments accepts no liability for any damage caused by any virus transmitted by this email.
+        ${escapeHtml(CONFIDENTIALITY_NOTICE)}
       </p>
     </div>
   `;

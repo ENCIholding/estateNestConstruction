@@ -11,6 +11,8 @@ import {
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const sharedNavClasses =
+    "rounded-full border border-white/15 bg-white/5 px-5 text-sm font-medium tracking-wide text-white backdrop-blur-sm transition-all hover:border-enc-orange-light/40 hover:bg-white/12 hover:text-enc-orange-light";
 
   const navigationItems = [
     { label: "Home", path: "/" },
@@ -38,16 +40,14 @@ const Header = () => {
           />
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8" aria-label="Primary">
+          <nav className="hidden md:flex items-center gap-3" aria-label="Primary">
             {navigationItems.map((item) => {
               return (
                 <Button
                   key={item.label}
                   variant="ghost"
                   asChild
-                  className={`text-sm font-medium tracking-wide text-white hover:bg-transparent hover:text-enc-orange-light ${
-                    item.isContact ? "rounded-full border border-white/15 px-5 hover:border-enc-orange-light/40" : ""
-                  }`}
+                  className={`${sharedNavClasses} ${item.isContact ? "shadow-[0_12px_30px_rgba(249,115,22,0.16)]" : ""}`}
                 >
                   <Link to={item.path}>{item.label}</Link>
                 </Button>
@@ -79,7 +79,7 @@ const Header = () => {
                         key={item.label}
                         variant="ghost"
                         asChild
-                        className="w-full justify-start text-base font-medium text-white hover:bg-white/10 hover:text-enc-orange-light"
+                        className="w-full justify-start rounded-full border border-white/15 bg-white/5 px-5 text-base font-medium text-white hover:bg-white/10 hover:text-enc-orange-light"
                       >
                         <Link to={item.path} onClick={() => setIsOpen(false)}>
                           {item.label}
