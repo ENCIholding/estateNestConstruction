@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   AlertTriangle,
   LayoutDashboard,
@@ -86,14 +86,138 @@ const allNavItems: NavItem[] = [
   })),
 ];
 
+type WorkspaceSettingsContentProps = {
+  featureFlags: ReturnType<typeof loadBuildOsFeatureFlags>;
+  preferences: BuildOsPreferences;
+  updatePreferences: (next: Partial<BuildOsPreferences>) => void;
+};
+
+function WorkspaceSettingsContent({
+  featureFlags,
+  preferences,
+  updatePreferences,
+}: WorkspaceSettingsContentProps) {
+  return (
+    <>
+      <p className="text-xs font-semibold uppercase tracking-[0.28em] text-enc-orange">
+        Workspace Preferences
+      </p>
+      <div className="mt-4 space-y-4 text-sm">
+        <div className="space-y-2">
+          <p className="font-medium text-foreground">Theme</p>
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              ["light", "Light"],
+              ["dark", "Dark"],
+              ["system", "System"],
+            ].map(([value, label]) => (
+              <Button
+                key={value}
+                type="button"
+                variant={preferences.themeMode === value ? "default" : "outline"}
+                className="rounded-full"
+                onClick={() =>
+                  updatePreferences({
+                    themeMode: value as BuildOsPreferences["themeMode"],
+                  })
+                }
+              >
+                {label}
+              </Button>
+            ))}
+          </div>
+        </div>
+        <div className="space-y-2">
+          <p className="font-medium text-foreground">Font size</p>
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              ["default", "Default"],
+              ["large", "Large"],
+              ["xlarge", "XL"],
+            ].map(([value, label]) => (
+              <Button
+                key={value}
+                type="button"
+                variant={preferences.fontScale === value ? "default" : "outline"}
+                className="rounded-full"
+                onClick={() =>
+                  updatePreferences({
+                    fontScale: value as BuildOsPreferences["fontScale"],
+                  })
+                }
+              >
+                {label}
+              </Button>
+            ))}
+          </div>
+        </div>
+        <div className="space-y-2">
+          <p className="font-medium text-foreground">Density</p>
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              ["comfortable", "Comfortable"],
+              ["compact", "Compact"],
+            ].map(([value, label]) => (
+              <Button
+                key={value}
+                type="button"
+                variant={preferences.density === value ? "default" : "outline"}
+                className="rounded-full"
+                onClick={() =>
+                  updatePreferences({
+                    density: value as BuildOsPreferences["density"],
+                  })
+                }
+              >
+                {label}
+              </Button>
+            ))}
+          </div>
+        </div>
+        <div className="grid gap-2">
+          <label className="flex items-center justify-between rounded-2xl border border-border/70 px-3 py-2">
+            <span>Reduced motion</span>
+            <input
+              type="checkbox"
+              checked={preferences.reducedMotion}
+              onChange={(event) =>
+                updatePreferences({ reducedMotion: event.target.checked })
+              }
+            />
+          </label>
+          <label className="flex items-center justify-between rounded-2xl border border-border/70 px-3 py-2">
+            <span>High contrast</span>
+            <input
+              type="checkbox"
+              checked={preferences.highContrast}
+              onChange={(event) =>
+                updatePreferences({ highContrast: event.target.checked })
+              }
+            />
+          </label>
+        </div>
+        <div className="rounded-2xl border border-border/70 bg-background/80 p-3 text-xs leading-5 text-muted-foreground">
+          Enabled live modules: {managementModules.filter((module) => module.enabled).length}. Beta flags:{" "}
+          {featureFlags.ganttBeta || featureFlags.automationBeta || featureFlags.mobileTasksBeta
+            ? "active"
+            : "none"}
+          .
+        </div>
+      </div>
+    </>
+  );
+}
+
 export default function ManagementLayout({
   children,
   currentPageName = "dashboard",
 }: ManagementLayoutProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const accessibility = useAccessibilityMode();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const sidebarScrollRef = useRef<HTMLDivElement | null>(null);
   const [preferences, setPreferences] = useState<BuildOsPreferences>(() =>
     loadBuildOsPreferences()
   );
@@ -115,6 +239,13 @@ export default function ManagementLayout({
   useEffect(() => {
     document.title = `${pageTitle} | ENCI BuildOS`;
   }, [pageTitle]);
+
+  useEffect(() => {
+    sidebarScrollRef.current?.scrollTo({
+      top: 0,
+      behavior: preferences.reducedMotion ? "auto" : "smooth",
+    });
+  }, [location.pathname, preferences.reducedMotion]);
 
   const filteredNavItems = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -193,104 +324,11 @@ export default function ManagementLayout({
                 </Button>
               </PopoverTrigger>
               <PopoverContent align="end" className="w-80 rounded-3xl border-border/80 bg-background/95 p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-enc-orange">
-                  ENCI BuildOS Settings
-                </p>
-                <div className="mt-4 space-y-4 text-sm">
-                  <div className="space-y-2">
-                    <p className="font-medium text-foreground">Theme</p>
-                    <div className="grid grid-cols-3 gap-2">
-                      {[
-                        ["light", "Light"],
-                        ["dark", "Dark"],
-                        ["system", "System"],
-                      ].map(([value, label]) => (
-                        <Button
-                          key={value}
-                          type="button"
-                          variant={preferences.themeMode === value ? "default" : "outline"}
-                          className="rounded-full"
-                          onClick={() =>
-                            updatePreferences({
-                              themeMode: value as BuildOsPreferences["themeMode"],
-                            })
-                          }
-                        >
-                          {label}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <p className="font-medium text-foreground">Font size</p>
-                    <div className="grid grid-cols-3 gap-2">
-                      {[
-                        ["default", "Default"],
-                        ["large", "Large"],
-                        ["xlarge", "XL"],
-                      ].map(([value, label]) => (
-                        <Button
-                          key={value}
-                          type="button"
-                          variant={preferences.fontScale === value ? "default" : "outline"}
-                          className="rounded-full"
-                          onClick={() =>
-                            updatePreferences({
-                              fontScale: value as BuildOsPreferences["fontScale"],
-                            })
-                          }
-                        >
-                          {label}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <p className="font-medium text-foreground">Density</p>
-                    <div className="grid grid-cols-2 gap-2">
-                      {[
-                        ["comfortable", "Comfortable"],
-                        ["compact", "Compact"],
-                      ].map(([value, label]) => (
-                        <Button
-                          key={value}
-                          type="button"
-                          variant={preferences.density === value ? "default" : "outline"}
-                          className="rounded-full"
-                          onClick={() =>
-                            updatePreferences({
-                              density: value as BuildOsPreferences["density"],
-                            })
-                          }
-                        >
-                          {label}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="grid gap-2">
-                    <label className="flex items-center justify-between rounded-2xl border border-border/70 px-3 py-2">
-                      <span>Reduced motion</span>
-                      <input
-                        type="checkbox"
-                        checked={preferences.reducedMotion}
-                        onChange={(event) =>
-                          updatePreferences({ reducedMotion: event.target.checked })
-                        }
-                      />
-                    </label>
-                    <label className="flex items-center justify-between rounded-2xl border border-border/70 px-3 py-2">
-                      <span>High contrast</span>
-                      <input
-                        type="checkbox"
-                        checked={preferences.highContrast}
-                        onChange={(event) =>
-                          updatePreferences({ highContrast: event.target.checked })
-                        }
-                      />
-                    </label>
-                  </div>
-                </div>
+                <WorkspaceSettingsContent
+                  featureFlags={featureFlags}
+                  preferences={preferences}
+                  updatePreferences={updatePreferences}
+                />
               </PopoverContent>
             </Popover>
             <Button
@@ -355,31 +393,11 @@ export default function ManagementLayout({
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent align="start" className="w-80 rounded-3xl border-border/80 bg-background/95 p-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.28em] text-enc-orange">
-                      Workspace Preferences
-                    </p>
-                    <div className="mt-4 grid gap-2 text-sm">
-                      <label className="flex items-center justify-between rounded-2xl border border-border/70 px-3 py-2">
-                        <span>High contrast</span>
-                        <input
-                          type="checkbox"
-                          checked={preferences.highContrast}
-                          onChange={(event) =>
-                            updatePreferences({ highContrast: event.target.checked })
-                          }
-                        />
-                      </label>
-                      <label className="flex items-center justify-between rounded-2xl border border-border/70 px-3 py-2">
-                        <span>Reduced motion</span>
-                        <input
-                          type="checkbox"
-                          checked={preferences.reducedMotion}
-                          onChange={(event) =>
-                            updatePreferences({ reducedMotion: event.target.checked })
-                          }
-                        />
-                      </label>
-                    </div>
+                    <WorkspaceSettingsContent
+                      featureFlags={featureFlags}
+                      preferences={preferences}
+                      updatePreferences={updatePreferences}
+                    />
                   </PopoverContent>
                 </Popover>
                 <Button
@@ -393,7 +411,7 @@ export default function ManagementLayout({
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto">
+            <div ref={sidebarScrollRef} className="flex-1 overflow-y-auto">
               <nav className="space-y-1 p-4 pb-6">
                 {filteredNavItems.map((item) => {
                   const isActive = currentPageName === item.page;
@@ -491,110 +509,14 @@ export default function ManagementLayout({
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent align="end" className="w-96 rounded-3xl border-border/80 bg-background/95 p-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.28em] text-enc-orange">
-                      Theme & Accessibility
-                    </p>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                    <p className="mt-0 text-sm leading-6 text-muted-foreground">
                       Keep ENCI BuildOS lean and readable with theme, font, density, motion, and contrast controls.
                     </p>
-                    <div className="mt-4 space-y-4">
-                      <div className="grid gap-2">
-                        <p className="text-sm font-medium text-foreground">Theme mode</p>
-                        <div className="grid grid-cols-3 gap-2">
-                          {[
-                            ["light", "Light"],
-                            ["dark", "Dark"],
-                            ["system", "System"],
-                          ].map(([value, label]) => (
-                            <Button
-                              key={value}
-                              type="button"
-                              variant={preferences.themeMode === value ? "default" : "outline"}
-                              className="rounded-full"
-                              onClick={() =>
-                                updatePreferences({
-                                  themeMode: value as BuildOsPreferences["themeMode"],
-                                })
-                              }
-                            >
-                              {label}
-                            </Button>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="grid gap-2">
-                        <p className="text-sm font-medium text-foreground">Font size</p>
-                        <div className="grid grid-cols-3 gap-2">
-                          {[
-                            ["default", "Default"],
-                            ["large", "Large"],
-                            ["xlarge", "XL"],
-                          ].map(([value, label]) => (
-                            <Button
-                              key={value}
-                              type="button"
-                              variant={preferences.fontScale === value ? "default" : "outline"}
-                              className="rounded-full"
-                              onClick={() =>
-                                updatePreferences({
-                                  fontScale: value as BuildOsPreferences["fontScale"],
-                                })
-                              }
-                            >
-                              {label}
-                            </Button>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="grid gap-2">
-                        <p className="text-sm font-medium text-foreground">Density</p>
-                        <div className="grid grid-cols-2 gap-2">
-                          {[
-                            ["comfortable", "Comfortable"],
-                            ["compact", "Compact"],
-                          ].map(([value, label]) => (
-                            <Button
-                              key={value}
-                              type="button"
-                              variant={preferences.density === value ? "default" : "outline"}
-                              className="rounded-full"
-                              onClick={() =>
-                                updatePreferences({
-                                  density: value as BuildOsPreferences["density"],
-                                })
-                              }
-                            >
-                              {label}
-                            </Button>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="grid gap-2">
-                        <label className="flex items-center justify-between rounded-2xl border border-border/70 px-3 py-2 text-sm">
-                          <span>High contrast mode</span>
-                          <input
-                            type="checkbox"
-                            checked={preferences.highContrast}
-                            onChange={(event) =>
-                              updatePreferences({ highContrast: event.target.checked })
-                            }
-                          />
-                        </label>
-                        <label className="flex items-center justify-between rounded-2xl border border-border/70 px-3 py-2 text-sm">
-                          <span>Reduced motion</span>
-                          <input
-                            type="checkbox"
-                            checked={preferences.reducedMotion}
-                            onChange={(event) =>
-                              updatePreferences({ reducedMotion: event.target.checked })
-                            }
-                          />
-                        </label>
-                      </div>
-                      <div className="rounded-2xl border border-border/70 bg-background/80 p-3 text-xs leading-5 text-muted-foreground">
-                        Enabled live modules: {managementModules.filter((module) => module.enabled).length}. Beta flags: {featureFlags.ganttBeta || featureFlags.automationBeta || featureFlags.mobileTasksBeta ? "active" : "none"}.
-                      </div>
-                    </div>
+                    <WorkspaceSettingsContent
+                      featureFlags={featureFlags}
+                      preferences={preferences}
+                      updatePreferences={updatePreferences}
+                    />
                   </PopoverContent>
                 </Popover>
               </div>

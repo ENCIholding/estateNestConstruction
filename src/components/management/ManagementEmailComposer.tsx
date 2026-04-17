@@ -23,6 +23,9 @@ const initialFormState: EmailFormState = {
   body: "Hello,\n\n",
 };
 
+const EMAIL_CONFIDENTIALITY_NOTICE =
+  "The contents of this email message and any attachments are intended solely for the addressee(s) and may contain confidential and/or privileged information and may be legally protected from disclosure. If you are not the intended recipient of this message or their agent, or if this message has been addressed to you in error, please immediately alert the sender by reply email and then delete this message and any attachments. If you are not the intended recipient, you are hereby notified that any use, dissemination, copying, or storage of this message or its attachments is strictly prohibited. Please note that any views or opinions presented in this email are solely those of the author and do not necessarily represent those of Estate Nest Capital Inc. Finally, the recipient should check this email and any attachments for the presence of viruses. Estate Nest Capital Inc accepts no liability for any damage caused by any virus transmitted by this email.";
+
 function splitEmails(value: string) {
   return value
     .split(",")
@@ -234,11 +237,7 @@ export default function ManagementEmailComposer() {
             </div>
 
             <div className="mt-5 rounded-2xl bg-muted/70 p-4 text-xs leading-6 text-muted-foreground">
-              Confidentiality Notice: The contents of this email message and
-              any attachments are intended solely for the addressee(s) and may
-              contain confidential and/or privileged information. If you are not
-              the intended recipient, any use, dissemination, copying, or
-              storage of this message is strictly prohibited.
+              {EMAIL_CONFIDENTIALITY_NOTICE}
             </div>
           </div>
         </aside>

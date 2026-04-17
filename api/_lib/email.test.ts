@@ -39,7 +39,9 @@ describe("email helpers", () => {
     });
 
     expect(content.text).toContain("Kanwar Sharma, Founder");
-    expect(content.text).toContain("Confidentiality Notice");
+    expect(content.text).toContain(
+      "The contents of this email message and any attachments are intended solely for the addressee(s)"
+    );
     expect(content.html).toContain("Estate Nest Capital Inc.");
     expect(content.html).toContain("https://www.estatenest.capital");
   });
