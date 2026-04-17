@@ -19,7 +19,10 @@ describe("auth helpers", () => {
   it("creates and reads signed session tokens", () => {
     process.env.MANAGEMENT_SESSION_SECRET = "test-secret-123";
 
-    const token = createSessionToken("kanwar");
+    const token = createSessionToken({
+      role: "Admin",
+      username: "kanwar",
+    });
     const session = readSessionToken(token);
 
     expect(verifySessionToken(token)).toBe(true);
@@ -33,7 +36,10 @@ describe("auth helpers", () => {
   it("rejects tampered tokens", () => {
     process.env.MANAGEMENT_SESSION_SECRET = "test-secret-123";
 
-    const token = createSessionToken("kanwar");
+    const token = createSessionToken({
+      role: "Admin",
+      username: "kanwar",
+    });
     const tamperedToken = `${token.slice(0, -1)}x`;
 
     expect(verifySessionToken(tamperedToken)).toBe(false);

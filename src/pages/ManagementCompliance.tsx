@@ -9,6 +9,25 @@ import {
   buildProjectCompliance,
   fetchManagementProjects,
 } from "@/lib/managementData";
+import {
+  getLinkedProjectRecords,
+  loadBuildOsDocuments,
+  loadMasterDatabaseRecords,
+} from "@/lib/buildosShared";
+
+function isExpiringSoon(value?: string) {
+  if (!value) {
+    return false;
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return false;
+  }
+
+  const days = (parsed.getTime() - Date.now()) / (1000 * 60 * 60 * 24);
+  return days <= 30;
+}
 
 export default function ManagementCompliance() {
   const [search, setSearch] = useState("");
@@ -23,14 +42,72 @@ export default function ManagementCompliance() {
   });
 
   const complianceRows = useMemo(() => buildProjectCompliance(projects), [projects]);
+  const { data: documents = [] } = useQuery({
+    queryKey: ["buildos-documents"],
+    queryFn: async () => loadBuildOsDocuments(),
+  });
+  const { data: masterRecords = [] } = useQuery({
+    queryKey: ["buildos-master-database"],
+    queryFn: async () => loadMasterDatabaseRecords(),
+  });
+
+  const enrichedRows = useMemo(
+    () =>
+      complianceRows.map((row) => {
+        const linkedDocuments = documents.filter((document) => document.projectId === row.projectId);
+        const linkedRecords = getLinkedProjectRecords(masterRecords, row.projectId);
+        const expiringDocuments = linkedDocuments.filter((document) =>
+          isExpiringSoon(document.expiryDate)
+        );
+        const expiringRecords = linkedRecords.filter(
+          (record) =>
+            isExpiringSoon(record.insuranceExpiry) || isExpiringSoon(record.licenseExpiry)
+        );
+        const checks = [
+          ...row.checks,
+          {
+            label: "Tracked project documents",
+            detail: linkedDocuments.length
+              ? `${linkedDocuments.length} BuildOS document record(s) are linked to this project.`
+              : "No BuildOS document records are linked yet.",
+            ready: linkedDocuments.length > 0,
+          },
+          {
+            label: "Expiring document review",
+            detail: expiringDocuments.length
+              ? `${expiringDocuments.length} linked document(s) expire within 30 days or are overdue.`
+              : "No linked project documents are expiring soon.",
+            ready: expiringDocuments.length === 0,
+          },
+          {
+            label: "Partner insurance / license review",
+            detail: expiringRecords.length
+              ? `${expiringRecords.length} linked participant record(s) have expiring insurance or license dates.`
+              : "No linked participant insurance or license dates are due soon.",
+            ready: expiringRecords.length === 0,
+          },
+        ];
+        const readyCount = checks.filter((check) => check.ready).length;
+        const missingCount = checks.length - readyCount;
+
+        return {
+          ...row,
+          checks,
+          readyCount,
+          missingCount,
+          score: Math.round((readyCount / checks.length) * 100),
+        };
+      }),
+    [complianceRows, documents, masterRecords]
+  );
 
   const filteredRows = useMemo(() => {
     const query = search.trim().toLowerCase();
     if (!query) {
-      return complianceRows;
+      return enrichedRows;
     }
 
-    return complianceRows.filter(
+    return enrichedRows.filter(
       (row) =>
         row.projectName.toLowerCase().includes(query) ||
         row.checks.some(
@@ -39,16 +116,16 @@ export default function ManagementCompliance() {
             check.detail.toLowerCase().includes(query)
         )
     );
-  }, [complianceRows, search]);
+  }, [enrichedRows, search]);
 
   const averageScore =
-    complianceRows.length > 0
+    enrichedRows.length > 0
       ? Math.round(
-          complianceRows.reduce((sum, row) => sum + row.score, 0) /
-            complianceRows.length
+          enrichedRows.reduce((sum, row) => sum + row.score, 0) /
+            enrichedRows.length
         )
       : 0;
-  const criticalGaps = complianceRows.filter((row) => row.missingCount >= 3).length;
+  const criticalGaps = enrichedRows.filter((row) => row.missingCount >= 3).length;
 
   return (
     <ManagementLayout currentPageName="compliance">
@@ -82,14 +159,14 @@ export default function ManagementCompliance() {
           <Card className="dashboard-panel p-2">
             <CardContent className="p-5">
               <p className="text-sm font-medium text-muted-foreground">Projects reviewed</p>
-              <p className="mt-3 text-3xl font-semibold text-foreground">{complianceRows.length}</p>
+              <p className="mt-3 text-3xl font-semibold text-foreground">{enrichedRows.length}</p>
             </CardContent>
           </Card>
           <Card className="dashboard-panel p-2">
             <CardContent className="p-5">
               <p className="text-sm font-medium text-muted-foreground">Fully documented</p>
               <p className="mt-3 text-3xl font-semibold text-foreground">
-                {complianceRows.filter((row) => row.missingCount === 0).length}
+                {enrichedRows.filter((row) => row.missingCount === 0).length}
               </p>
             </CardContent>
           </Card>

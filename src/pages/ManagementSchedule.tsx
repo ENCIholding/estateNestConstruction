@@ -5,12 +5,14 @@ import ManagementLayout from "@/components/management/ManagementLayout";
 import Badge from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Input from "@/components/ui/input";
+import { getTaskAssigneeLabel, isTaskOverdue } from "@/lib/buildosTasks";
 import {
   buildProjectScheduleEntries,
   buildUndatedMilestones,
   fetchManagementProjects,
   formatDate,
 } from "@/lib/managementData";
+import { loadMasterDatabaseRecords, loadTasks } from "@/lib/buildosShared";
 
 const categoryLabels = {
   actual: "Actual completion",
@@ -31,6 +33,14 @@ export default function ManagementSchedule() {
   } = useQuery({
     queryKey: ["management-projects"],
     queryFn: fetchManagementProjects,
+  });
+  const { data: tasks = [] } = useQuery({
+    queryKey: ["buildos-tasks"],
+    queryFn: async () => loadTasks(),
+  });
+  const { data: records = [] } = useQuery({
+    queryKey: ["buildos-master-database"],
+    queryFn: async () => loadMasterDatabaseRecords(),
   });
 
   const scheduleEntries = useMemo(
@@ -75,7 +85,7 @@ export default function ManagementSchedule() {
             </p>
             <h1 className="mt-3 text-3xl font-bold text-foreground">Schedule</h1>
             <p className="mt-4 max-w-3xl text-sm leading-6 text-muted-foreground">
-              This module now shows only date checkpoints that exist inside the live project registry. Task-level sequencing remains offline until a real task backend is ready.
+              Registry checkpoints still anchor the schedule baseline, and the shared BuildOS task model now adds live execution dates, milestones, and due-date pressure.
             </p>
           </div>
         </div>
@@ -95,8 +105,8 @@ export default function ManagementSchedule() {
           </Card>
           <Card className="dashboard-panel p-2">
             <CardContent className="p-5">
-              <p className="text-sm font-medium text-muted-foreground">Past target dates</p>
-              <p className="mt-3 text-3xl font-semibold text-foreground">{overdueCount}</p>
+              <p className="text-sm font-medium text-muted-foreground">Past target dates / overdue tasks</p>
+              <p className="mt-3 text-3xl font-semibold text-foreground">{overdueCount + tasks.filter((task) => isTaskOverdue(task)).length}</p>
             </CardContent>
           </Card>
           <Card className="dashboard-panel p-2">
@@ -234,14 +244,68 @@ export default function ManagementSchedule() {
             </Card>
 
             <Card className="dashboard-panel p-2">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-xl text-foreground">
-                  <TimerReset className="h-5 w-5 text-enc-orange" />
-                  What stays offline
-                </CardTitle>
+              <CardHeader className="flex flex-row items-start justify-between gap-4">
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-xl text-foreground">
+                    <TimerReset className="h-5 w-5 text-enc-orange" />
+                    Task-driven schedule pressure
+                  </CardTitle>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    These entries come from live BuildOS tasks and feed Gantt, project drilldowns, automation, and mobile updates.
+                  </p>
+                </div>
+                <Badge className="rounded-full bg-muted text-muted-foreground">
+                  {tasks.length} tasks
+                </Badge>
               </CardHeader>
-              <CardContent className="text-sm leading-6 text-muted-foreground">
-                Task assignments, crew sequencing, and Gantt dependencies remain offline until there is a durable task model with server-side validation and history.
+              <CardContent className="space-y-3">
+                {tasks.length ? (
+                  tasks
+                    .slice()
+                    .sort((left, right) => {
+                      const leftDate = new Date(left.dueDate || left.startDate || 0).getTime();
+                      const rightDate = new Date(right.dueDate || right.startDate || 0).getTime();
+                      return leftDate - rightDate;
+                    })
+                    .slice(0, 8)
+                    .map((task) => (
+                      <div key={task.id} className="dashboard-item p-4">
+                        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                          <div>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="text-sm font-semibold text-foreground">{task.title}</p>
+                              <Badge className="rounded-full bg-muted text-muted-foreground">
+                                {task.status}
+                              </Badge>
+                              {task.milestone ? (
+                                <Badge className="rounded-full bg-enc-orange/10 text-enc-orange">
+                                  Milestone
+                                </Badge>
+                              ) : null}
+                              {isTaskOverdue(task) ? (
+                                <Badge className="rounded-full bg-rose-500/10 text-rose-700 dark:text-rose-300">
+                                  Overdue
+                                </Badge>
+                              ) : null}
+                            </div>
+                            <p className="mt-2 text-sm text-muted-foreground">
+                              {projects.find((project) => project.id === task.projectId)?.project_name || "Unlinked project"} · {task.phase}
+                            </p>
+                            <p className="mt-2 text-sm text-muted-foreground">
+                              Assignee: {getTaskAssigneeLabel(task, records)}
+                            </p>
+                          </div>
+                          <div className="rounded-2xl border border-border/70 bg-background/80 px-4 py-3 text-sm text-muted-foreground">
+                            {formatDate(task.dueDate || task.startDate)}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                ) : (
+                  <div className="dashboard-item p-4 text-sm leading-6 text-muted-foreground">
+                    No BuildOS task records exist yet. Add tasks in Project Tasks to activate live schedule sequencing.
+                  </div>
+                )}
               </CardContent>
             </Card>
           </>

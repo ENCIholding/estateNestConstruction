@@ -26,6 +26,12 @@ export type ProjectRegistrySource = "environment" | "temporary" | "unconfigured"
 
 export type DashboardStatus = {
   authConfigured: boolean;
+  buildOsStorage: {
+    configured: boolean;
+    mode: "browser-fallback" | "shared";
+    provider: string;
+    workspaceSlug: string;
+  };
   emailConfigured: boolean;
   projectRegistry: {
     editable: boolean;

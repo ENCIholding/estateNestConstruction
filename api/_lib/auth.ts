@@ -5,6 +5,12 @@ import crypto from "node:crypto";
  */
 const COOKIE_NAME = "enci_mgmt_session";
 const SESSION_HOURS = 8;
+type SessionPayload = {
+  d?: string;
+  exp: number;
+  r?: string;
+  u: string;
+};
 
 /**
  * GET SECRET
@@ -32,11 +38,17 @@ function sign(payload: string): string {
 /**
  * CREATE TOKEN
  */
-export function createSessionToken(username: string): string {
+export function createSessionToken(session: {
+  displayName?: string;
+  role?: string;
+  username: string;
+}): string {
   const payload = JSON.stringify({
-    u: username,
+    d: session.displayName,
     exp: Date.now() + SESSION_HOURS * 60 * 60 * 1000,
-  });
+    r: session.role,
+    u: session.username,
+  } satisfies SessionPayload);
 
   const encoded = Buffer.from(payload).toString("base64url");
 
@@ -45,7 +57,7 @@ export function createSessionToken(username: string): string {
 
 export function readSessionToken(
   token?: string | null
-): { expiresAt: number; username: string } | null {
+): { displayName?: string; expiresAt: number; role?: string; username: string } | null {
   try {
     if (!token) return null;
 
@@ -58,17 +70,16 @@ export function readSessionToken(
 
     if (signature !== expectedSignature) return null;
 
-    const parsed = JSON.parse(payload) as {
-      exp: number;
-      u: string;
-    };
+    const parsed = JSON.parse(payload) as SessionPayload;
 
     if (!parsed.exp || parsed.exp < Date.now() || !parsed.u) {
       return null;
     }
 
     return {
+      displayName: parsed.d,
       expiresAt: parsed.exp,
+      role: parsed.r,
       username: parsed.u,
     };
   } catch {

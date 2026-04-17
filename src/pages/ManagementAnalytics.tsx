@@ -4,12 +4,23 @@ import { ChartNoAxesColumn, TriangleAlert } from "lucide-react";
 import ManagementLayout from "@/components/management/ManagementLayout";
 import Badge from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { buildOperationalAlerts, getVendorRiskStatus } from "@/lib/buildosIntelligence";
+import { getTaskSummary } from "@/lib/buildosTasks";
 import {
   buildProjectCompliance,
   buildProjectDocuments,
   fetchManagementProjects,
   getRegistryCoverage,
 } from "@/lib/managementData";
+import {
+  loadBuildOsChangeOrders,
+  loadBuildOsClientInvoices,
+  loadBuildOsDeficiencies,
+  loadBuildOsDocuments,
+  loadBuildOsTasks,
+  loadBuildOsVendorBills,
+  loadMasterDatabaseRecords,
+} from "@/lib/buildosShared";
 
 export default function ManagementAnalytics() {
   const {
@@ -20,10 +31,61 @@ export default function ManagementAnalytics() {
     queryKey: ["management-projects"],
     queryFn: fetchManagementProjects,
   });
+  const { data: changeOrders = [] } = useQuery({
+    queryKey: ["buildos-change-orders"],
+    queryFn: async () => loadBuildOsChangeOrders(),
+  });
+  const { data: clientInvoices = [] } = useQuery({
+    queryKey: ["buildos-client-invoices"],
+    queryFn: async () => loadBuildOsClientInvoices(),
+  });
+  const { data: vendorBills = [] } = useQuery({
+    queryKey: ["buildos-vendor-bills"],
+    queryFn: async () => loadBuildOsVendorBills(),
+  });
+  const { data: deficiencies = [] } = useQuery({
+    queryKey: ["buildos-deficiencies"],
+    queryFn: async () => loadBuildOsDeficiencies(),
+  });
+  const { data: buildosDocuments = [] } = useQuery({
+    queryKey: ["buildos-documents"],
+    queryFn: async () => loadBuildOsDocuments(),
+  });
+  const { data: tasks = [] } = useQuery({
+    queryKey: ["buildos-tasks"],
+    queryFn: async () => loadBuildOsTasks(),
+  });
+  const { data: records = [] } = useQuery({
+    queryKey: ["buildos-master-database"],
+    queryFn: async () => loadMasterDatabaseRecords(),
+  });
 
   const complianceRows = useMemo(() => buildProjectCompliance(projects), [projects]);
   const documents = useMemo(() => buildProjectDocuments(projects), [projects]);
   const coverage = useMemo(() => getRegistryCoverage(projects), [projects]);
+  const taskSummary = useMemo(() => getTaskSummary(tasks), [tasks]);
+  const operationalAlerts = useMemo(
+    () =>
+      buildOperationalAlerts(
+        projects,
+        changeOrders,
+        clientInvoices,
+        vendorBills,
+        deficiencies,
+        buildosDocuments,
+        tasks,
+        records
+      ),
+    [buildosDocuments, changeOrders, clientInvoices, deficiencies, projects, records, tasks, vendorBills]
+  );
+  const highRiskVendors = useMemo(
+    () =>
+      records.filter(
+        (record) =>
+          record.type === "Vendor (Trade)" && getVendorRiskStatus(record) === "High Risk Vendor"
+      ).length,
+    [records]
+  );
   const statusCounts = useMemo(() => {
     return projects.reduce<Record<string, number>>((counts, project) => {
       const key = project.status || "Unknown";
@@ -71,6 +133,24 @@ export default function ManagementAnalytics() {
             <CardContent className="p-5">
               <p className="text-sm font-medium text-muted-foreground">Average compliance</p>
               <p className="mt-3 text-3xl font-semibold text-foreground">{coverage.averageCompliance}%</p>
+            </CardContent>
+          </Card>
+          <Card className="dashboard-panel p-2">
+            <CardContent className="p-5">
+              <p className="text-sm font-medium text-muted-foreground">Overdue tasks</p>
+              <p className="mt-3 text-3xl font-semibold text-foreground">{taskSummary.overdue}</p>
+            </CardContent>
+          </Card>
+          <Card className="dashboard-panel p-2">
+            <CardContent className="p-5">
+              <p className="text-sm font-medium text-muted-foreground">Active alerts</p>
+              <p className="mt-3 text-3xl font-semibold text-foreground">{operationalAlerts.length}</p>
+            </CardContent>
+          </Card>
+          <Card className="dashboard-panel p-2">
+            <CardContent className="p-5">
+              <p className="text-sm font-medium text-muted-foreground">High-risk vendors</p>
+              <p className="mt-3 text-3xl font-semibold text-foreground">{highRiskVendors}</p>
             </CardContent>
           </Card>
         </div>
@@ -153,7 +233,13 @@ export default function ManagementAnalytics() {
                 <div className="dashboard-item p-4">
                   <p className="text-sm font-medium text-foreground">Purpose of this view</p>
                   <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                    This page helps identify coverage gaps in the current registry. It is not a substitute for project controls, field telemetry, or financial reporting.
+                    This page now combines registry coverage with live BuildOS execution and risk signals. Use it to spot weak data, weak execution, and weak relationships before they become lender or client problems.
+                  </p>
+                </div>
+                <div className="dashboard-item p-4">
+                  <p className="text-sm font-medium text-foreground">Live document records</p>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {buildosDocuments.length} BuildOS document record(s) supplement the base registry diligence links.
                   </p>
                 </div>
               </CardContent>

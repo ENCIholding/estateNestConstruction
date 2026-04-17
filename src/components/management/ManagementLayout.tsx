@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
+  AlertTriangle,
   LayoutDashboard,
   FolderKanban,
   Users,
@@ -23,10 +24,23 @@ import {
   ShieldCheck,
   MoonStar,
   SunMedium,
+  MonitorCog,
+  Settings2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Popover, { PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { managementModules } from "@/lib/management";
 import BrandLockup from "@/components/BrandLockup";
+import { useAccessibilityMode } from "@/components/accessibility/AccessibilityProvider";
+import {
+  loadBuildOsFeatureFlags,
+  loadBuildOsPreferences,
+  type BuildOsPreferences,
+} from "@/lib/buildosWorkspace";
+import {
+  getDashboardShellClasses,
+  resolveDashboardTheme,
+} from "@/lib/dashboardPreferences";
 
 type ManagementLayoutProps = {
   children: React.ReactNode;
@@ -77,19 +91,30 @@ export default function ManagementLayout({
   currentPageName = "dashboard",
 }: ManagementLayoutProps) {
   const navigate = useNavigate();
+  const accessibility = useAccessibilityMode();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [dashboardTheme, setDashboardTheme] = useState<"light" | "dark">(
-    "light"
+  const [preferences, setPreferences] = useState<BuildOsPreferences>(() =>
+    loadBuildOsPreferences()
   );
+  const [featureFlags] = useState(() => loadBuildOsFeatureFlags());
 
   useEffect(() => {
-    const storedTheme = window.localStorage.getItem("enci-dashboard-theme");
-
-    if (storedTheme === "dark" || storedTheme === "light") {
-      setDashboardTheme(storedTheme);
+    if (preferences.highContrast) {
+      accessibility.enableEnhancedMode();
+    } else {
+      accessibility.disableEnhancedMode();
     }
-  }, []);
+  }, [accessibility, preferences.highContrast]);
+
+  const resolvedTheme = resolveDashboardTheme(preferences.themeMode);
+  const pageTitle =
+    allNavItems.find((item) => item.page === currentPageName)?.name || "Dashboard";
+  const shellClasses = getDashboardShellClasses(preferences);
+
+  useEffect(() => {
+    document.title = `${pageTitle} | ENCI BuildOS`;
+  }, [pageTitle]);
 
   const filteredNavItems = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -115,10 +140,10 @@ export default function ManagementLayout({
     navigate("/management/login", { replace: true });
   };
 
-  const toggleTheme = () => {
-    const nextTheme = dashboardTheme === "dark" ? "light" : "dark";
-    setDashboardTheme(nextTheme);
-    window.localStorage.setItem("enci-dashboard-theme", nextTheme);
+  const updatePreferences = (next: Partial<BuildOsPreferences>) => {
+    const merged = { ...preferences, ...next };
+    setPreferences(merged);
+    window.localStorage.setItem("enci-buildos-preferences", JSON.stringify(merged));
   };
 
   const openEmailComposer = () => {
@@ -140,8 +165,10 @@ export default function ManagementLayout({
   };
 
   return (
-    <div className={dashboardTheme === "dark" ? "dark" : ""}>
-      <div className="dashboard-shell min-h-screen bg-background text-foreground">
+    <div className={resolvedTheme === "dark" ? "dark" : ""}>
+      <div
+        className={`dashboard-shell min-h-screen bg-background text-foreground ${shellClasses.fontClass} ${shellClasses.densityClass} ${shellClasses.reducedMotionClass}`.trim()}
+      >
         <div className="fixed left-0 right-0 top-0 z-50 flex items-center justify-between border-b border-border/70 bg-background/95 px-4 py-3 backdrop-blur-xl lg:hidden">
           <div className="flex items-center gap-3">
             <Button
@@ -158,19 +185,114 @@ export default function ManagementLayout({
             <BrandLockup compact subtitle="Dashboard" className="max-w-[220px]" />
           </div>
 
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleTheme}
-              aria-label="Toggle dashboard theme"
-            >
-              {dashboardTheme === "dark" ? (
-                <SunMedium className="h-4 w-4" />
-              ) : (
-                <MoonStar className="h-4 w-4" />
-              )}
-            </Button>
+            <div className="flex items-center gap-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon" aria-label="Open ENCI BuildOS settings">
+                  <Settings2 className="h-4 w-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-80 rounded-3xl border-border/80 bg-background/95 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-enc-orange">
+                  ENCI BuildOS Settings
+                </p>
+                <div className="mt-4 space-y-4 text-sm">
+                  <div className="space-y-2">
+                    <p className="font-medium text-foreground">Theme</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        ["light", "Light"],
+                        ["dark", "Dark"],
+                        ["system", "System"],
+                      ].map(([value, label]) => (
+                        <Button
+                          key={value}
+                          type="button"
+                          variant={preferences.themeMode === value ? "default" : "outline"}
+                          className="rounded-full"
+                          onClick={() =>
+                            updatePreferences({
+                              themeMode: value as BuildOsPreferences["themeMode"],
+                            })
+                          }
+                        >
+                          {label}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="font-medium text-foreground">Font size</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        ["default", "Default"],
+                        ["large", "Large"],
+                        ["xlarge", "XL"],
+                      ].map(([value, label]) => (
+                        <Button
+                          key={value}
+                          type="button"
+                          variant={preferences.fontScale === value ? "default" : "outline"}
+                          className="rounded-full"
+                          onClick={() =>
+                            updatePreferences({
+                              fontScale: value as BuildOsPreferences["fontScale"],
+                            })
+                          }
+                        >
+                          {label}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="font-medium text-foreground">Density</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        ["comfortable", "Comfortable"],
+                        ["compact", "Compact"],
+                      ].map(([value, label]) => (
+                        <Button
+                          key={value}
+                          type="button"
+                          variant={preferences.density === value ? "default" : "outline"}
+                          className="rounded-full"
+                          onClick={() =>
+                            updatePreferences({
+                              density: value as BuildOsPreferences["density"],
+                            })
+                          }
+                        >
+                          {label}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="grid gap-2">
+                    <label className="flex items-center justify-between rounded-2xl border border-border/70 px-3 py-2">
+                      <span>Reduced motion</span>
+                      <input
+                        type="checkbox"
+                        checked={preferences.reducedMotion}
+                        onChange={(event) =>
+                          updatePreferences({ reducedMotion: event.target.checked })
+                        }
+                      />
+                    </label>
+                    <label className="flex items-center justify-between rounded-2xl border border-border/70 px-3 py-2">
+                      <span>High contrast</span>
+                      <input
+                        type="checkbox"
+                        checked={preferences.highContrast}
+                        onChange={(event) =>
+                          updatePreferences({ highContrast: event.target.checked })
+                        }
+                      />
+                    </label>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
             <Button
               variant="ghost"
               size="sm"
@@ -198,7 +320,7 @@ export default function ManagementLayout({
             <div className="border-b border-border/70 p-6 shrink-0">
               <BrandLockup
                 to="/management/dashboard"
-                subtitle="Management Dashboard"
+                subtitle="ENCI BuildOS"
                 className="max-w-[220px]"
               />
             </div>
@@ -217,19 +339,49 @@ export default function ManagementLayout({
               </div>
 
               <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex-1 rounded-xl border-enc-orange/20 bg-card/80 hover:border-enc-orange/40 hover:bg-enc-orange/5"
-                  onClick={toggleTheme}
-                >
-                  {dashboardTheme === "dark" ? (
-                    <SunMedium className="h-4 w-4" />
-                  ) : (
-                    <MoonStar className="h-4 w-4" />
-                  )}
-                  {dashboardTheme === "dark" ? "Light Mode" : "Dark Mode"}
-                </Button>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 rounded-xl border-enc-orange/20 bg-card/80 hover:border-enc-orange/40 hover:bg-enc-orange/5"
+                    >
+                      {resolvedTheme === "dark" ? (
+                        <MoonStar className="h-4 w-4" />
+                      ) : (
+                        <SunMedium className="h-4 w-4" />
+                      )}
+                      Settings
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent align="start" className="w-80 rounded-3xl border-border/80 bg-background/95 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.28em] text-enc-orange">
+                      Workspace Preferences
+                    </p>
+                    <div className="mt-4 grid gap-2 text-sm">
+                      <label className="flex items-center justify-between rounded-2xl border border-border/70 px-3 py-2">
+                        <span>High contrast</span>
+                        <input
+                          type="checkbox"
+                          checked={preferences.highContrast}
+                          onChange={(event) =>
+                            updatePreferences({ highContrast: event.target.checked })
+                          }
+                        />
+                      </label>
+                      <label className="flex items-center justify-between rounded-2xl border border-border/70 px-3 py-2">
+                        <span>Reduced motion</span>
+                        <input
+                          type="checkbox"
+                          checked={preferences.reducedMotion}
+                          onChange={(event) =>
+                            updatePreferences({ reducedMotion: event.target.checked })
+                          }
+                        />
+                      </label>
+                    </div>
+                  </PopoverContent>
+                </Popover>
                 <Button
                   variant="outline"
                   size="sm"
@@ -279,14 +431,14 @@ export default function ManagementLayout({
 
             <div className="border-t border-border/70 bg-background/90 p-4 shrink-0">
               <div className="flex items-center gap-3 rounded-2xl bg-card/80 px-3 py-3 shadow-sm">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-enc-red via-enc-orange to-enc-yellow text-sm font-medium text-white shadow-glow">
-                  E
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-enc-red via-enc-orange to-enc-yellow text-sm font-medium text-white shadow-glow">
+                  B
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-foreground">
-                    Estate Nest Admin
+                    ENCI BuildOS Admin
                   </p>
-                  <p className="truncate text-xs text-muted-foreground">Admin</p>
+                  <p className="truncate text-xs text-muted-foreground">Estate Nest Capital</p>
                 </div>
                 <Button
                   variant="ghost"
@@ -302,7 +454,153 @@ export default function ManagementLayout({
         </aside>
 
         <main id="main-content" className="min-h-screen pt-16 lg:ml-72 lg:pt-0">
-          <div className="p-4 lg:p-8">{children}</div>
+          <div className="sticky top-0 z-30 hidden border-b border-border/70 bg-background/95 px-6 py-4 backdrop-blur-xl lg:block">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-enc-orange">
+                  ENCI BuildOS
+                </p>
+                <h1 className="mt-2 text-2xl font-semibold text-foreground">{pageTitle}</h1>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="relative hidden xl:block">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                    placeholder="Search modules"
+                    className="h-10 w-72 rounded-full border border-border/80 bg-card/80 py-2 pl-10 pr-4 text-sm text-foreground"
+                  />
+                </div>
+                <Button variant="outline" className="rounded-full" onClick={openEmailComposer}>
+                  <Mail className="mr-2 h-4 w-4" />
+                  Email
+                </Button>
+                <Button asChild variant="outline" className="rounded-full">
+                  <Link to="/management/dashboard">
+                    <AlertTriangle className="mr-2 h-4 w-4" />
+                    Alerts
+                  </Link>
+                </Button>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="rounded-full">
+                      <MonitorCog className="mr-2 h-4 w-4" />
+                      Theme & Access
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent align="end" className="w-96 rounded-3xl border-border/80 bg-background/95 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.28em] text-enc-orange">
+                      Theme & Accessibility
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                      Keep ENCI BuildOS lean and readable with theme, font, density, motion, and contrast controls.
+                    </p>
+                    <div className="mt-4 space-y-4">
+                      <div className="grid gap-2">
+                        <p className="text-sm font-medium text-foreground">Theme mode</p>
+                        <div className="grid grid-cols-3 gap-2">
+                          {[
+                            ["light", "Light"],
+                            ["dark", "Dark"],
+                            ["system", "System"],
+                          ].map(([value, label]) => (
+                            <Button
+                              key={value}
+                              type="button"
+                              variant={preferences.themeMode === value ? "default" : "outline"}
+                              className="rounded-full"
+                              onClick={() =>
+                                updatePreferences({
+                                  themeMode: value as BuildOsPreferences["themeMode"],
+                                })
+                              }
+                            >
+                              {label}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="grid gap-2">
+                        <p className="text-sm font-medium text-foreground">Font size</p>
+                        <div className="grid grid-cols-3 gap-2">
+                          {[
+                            ["default", "Default"],
+                            ["large", "Large"],
+                            ["xlarge", "XL"],
+                          ].map(([value, label]) => (
+                            <Button
+                              key={value}
+                              type="button"
+                              variant={preferences.fontScale === value ? "default" : "outline"}
+                              className="rounded-full"
+                              onClick={() =>
+                                updatePreferences({
+                                  fontScale: value as BuildOsPreferences["fontScale"],
+                                })
+                              }
+                            >
+                              {label}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="grid gap-2">
+                        <p className="text-sm font-medium text-foreground">Density</p>
+                        <div className="grid grid-cols-2 gap-2">
+                          {[
+                            ["comfortable", "Comfortable"],
+                            ["compact", "Compact"],
+                          ].map(([value, label]) => (
+                            <Button
+                              key={value}
+                              type="button"
+                              variant={preferences.density === value ? "default" : "outline"}
+                              className="rounded-full"
+                              onClick={() =>
+                                updatePreferences({
+                                  density: value as BuildOsPreferences["density"],
+                                })
+                              }
+                            >
+                              {label}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="grid gap-2">
+                        <label className="flex items-center justify-between rounded-2xl border border-border/70 px-3 py-2 text-sm">
+                          <span>High contrast mode</span>
+                          <input
+                            type="checkbox"
+                            checked={preferences.highContrast}
+                            onChange={(event) =>
+                              updatePreferences({ highContrast: event.target.checked })
+                            }
+                          />
+                        </label>
+                        <label className="flex items-center justify-between rounded-2xl border border-border/70 px-3 py-2 text-sm">
+                          <span>Reduced motion</span>
+                          <input
+                            type="checkbox"
+                            checked={preferences.reducedMotion}
+                            onChange={(event) =>
+                              updatePreferences({ reducedMotion: event.target.checked })
+                            }
+                          />
+                        </label>
+                      </div>
+                      <div className="rounded-2xl border border-border/70 bg-background/80 p-3 text-xs leading-5 text-muted-foreground">
+                        Enabled live modules: {managementModules.filter((module) => module.enabled).length}. Beta flags: {featureFlags.ganttBeta || featureFlags.automationBeta || featureFlags.mobileTasksBeta ? "active" : "none"}.
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+          </div>
+          <div className={`p-4 lg:p-8 ${preferences.density === "compact" ? "space-y-4" : "space-y-6"}`}>{children}</div>
         </main>
       </div>
     </div>
