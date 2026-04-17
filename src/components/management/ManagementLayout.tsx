@@ -41,6 +41,7 @@ import {
   getDashboardShellClasses,
   resolveDashboardTheme,
 } from "@/lib/dashboardPreferences";
+import { preloadManagementRoutes } from "@/lib/preloadManagementRoutes";
 
 type ManagementLayoutProps = {
   children: React.ReactNode;
@@ -241,9 +242,13 @@ export default function ManagementLayout({
   }, [pageTitle]);
 
   useEffect(() => {
+    void preloadManagementRoutes();
+  }, []);
+
+  useEffect(() => {
     sidebarScrollRef.current?.scrollTo({
       top: 0,
-      behavior: preferences.reducedMotion ? "auto" : "smooth",
+      behavior: "auto",
     });
   }, [location.pathname, preferences.reducedMotion]);
 

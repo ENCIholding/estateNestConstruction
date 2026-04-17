@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Loader2, MailPlus, Send, ShieldCheck } from "lucide-react";
+import { ExternalLink, Loader2, MailPlus, Send, ShieldCheck } from "lucide-react";
 import BrandLockup from "@/components/BrandLockup";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +31,32 @@ function splitEmails(value: string) {
     .split(",")
     .map((email) => email.trim())
     .filter(Boolean);
+}
+
+function buildFallbackMailto(form: EmailFormState) {
+  const to = splitEmails(form.to).join(",");
+  const cc = splitEmails(form.cc).join(",");
+  const bcc = splitEmails(form.bcc).join(",");
+  const signature = [
+    "",
+    "",
+    "Estate Nest Capital Inc.",
+    "@KS:ks",
+    "",
+    "Kanwar Sharma, Founder",
+    "",
+    "HELLO@ESTATENEST.CAPITAL",
+    "www.estatenest.capital",
+    "",
+    EMAIL_CONFIDENTIALITY_NOTICE,
+  ].join("\n");
+  const body = `${form.body.trimEnd()}${signature}`;
+  const params = new URLSearchParams();
+  if (cc) params.set("cc", cc);
+  if (bcc) params.set("bcc", bcc);
+  if (form.subject.trim()) params.set("subject", form.subject.trim());
+  if (body.trim()) params.set("body", body);
+  return `mailto:${encodeURIComponent(to)}?${params.toString()}`;
 }
 
 export default function ManagementEmailComposer() {
@@ -191,23 +217,31 @@ export default function ManagementEmailComposer() {
               hello@estatenest.capital.
             </p>
 
-            <Button
-              type="submit"
-              disabled={sending}
-              className="rounded-full bg-gradient-to-r from-enc-red via-enc-orange to-enc-yellow px-6 text-white shadow-glow hover:opacity-95"
-            >
-              {sending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Sending...
-                </>
-              ) : (
-                <>
-                  <Send className="mr-2 h-4 w-4" />
-                  Send Email
-                </>
-              )}
-            </Button>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Button asChild type="button" variant="outline" className="rounded-full">
+                <a href={buildFallbackMailto(form)}>
+                  <ExternalLink className="mr-2 h-4 w-4" />
+                  Open In Mail App
+                </a>
+              </Button>
+              <Button
+                type="submit"
+                disabled={sending}
+                className="rounded-full bg-gradient-to-r from-enc-red via-enc-orange to-enc-yellow px-6 text-white shadow-glow hover:opacity-95"
+              >
+                {sending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <Send className="mr-2 h-4 w-4" />
+                    Send Email
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </form>
 

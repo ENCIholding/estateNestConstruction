@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { Loader2 } from "lucide-react";
+import ManagementRouteFallback from "@/components/management/ManagementRouteFallback";
 
 type SessionState = {
   loading: boolean;
@@ -57,12 +57,10 @@ export default function RequireManagementAuth({
 
   if (session.loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <div className="flex items-center gap-3 text-slate-600">
-          <Loader2 className="h-5 w-5 animate-spin" />
-          <span>Checking management access...</span>
-        </div>
-      </div>
+      <ManagementRouteFallback
+        variant="auth"
+        message="Checking the active management session before ENCI BuildOS opens the next module."
+      />
     );
   }
 
