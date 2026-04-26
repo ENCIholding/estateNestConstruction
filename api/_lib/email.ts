@@ -88,6 +88,7 @@ function getBoolean(value: string | undefined, fallback: boolean): boolean {
 export function getSmtpConfig(): SmtpConfig {
   const user = readFirstEnv(
     "EMAIL_SMTP_USER",
+    "EMAIL_SMTP_USE",
     "EMAIL_SMTP_USERNAME",
     "EMAIL_FROM_ADDRESS",
     "EMAIL_USERNAME",
@@ -116,6 +117,7 @@ export function getSmtpConfig(): SmtpConfig {
   const googleClientId = readFirstEnv(
     "EMAIL_GOOGLE_CLIENT_ID",
     "GOOGLE_OAUTH_CLIENT_ID",
+    "OOGLE_OAUTH_CLIENT_ID",
     "GOOGLE_CLIENT_ID",
     "GOOGLE_OAUTH_KEY",
     "GOOGLE_CLIENT_KEY"
@@ -123,6 +125,7 @@ export function getSmtpConfig(): SmtpConfig {
   const googleClientSecret = readFirstEnv(
     "EMAIL_GOOGLE_CLIENT_SECRET",
     "GOOGLE_OAUTH_CLIENT_SECRET",
+    "OOGLE_OAUTH_CLIENT_SECRET",
     "GOOGLE_CLIENT_SECRET",
     "GOOGLE_OAUTH_SECRET",
     "GOOGLE_CLIENT_SECRET_KEY"
@@ -130,6 +133,7 @@ export function getSmtpConfig(): SmtpConfig {
   const googleRefreshToken = readFirstEnv(
     "EMAIL_GOOGLE_REFRESH_TOKEN",
     "GOOGLE_OAUTH_REFRESH_TOKEN",
+    "OOGLE_OAUTH_REFRESH_TOKEN",
     "GOOGLE_REFRESH_TOKEN",
     "GOOGLE_OAUTH_TOKEN",
     "GOOGLE_REFRESH"
