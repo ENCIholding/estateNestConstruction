@@ -4,6 +4,9 @@ const originalEnv = {
   EMAIL_SMTP_USER: process.env.EMAIL_SMTP_USER,
   EMAIL_SMTP_PASS: process.env.EMAIL_SMTP_PASS,
   EMAIL_FROM_ADDRESS: process.env.EMAIL_FROM_ADDRESS,
+  GOOGLE_OAUTH_CLIENT_ID: process.env.GOOGLE_OAUTH_CLIENT_ID,
+  GOOGLE_OAUTH_CLIENT_SECRET: process.env.GOOGLE_OAUTH_CLIENT_SECRET,
+  GOOGLE_OAUTH_REFRESH_TOKEN: process.env.GOOGLE_OAUTH_REFRESH_TOKEN,
 };
 
 afterEach(() => {
@@ -58,6 +61,33 @@ describe("email helpers", () => {
         host: "smtp.gmail.com",
         fromAddress: "hello@estatenest.capital",
         user: "hello@estatenest.capital",
+        auth: expect.objectContaining({
+          kind: "password",
+          user: "hello@estatenest.capital",
+        }),
+      })
+    );
+  });
+
+  it("accepts Google OAuth mail configuration when password auth is not present", async () => {
+    process.env.EMAIL_SMTP_USER = "hello@estatenest.capital";
+    delete process.env.EMAIL_SMTP_PASS;
+    process.env.GOOGLE_OAUTH_CLIENT_ID = "client-id";
+    process.env.GOOGLE_OAUTH_CLIENT_SECRET = "client-secret";
+    process.env.GOOGLE_OAUTH_REFRESH_TOKEN = "refresh-token";
+
+    const email = await import("./email");
+
+    expect(email.getSmtpConfig()).toEqual(
+      expect.objectContaining({
+        user: "hello@estatenest.capital",
+        auth: expect.objectContaining({
+          kind: "oauth2",
+          clientId: "client-id",
+          clientSecret: "client-secret",
+          refreshToken: "refresh-token",
+          user: "hello@estatenest.capital",
+        }),
       })
     );
   });

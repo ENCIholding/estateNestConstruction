@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, Clock3, FileText, Pencil, Plus, Search, ShieldAlert, Users } from "lucide-react";
 import { Link } from "react-router-dom";
+import FormSaveStateNotice from "@/components/forms/FormSaveStateNotice";
 import ManagementLayout from "@/components/management/ManagementLayout";
 import BuildOsTaskForm, {
   createTaskFormState,
@@ -12,6 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import Input from "@/components/ui/input";
+import { toast } from "@/components/ui/sonner";
+import useUnsavedChangesGuard from "@/hooks/useUnsavedChangesGuard";
 import { fetchManagementProjects } from "@/lib/managementData";
 import { getTaskAssigneeLabel, isTaskDueSoon, isTaskOverdue } from "@/lib/buildosTasks";
 import {
@@ -20,6 +23,7 @@ import {
   saveTask,
   type BuildOsTask,
 } from "@/lib/buildosShared";
+import { getVendorInsightByRecordId } from "@/lib/vendorMemory";
 
 function cycleStatus(status: BuildOsTask["status"]): BuildOsTask["status"] {
   switch (status) {
@@ -43,6 +47,11 @@ export default function ManagementMobileTasks() {
   const [showForm, setShowForm] = useState(false);
   const [editingRecord, setEditingRecord] = useState<BuildOsTask | null>(null);
   const [form, setForm] = useState<BuildOsTaskFormState>(createTaskFormState());
+  const [saving, setSaving] = useState(false);
+  const [initialFingerprint, setInitialFingerprint] = useState(
+    JSON.stringify(createTaskFormState())
+  );
+  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
 
   const { data: projects = [] } = useQuery({
     queryKey: ["management-projects"],
@@ -91,9 +100,28 @@ export default function ManagementMobileTasks() {
 
   const openForm = (record?: BuildOsTask | null) => {
     setEditingRecord(record || null);
-    setForm(createTaskFormState(record));
+    const nextState = createTaskFormState(record);
+    setForm(nextState);
+    setInitialFingerprint(JSON.stringify(nextState));
+    setSaving(false);
+    setLastSavedAt(null);
     setShowForm(true);
   };
+  const isDirty = useMemo(
+    () => JSON.stringify(form) !== initialFingerprint,
+    [form, initialFingerprint]
+  );
+  const handleAttemptClose = useUnsavedChangesGuard({
+    discardMessage:
+      "Discard the unsaved field-task changes? This form does not autosave until you click Save.",
+    isDirty,
+    onConfirmClose: () => {
+      setShowForm(false);
+      setEditingRecord(null);
+    },
+    open: showForm,
+    saving,
+  });
 
   const saveAndRefresh = async (record: Partial<BuildOsTask>) => {
     await saveTask(record);
@@ -248,7 +276,10 @@ export default function ManagementMobileTasks() {
 
         <div className="grid gap-4">
           {filteredTasks.length ? (
-            filteredTasks.map((task) => (
+            filteredTasks.map((task) => {
+              const vendorInsight = getVendorInsightByRecordId(records, task.assignedRecordId);
+
+              return (
               <Card key={task.id} className="dashboard-panel p-2">
                 <CardContent className="space-y-4 p-5">
                   <div className="flex items-start gap-4">
@@ -270,6 +301,19 @@ export default function ManagementMobileTasks() {
                             Milestone
                           </Badge>
                         ) : null}
+                        {vendorInsight ? (
+                          <Badge
+                            className={
+                              vendorInsight.riskStatus === "High Risk Vendor"
+                                ? "rounded-full bg-rose-500/10 text-rose-700 dark:text-rose-300"
+                                : vendorInsight.riskStatus === "Use with Caution"
+                                  ? "rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                                  : "rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                            }
+                          >
+                            {vendorInsight.riskStatus}
+                          </Badge>
+                        ) : null}
                         {isTaskOverdue(task) ? (
                           <Badge className="rounded-full bg-rose-500/10 text-rose-700 dark:text-rose-300">
                             Overdue
@@ -285,6 +329,14 @@ export default function ManagementMobileTasks() {
                       </p>
                       <p className="text-sm text-muted-foreground">
                         Assignee: {getTaskAssigneeLabel(task, records)}
+                      </p>
+                      {vendorInsight ? (
+                        <p className="text-sm text-muted-foreground">
+                          Vendor memory: {vendorInsight.deficiencyCount} repeat issue{vendorInsight.deficiencyCount === 1 ? "" : "s"} | Work again: {vendorInsight.workAgain}
+                        </p>
+                      ) : null}
+                      <p className="text-xs text-muted-foreground">
+                        Audit: {task.lastUpdatedBy || "Actor not recorded"} | {task.updatedAt}
                       </p>
                       {task.mobileNote ? (
                         <div className="rounded-2xl border border-border/70 bg-background/80 px-4 py-3 text-sm leading-6 text-muted-foreground">
@@ -320,7 +372,8 @@ export default function ManagementMobileTasks() {
                   </div>
                 </CardContent>
               </Card>
-            ))
+            );
+          })
           ) : (
             <Card className="dashboard-panel p-2">
               <CardContent className="p-6 text-sm leading-6 text-muted-foreground">
@@ -331,7 +384,7 @@ export default function ManagementMobileTasks() {
         </div>
       </div>
 
-      <Dialog open={showForm} onOpenChange={(nextOpen) => !nextOpen && setShowForm(false)}>
+      <Dialog open={showForm} onOpenChange={(nextOpen) => !nextOpen && handleAttemptClose()}>
         <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingRecord ? "Update Field Task" : "New Field Task"}</DialogTitle>
@@ -339,31 +392,49 @@ export default function ManagementMobileTasks() {
           <form
             onSubmit={async (event) => {
               event.preventDefault();
-              await saveAndRefresh({
-                id: editingRecord?.id,
-                projectId: form.projectId,
-                title: form.title,
-                description: form.description,
-                location: form.location,
-                phase: form.phase,
-                status: form.status,
-                priority: form.priority,
-                assignedRecordId: form.assignedRecordId || undefined,
-                assignedLabel: form.assignedLabel,
-                startDate: form.startDate,
-                dueDate: form.dueDate,
-                milestone: form.milestone,
-                predecessorIds: form.predecessorIds,
-                inspectionDate: form.inspectionDate,
-                percentComplete: Number(form.percentComplete) || 0,
-                mobileNote: form.mobileNote,
-                lastUpdatedBy: form.lastUpdatedBy,
-              });
-              setShowForm(false);
-              setEditingRecord(null);
+              try {
+                setSaving(true);
+                await saveAndRefresh({
+                  id: editingRecord?.id,
+                  projectId: form.projectId,
+                  title: form.title,
+                  description: form.description,
+                  location: form.location,
+                  phase: form.phase,
+                  status: form.status,
+                  priority: form.priority,
+                  assignedRecordId: form.assignedRecordId || undefined,
+                  assignedLabel: form.assignedLabel,
+                  startDate: form.startDate,
+                  dueDate: form.dueDate,
+                  milestone: form.milestone,
+                  predecessorIds: form.predecessorIds,
+                  inspectionDate: form.inspectionDate,
+                  percentComplete: Number(form.percentComplete) || 0,
+                  mobileNote: form.mobileNote,
+                  lastUpdatedBy: form.lastUpdatedBy,
+                });
+                setInitialFingerprint(JSON.stringify(form));
+                setLastSavedAt(new Date().toISOString());
+                toast.success(
+                  editingRecord
+                    ? "Field-task changes were saved to ENCI BuildOS."
+                    : "Field task was added to ENCI BuildOS."
+                );
+                setShowForm(false);
+                setEditingRecord(null);
+              } finally {
+                setSaving(false);
+              }
             }}
             className="space-y-6"
           >
+            <FormSaveStateNotice
+              isDirty={isDirty}
+              lastSavedAt={lastSavedAt}
+              message="This form does not autosave. Click Save to persist the field task in ENCI BuildOS."
+              saving={saving}
+            />
             <BuildOsTaskForm
               form={form}
               projects={projects}
@@ -372,10 +443,10 @@ export default function ManagementMobileTasks() {
               onChange={setForm}
             />
             <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => setShowForm(false)}>
+              <Button type="button" variant="outline" onClick={handleAttemptClose}>
                 Cancel
               </Button>
-              <Button type="submit">{editingRecord ? "Save Update" : "Create Task"}</Button>
+              <Button type="submit" disabled={saving}>{editingRecord ? "Save Update" : "Create Task"}</Button>
             </div>
           </form>
         </DialogContent>

@@ -26,10 +26,16 @@ import {
   saveProjectToWorkspace,
 } from "@/lib/managementWorkspace";
 import {
+  loadBuildOsChangeOrders,
+  loadBuildOsClientInvoices,
+  loadBuildOsDeficiencies,
   loadBuildOsProjectParticipantAssignments,
   loadBuildOsDocuments,
   loadBuildOsTasks,
+  loadBuildOsVendorBills,
+  loadMasterDatabaseRecords,
 } from "@/lib/buildosShared";
+import { buildProjectControlSnapshot } from "@/lib/projectControl";
 
 type ProjectsStatus = {
   projectRegistry: {
@@ -38,8 +44,8 @@ type ProjectsStatus = {
   };
 };
 
-function formatCurrency(value?: number) {
-  if (!value) {
+function formatCurrency(value?: number | null) {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
     return "Not set";
   }
 
@@ -66,6 +72,18 @@ function getStatusClass(status?: string) {
   }
 
   return "bg-muted text-muted-foreground";
+}
+
+function getToneBadgeClass(tone: "green" | "yellow" | "red") {
+  if (tone === "red") {
+    return "bg-rose-500/10 text-rose-700 dark:text-rose-300";
+  }
+
+  if (tone === "yellow") {
+    return "bg-amber-500/10 text-amber-700 dark:text-amber-300";
+  }
+
+  return "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300";
 }
 
 function getRegistryMessage(source: ProjectsStatus["projectRegistry"]["source"]) {
@@ -124,6 +142,26 @@ export default function ManagementProjects() {
     queryKey: ["buildos-documents"],
     queryFn: async () => loadBuildOsDocuments(),
   });
+  const { data: changeOrders = [] } = useQuery({
+    queryKey: ["buildos-change-orders"],
+    queryFn: async () => loadBuildOsChangeOrders(),
+  });
+  const { data: clientInvoices = [] } = useQuery({
+    queryKey: ["buildos-client-invoices"],
+    queryFn: async () => loadBuildOsClientInvoices(),
+  });
+  const { data: vendorBills = [] } = useQuery({
+    queryKey: ["buildos-vendor-bills"],
+    queryFn: async () => loadBuildOsVendorBills(),
+  });
+  const { data: deficiencies = [] } = useQuery({
+    queryKey: ["buildos-deficiencies"],
+    queryFn: async () => loadBuildOsDeficiencies(),
+  });
+  const { data: masterRecords = [] } = useQuery({
+    queryKey: ["buildos-master-database"],
+    queryFn: async () => loadMasterDatabaseRecords(),
+  });
   const { data: participantAssignments = [] } = useQuery({
     queryKey: ["buildos-project-participants"],
     queryFn: async () => loadBuildOsProjectParticipantAssignments(),
@@ -132,6 +170,37 @@ export default function ManagementProjects() {
   const mergedRegistry = useMemo(
     () => mergeProjectsWithWorkspace(serverProjects),
     [serverProjects, workspaceRevision]
+  );
+  const projectControlById = useMemo(
+    () =>
+      new Map(
+        mergedRegistry.projects.map((project) => [
+          project.id,
+          buildProjectControlSnapshot({
+            assignment:
+              participantAssignments.find((item) => item.projectId === project.id) || null,
+            changeOrders,
+            clientInvoices,
+            deficiencies,
+            documents,
+            project,
+            records: masterRecords,
+            tasks,
+            vendorBills,
+          }),
+        ])
+      ),
+    [
+      changeOrders,
+      clientInvoices,
+      deficiencies,
+      documents,
+      masterRecords,
+      mergedRegistry.projects,
+      participantAssignments,
+      tasks,
+      vendorBills,
+    ]
   );
 
   const handleSave = async (project: ManagementProject) => {
@@ -217,6 +286,11 @@ export default function ManagementProjects() {
                 mergedRegistry.serverIds,
                 mergedRegistry.upserts
               );
+              const snapshot = projectControlById.get(project.id);
+
+              if (!snapshot) {
+                return null;
+              }
 
               return (
                 <Card key={project.id} className="dashboard-panel p-2">
@@ -224,15 +298,21 @@ export default function ManagementProjects() {
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                       <div className="space-y-3">
                         <div className="flex flex-wrap items-center gap-2">
-                          <h2 className="text-xl font-semibold text-foreground">
-                            {project.project_name}
-                          </h2>
-                          <Badge className={`rounded-full ${getStatusClass(project.status)}`}>
-                            {project.status}
-                          </Badge>
-                          <Badge
-                            className={
-                              sourceBadge === "Deployment Record"
+                        <h2 className="text-xl font-semibold text-foreground">
+                          {project.project_name}
+                        </h2>
+                        <Badge className={`rounded-full ${getStatusClass(project.status)}`}>
+                          {project.status}
+                        </Badge>
+                        <Badge className={getToneBadgeClass(snapshot.financialHealthTone)}>
+                          {snapshot.projectHealth}
+                        </Badge>
+                        <Badge className={getToneBadgeClass(snapshot.scopeTone)}>
+                          {snapshot.scopeStatus}
+                        </Badge>
+                        <Badge
+                          className={
+                            sourceBadge === "Deployment Record"
                                 ? "rounded-full bg-muted text-muted-foreground"
                                 : sourceBadge === "Workspace Override"
                                   ? "rounded-full bg-enc-yellow/20 text-foreground"
@@ -248,7 +328,40 @@ export default function ManagementProjects() {
                             <MapPin className="h-4 w-4 text-enc-orange" />
                             {project.civic_address}
                           </span>
+                          <span>Scope subject: {project.scope_subject || "Not set"}</span>
                           <span>Budget baseline: {formatCurrency(project.estimated_budget)}</span>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2">
+                          {snapshot.riskSignals.map((risk) => (
+                            <Badge
+                              key={`${project.id}-${risk.label}`}
+                              className={getToneBadgeClass(risk.tone)}
+                            >
+                              {risk.label}: {risk.level}
+                            </Badge>
+                          ))}
+                        </div>
+
+                        <div className="grid gap-3 text-sm text-muted-foreground md:grid-cols-2 xl:grid-cols-4">
+                          <div className="dashboard-item p-3">
+                            <p className="font-medium text-foreground">Expected profit</p>
+                            <p className="mt-2">{formatCurrency(snapshot.expectedProfit)}</p>
+                          </div>
+                          <div className="dashboard-item p-3">
+                            <p className="font-medium text-foreground">Current profit</p>
+                            <p className="mt-2">{formatCurrency(snapshot.currentProfit)}</p>
+                          </div>
+                          <div className="dashboard-item p-3">
+                            <p className="font-medium text-foreground">Profit at risk</p>
+                            <p className="mt-2">{formatCurrency(snapshot.profitAtRisk)}</p>
+                          </div>
+                          <div className="dashboard-item p-3">
+                            <p className="font-medium text-foreground">Pending CO exposure</p>
+                            <p className="mt-2">
+                              {formatCurrency(snapshot.projectSummary.pendingChangeOrderExposure)}
+                            </p>
+                          </div>
                         </div>
 
                         <div className="grid gap-3 text-sm text-muted-foreground md:grid-cols-3">
@@ -311,6 +424,17 @@ export default function ManagementProjects() {
                             </p>
                           </div>
                         </div>
+
+                        {snapshot.nextThreeActions.length ? (
+                          <div className="rounded-2xl border border-border/70 bg-background/80 p-3">
+                            <p className="text-sm font-medium text-foreground">Next 3 actions</p>
+                            <ul className="mt-2 space-y-1 text-sm leading-6 text-muted-foreground">
+                              {snapshot.nextThreeActions.map((action) => (
+                                <li key={`${project.id}-${action}`}>{action}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        ) : null}
                       </div>
 
                       <div className="flex flex-wrap gap-2">

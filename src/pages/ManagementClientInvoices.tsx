@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import FormSaveStateNotice from "@/components/forms/FormSaveStateNotice";
 import ManagementLayout from "@/components/management/ManagementLayout";
 import {
   AlertDialog,
@@ -25,6 +26,8 @@ import {
 import Input from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { toast } from "@/components/ui/sonner";
+import useUnsavedChangesGuard from "@/hooks/useUnsavedChangesGuard";
 import { fetchManagementProjects, formatCurrency } from "@/lib/managementData";
 import {
   deleteClientInvoice,
@@ -42,6 +45,7 @@ type InvoiceFormState = {
   dueDate: string;
   amount: string;
   status: BuildOsClientInvoice["status"];
+  updatedBy: string;
   notes: string;
   drawReference: string;
 };
@@ -55,6 +59,7 @@ function initialForm(record?: BuildOsClientInvoice | null): InvoiceFormState {
     dueDate: record?.dueDate || new Date().toISOString().slice(0, 10),
     amount: record?.amount ? String(record.amount) : "",
     status: record?.status || "Draft",
+    updatedBy: record?.updatedBy || "Estate Nest Team",
     notes: record?.notes || "",
     drawReference: record?.drawReference || "",
   };
@@ -79,6 +84,9 @@ export default function ManagementClientInvoices() {
   const [deleteTarget, setDeleteTarget] = useState<BuildOsClientInvoice | null>(null);
   const [form, setForm] = useState<InvoiceFormState>(initialForm());
   const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [initialFingerprint, setInitialFingerprint] = useState(JSON.stringify(initialForm()));
+  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
 
   const { data: projects = [] } = useQuery({
     queryKey: ["management-projects"],
@@ -144,10 +152,29 @@ export default function ManagementClientInvoices() {
 
   const openForm = (record?: BuildOsClientInvoice | null) => {
     setEditingRecord(record || null);
-    setForm(initialForm(record));
+    const nextState = initialForm(record);
+    setForm(nextState);
+    setInitialFingerprint(JSON.stringify(nextState));
     setError("");
+    setSaving(false);
+    setLastSavedAt(null);
     setShowForm(true);
   };
+  const isDirty = useMemo(
+    () => JSON.stringify(form) !== initialFingerprint,
+    [form, initialFingerprint]
+  );
+  const handleAttemptClose = useUnsavedChangesGuard({
+    discardMessage:
+      "Discard the unsaved invoice changes? This form does not autosave until you click Save.",
+    isDirty,
+    onConfirmClose: () => {
+      setShowForm(false);
+      setEditingRecord(null);
+    },
+    open: showForm,
+    saving,
+  });
 
   const handleSave = async (event: FormEvent) => {
     event.preventDefault();
@@ -156,26 +183,41 @@ export default function ManagementClientInvoices() {
       setError("Project, invoice number, and amount are required.");
       return;
     }
-    await saveClientInvoice({
-      id: editingRecord?.id,
-      projectId: form.projectId,
-      stakeholderRecordId: form.stakeholderRecordId || undefined,
-      invoiceNumber: form.invoiceNumber,
-      invoiceDate: form.invoiceDate,
-      dueDate: form.dueDate,
-      amount: Number(form.amount) || 0,
-      status: form.status,
-      notes: form.notes,
-      drawReference: form.drawReference,
-    });
-    await queryClient.invalidateQueries({
-      predicate: (query) =>
-        Array.isArray(query.queryKey) &&
-        typeof query.queryKey[0] === "string" &&
-        (query.queryKey[0].startsWith("buildos") || query.queryKey[0].startsWith("management")),
-    });
-    setShowForm(false);
-    setEditingRecord(null);
+    try {
+      setSaving(true);
+      await saveClientInvoice({
+        id: editingRecord?.id,
+        projectId: form.projectId,
+        stakeholderRecordId: form.stakeholderRecordId || undefined,
+        invoiceNumber: form.invoiceNumber,
+        invoiceDate: form.invoiceDate,
+        dueDate: form.dueDate,
+        amount: Number(form.amount) || 0,
+        status: form.status,
+        updatedBy: form.updatedBy,
+        notes: form.notes,
+        drawReference: form.drawReference,
+      });
+      await queryClient.invalidateQueries({
+        predicate: (query) =>
+          Array.isArray(query.queryKey) &&
+          typeof query.queryKey[0] === "string" &&
+          (query.queryKey[0].startsWith("buildos") || query.queryKey[0].startsWith("management")),
+      });
+      setInitialFingerprint(JSON.stringify(form));
+      setLastSavedAt(new Date().toISOString());
+      toast.success(
+        editingRecord
+          ? "Invoice changes were saved to ENCI BuildOS."
+          : "Client invoice was added to ENCI BuildOS."
+      );
+      setShowForm(false);
+      setEditingRecord(null);
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : "Failed to save invoice.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDelete = async () => {
@@ -266,6 +308,15 @@ export default function ManagementClientInvoices() {
                           <p className="mt-2 text-sm text-muted-foreground">{formatCurrency(invoice.amount)}</p>
                         </div>
                       </div>
+                      <div className="dashboard-item p-3">
+                        <p className="text-sm font-medium text-foreground">Audit</p>
+                        <p className="mt-2 text-sm text-muted-foreground">
+                          {invoice.updatedBy || "Actor not recorded"}
+                        </p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Last changed {invoice.updatedAt}
+                        </p>
+                      </div>
                       {invoice.notes ? (
                         <div className="dashboard-item p-3">
                           <p className="text-sm font-medium text-foreground">Notes</p>
@@ -297,12 +348,18 @@ export default function ManagementClientInvoices() {
         </div>
       </div>
 
-      <Dialog open={showForm} onOpenChange={(nextOpen) => !nextOpen && setShowForm(false)}>
+      <Dialog open={showForm} onOpenChange={(nextOpen) => !nextOpen && handleAttemptClose()}>
         <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingRecord ? "Edit Client Invoice" : "New Client Invoice"}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSave} className="space-y-6">
+            <FormSaveStateNotice
+              isDirty={isDirty}
+              lastSavedAt={lastSavedAt}
+              message="This form does not autosave. Click Save to persist the invoice in ENCI BuildOS."
+              saving={saving}
+            />
             {error ? <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
@@ -334,6 +391,10 @@ export default function ManagementClientInvoices() {
                 </select>
               </div>
               <div className="space-y-2">
+                <Label>Updated by</Label>
+                <Input value={form.updatedBy} onChange={(event) => setForm((current) => ({ ...current, updatedBy: event.target.value }))} />
+              </div>
+              <div className="space-y-2">
                 <Label>Invoice date</Label>
                 <Input type="date" value={form.invoiceDate} onChange={(event) => setForm((current) => ({ ...current, invoiceDate: event.target.value }))} />
               </div>
@@ -355,8 +416,8 @@ export default function ManagementClientInvoices() {
               </div>
             </div>
             <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
-              <Button type="submit">{editingRecord ? "Update Invoice" : "Save Invoice"}</Button>
+              <Button type="button" variant="outline" onClick={handleAttemptClose}>Cancel</Button>
+              <Button type="submit" disabled={saving}>{editingRecord ? "Update Invoice" : "Save Invoice"}</Button>
             </div>
           </form>
         </DialogContent>

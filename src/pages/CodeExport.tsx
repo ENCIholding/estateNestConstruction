@@ -128,17 +128,17 @@ export default defineConfig(() => ({
     --primary: 220 14% 96%;
     --primary-foreground: 220 9% 46%;
     
-    /* Estate Nest Capital logo-inspired color palette */
-    --enc-red: 0 85% 60%;
-    --enc-orange: 25 95% 60%;
-    --enc-yellow: 50 100% 60%;
+    /* ENCI green-gold brand palette */
+    --enc-red: 130 56% 31%;
+    --enc-orange: 96 59% 42%;
+    --enc-yellow: 47 100% 52%;
     --enc-text-primary: 220 50% 10%;
     --enc-text-secondary: 220 9% 46%;
     
-    /* Logo-inspired gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(0 85% 60%), hsl(25 95% 60%), hsl(50 100% 60%));
-    --gradient-warm: linear-gradient(135deg, hsl(10 90% 65%), hsl(25 95% 75%));
-    --gradient-text: linear-gradient(135deg, hsl(0 85% 60%), hsl(25 95% 60%), hsl(50 100% 60%));
+    /* ENCI brand gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(130 56% 31%), hsl(96 59% 42%), hsl(47 100% 52%));
+    --gradient-warm: linear-gradient(135deg, hsl(130 45% 36%), hsl(84 56% 55%), hsl(50 100% 72%));
+    --gradient-text: linear-gradient(135deg, hsl(135 42% 22%), hsl(101 58% 35%), hsl(46 100% 42%));
     
     /* Modern shadows and effects */
     --shadow-glow: 0 0 40px hsl(var(--enc-orange) / 0.3);

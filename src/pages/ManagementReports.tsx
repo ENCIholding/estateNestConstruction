@@ -8,15 +8,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   buildProjectAlerts,
   getPortfolioFinancialOverview,
-  getProjectFinancialSummary,
-  getProjectHealthStatus,
 } from "@/lib/buildosIntelligence";
+import { buildProjectAuditSnapshot } from "@/lib/projectAudit";
+import { buildProjectControlSnapshot } from "@/lib/projectControl";
 import {
   loadBuildOsChangeOrders,
   loadBuildOsClientInvoices,
   loadBuildOsDailyLogs,
   loadBuildOsDeficiencies,
   loadBuildOsDocuments,
+  loadBuildOsProjectParticipantAssignments,
   loadBuildOsTasks,
   loadMasterDatabaseRecords,
   loadBuildOsVendorBills,
@@ -118,6 +119,10 @@ export default function ManagementReports() {
     queryKey: ["buildos-documents"],
     queryFn: async () => loadBuildOsDocuments(),
   });
+  const { data: participantAssignments = [] } = useQuery({
+    queryKey: ["buildos-project-participants"],
+    queryFn: async () => loadBuildOsProjectParticipantAssignments(),
+  });
 
   const documentCsv = useMemo(
     () =>
@@ -182,36 +187,51 @@ export default function ManagementReports() {
   const projectHealthRows = useMemo(
     () =>
       projects.map((project) => {
-        const alerts = buildProjectAlerts(
-          project,
+        const snapshot = buildProjectControlSnapshot({
+          assignment:
+            participantAssignments.find((item) => item.projectId === project.id) || null,
           changeOrders,
           clientInvoices,
-          vendorBills,
           deficiencies,
           documents,
-          tasks
-        );
-        const financialSummary = getProjectFinancialSummary(
           project,
+          records,
+          tasks,
+          vendorBills,
+        });
+        const auditSnapshot = buildProjectAuditSnapshot({
+          assignment:
+            participantAssignments.find((item) => item.projectId === project.id) || null,
           changeOrders,
           clientInvoices,
-          vendorBills
-        );
-        const health = getProjectHealthStatus(
-          project,
-          financialSummary,
-          deficiencies,
-          alerts
-        );
+          dailyLogs,
+          documents,
+          projectId: project.id,
+          records,
+          tasks,
+          vendorBills,
+        });
 
         return {
+          auditSnapshot,
           project,
-          alerts,
-          financialSummary,
-          health,
+          alerts: snapshot.alerts,
+          financialSummary: snapshot.projectSummary,
+          health: snapshot.projectHealth,
+          snapshot,
         };
       }),
-    [projects, changeOrders, clientInvoices, vendorBills, deficiencies, documents, tasks]
+    [
+      projects,
+      changeOrders,
+      clientInvoices,
+      vendorBills,
+      deficiencies,
+      documents,
+      tasks,
+      participantAssignments,
+      records,
+    ]
   );
 
   const registryCsv = useMemo(() => buildProjectsCsv(projects), [projects]);
@@ -638,7 +658,7 @@ export default function ManagementReports() {
               </CardHeader>
               <CardContent className="space-y-3">
                 {projectHealthRows.length ? (
-                  projectHealthRows.map(({ project, health, financialSummary, alerts }) => (
+                  projectHealthRows.map(({ project, health, financialSummary, alerts, auditSnapshot, snapshot }) => (
                     <div key={project.id} className="dashboard-item p-4">
                       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                         <div>
@@ -660,6 +680,33 @@ export default function ManagementReports() {
                             >
                               {health}
                             </Badge>
+                            <Badge
+                              className={
+                                snapshot.scopeTone === "red"
+                                  ? "rounded-full bg-rose-500/10 text-rose-700 dark:text-rose-300"
+                                  : snapshot.scopeTone === "yellow"
+                                    ? "rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                                    : "rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                              }
+                            >
+                              {snapshot.scopeStatus}
+                            </Badge>
+                          </div>
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {snapshot.riskSignals.map((risk) => (
+                              <Badge
+                                key={`${project.id}-${risk.label}`}
+                                className={
+                                  risk.tone === "red"
+                                    ? "rounded-full bg-rose-500/10 text-rose-700 dark:text-rose-300"
+                                    : risk.tone === "yellow"
+                                      ? "rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                                      : "rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                                }
+                              >
+                                {risk.label}: {risk.level}
+                              </Badge>
+                            ))}
                           </div>
                           <div className="mt-3 flex flex-wrap gap-4 text-sm text-muted-foreground">
                             <span>
@@ -673,12 +720,23 @@ export default function ManagementReports() {
                               Unpaid vendor bills:{" "}
                               {formatCurrency(financialSummary.unpaidVendorBills)}
                             </span>
+                            <span>
+                              Profit at risk: {formatCurrency(snapshot.profitAtRisk)}
+                            </span>
                           </div>
                         </div>
 
                         <div className="rounded-2xl border border-border/70 bg-background/80 px-4 py-3 text-sm text-muted-foreground">
                           <p className="font-medium text-foreground">Alert count</p>
                           <p className="mt-2">{alerts.length}</p>
+                          <p className="mt-3 font-medium text-foreground">Audit coverage</p>
+                          <p className="mt-2">{auditSnapshot.actorCoverage}%</p>
+                          <p className="mt-3 font-medium text-foreground">Last linked change</p>
+                          <p className="mt-2">
+                            {auditSnapshot.entries[0]
+                              ? `${auditSnapshot.entries[0].actor} | ${auditSnapshot.entries[0].changedAt}`
+                              : "No tracked changes yet"}
+                          </p>
                         </div>
                       </div>
                     </div>

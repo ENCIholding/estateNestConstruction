@@ -1,18 +1,21 @@
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Info, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import Badge from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Input from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { toast } from "@/components/ui/sonner";
 import { fetchManagementProjects } from "@/lib/managementData";
 import {
   BUILDOS_ENTITY_TYPES,
@@ -109,7 +112,15 @@ export default function MasterRecordForm({
   const [form, setForm] = useState<MasterRecordFormState>(buildInitialState(record, forcedType));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [initialFingerprint, setInitialFingerprint] = useState(
+    JSON.stringify(buildInitialState(record, forcedType))
+  );
+  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
   const isEdit = useMemo(() => Boolean(record?.id), [record?.id]);
+  const isDirty = useMemo(
+    () => JSON.stringify(form) !== initialFingerprint,
+    [form, initialFingerprint]
+  );
 
   const { data: projects = [] } = useQuery({
     queryKey: ["management-projects"],
@@ -118,11 +129,45 @@ export default function MasterRecordForm({
 
   useEffect(() => {
     if (open) {
-      setForm(buildInitialState(record, forcedType));
+      const initialState = buildInitialState(record, forcedType);
+      setForm(initialState);
+      setInitialFingerprint(JSON.stringify(initialState));
       setSaving(false);
       setError("");
+      setLastSavedAt(null);
     }
   }, [forcedType, open, record]);
+
+  useEffect(() => {
+    if (!open || !isDirty) {
+      return;
+    }
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isDirty, open]);
+
+  const handleAttemptClose = () => {
+    if (saving) {
+      return;
+    }
+
+    if (
+      isDirty &&
+      !window.confirm(
+        "Discard the unsaved master record changes? This form does not autosave until you click Save."
+      )
+    ) {
+      return;
+    }
+
+    onClose();
+  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -167,8 +212,14 @@ export default function MasterRecordForm({
         recommended: form.recommended,
         dealSide: form.dealSide,
       });
+      setInitialFingerprint(JSON.stringify(form));
+      setLastSavedAt(new Date().toISOString());
+      toast.success(
+        isEdit
+          ? "Master record changes were saved to ENCI BuildOS."
+          : "Master record was added to ENCI BuildOS."
+      );
       onSaved();
-      onClose();
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "Failed to save record.");
     } finally {
@@ -177,7 +228,7 @@ export default function MasterRecordForm({
   };
 
   return (
-    <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
+    <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && handleAttemptClose()}>
       <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
@@ -189,6 +240,41 @@ export default function MasterRecordForm({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-border/70 bg-background/70 px-4 py-3 text-sm">
+            <Badge
+              className={
+                saving
+                  ? "rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-300"
+                  : isDirty
+                    ? "rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                    : "rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+              }
+            >
+              {saving ? "Saving" : isDirty ? "Unsaved changes" : "Ready"}
+            </Badge>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              {saving ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : isDirty ? (
+                <AlertTriangle className="h-4 w-4 text-amber-500" />
+              ) : (
+                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+              )}
+              <span>
+                {saving
+                  ? "Saving the record to ENCI BuildOS..."
+                  : isDirty
+                    ? "Changes are not saved until you click Save."
+                    : lastSavedAt
+                      ? `Saved ${new Intl.DateTimeFormat("en-CA", {
+                          hour: "numeric",
+                          minute: "2-digit",
+                        }).format(new Date(lastSavedAt))}.`
+                      : "Loaded values are ready for review or editing."}
+              </span>
+            </div>
+          </div>
+
           {error ? (
             <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
               {error}
@@ -531,18 +617,27 @@ export default function MasterRecordForm({
             </div>
           </section>
 
-          <div className="flex flex-wrap justify-end gap-2">
-            <Button type="button" variant="outline" onClick={onClose}>
+          <DialogFooter className="items-center justify-between gap-3 sm:space-x-0">
+            <div className="flex items-start gap-2 text-sm text-muted-foreground">
+              <Info className="mt-0.5 h-4 w-4 shrink-0 text-enc-orange" />
+              <p>
+                {isDirty
+                  ? "Unsaved record changes will be lost if you close this form now."
+                  : "Master records stay saved after you click Save. Until then, the edits only live in this form window."}
+              </p>
+            </div>
+            <div className="flex flex-col-reverse gap-2 sm:flex-row">
+            <Button type="button" variant="outline" onClick={handleAttemptClose}>
               Cancel
             </Button>
             <Button type="submit" disabled={saving}>
               {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              {isEdit ? "Update Record" : "Save Record"}
+              {isEdit ? "Save Record Changes" : "Save Record"}
             </Button>
-          </div>
+            </div>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
   );
 }
-

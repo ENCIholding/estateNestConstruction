@@ -1,17 +1,31 @@
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/i;
 const DEFAULT_LOGO_URL =
-  "https://www.estatenest.capital/brand/estate-nest-capital-logo.jpg";
+  "https://www.estatenest.capital/brand/enci-buildos-logo.jpeg";
 const DEFAULT_FROM_NAME = "Estate Nest Capital Inc.";
 const DEFAULT_INBOX_COPY = "hello@estatenest.capital";
 const CONFIDENTIALITY_NOTICE =
   "The contents of this email message and any attachments are intended solely for the addressee(s) and may contain confidential and/or privileged information and may be legally protected from disclosure. If you are not the intended recipient of this message or their agent, or if this message has been addressed to you in error, please immediately alert the sender by reply email and then delete this message and any attachments. If you are not the intended recipient, you are hereby notified that any use, dissemination, copying, or storage of this message or its attachments is strictly prohibited. Please note that any views or opinions presented in this email are solely those of the author and do not necessarily represent those of Estate Nest Capital Inc. Finally, the recipient should check this email and any attachments for the presence of viruses. Estate Nest Capital Inc accepts no liability for any damage caused by any virus transmitted by this email.";
 
 type SmtpConfig = {
+  auth:
+    | {
+        kind: "password";
+        pass: string;
+        user: string;
+      }
+    | {
+        accessToken?: string;
+        clientId: string;
+        clientSecret: string;
+        kind: "oauth2";
+        redirectUri?: string;
+        refreshToken: string;
+        user: string;
+      };
   host: string;
   port: number;
   secure: boolean;
   user: string;
-  pass: string;
   fromAddress: string;
   fromName: string;
   replyTo: string;
@@ -86,12 +100,48 @@ export function getSmtpConfig(): SmtpConfig {
     process.env.SMTP_PASS?.trim() ||
     process.env.MAIL_PASSWORD?.trim() ||
     process.env.MAIL_PASS?.trim();
+  const googleClientId =
+    process.env.EMAIL_GOOGLE_CLIENT_ID?.trim() ||
+    process.env.GOOGLE_OAUTH_CLIENT_ID?.trim() ||
+    process.env.GOOGLE_CLIENT_ID?.trim();
+  const googleClientSecret =
+    process.env.EMAIL_GOOGLE_CLIENT_SECRET?.trim() ||
+    process.env.GOOGLE_OAUTH_CLIENT_SECRET?.trim() ||
+    process.env.GOOGLE_CLIENT_SECRET?.trim();
+  const googleRefreshToken =
+    process.env.EMAIL_GOOGLE_REFRESH_TOKEN?.trim() ||
+    process.env.GOOGLE_OAUTH_REFRESH_TOKEN?.trim() ||
+    process.env.GOOGLE_REFRESH_TOKEN?.trim();
+  const googleAccessToken =
+    process.env.EMAIL_GOOGLE_ACCESS_TOKEN?.trim() ||
+    process.env.GOOGLE_OAUTH_ACCESS_TOKEN?.trim() ||
+    process.env.GOOGLE_ACCESS_TOKEN?.trim();
+  const googleRedirectUri =
+    process.env.EMAIL_GOOGLE_REDIRECT_URI?.trim() ||
+    process.env.GOOGLE_OAUTH_REDIRECT_URI?.trim() ||
+    process.env.GOOGLE_REDIRECT_URI?.trim();
 
-  if (!user || !pass) {
+  if (!user || (!pass && !(googleClientId && googleClientSecret && googleRefreshToken))) {
     throw new Error(
-      "Dashboard email is not configured on this deployment yet. EMAIL_SMTP_USER and EMAIL_SMTP_PASS are required for the system to send email."
+      "Dashboard email is not configured on this deployment yet. Configure either EMAIL_SMTP_USER with EMAIL_SMTP_PASS or the Google OAuth mail variables required by ENCI BuildOS."
     );
   }
+
+  const auth: SmtpConfig["auth"] = pass
+    ? {
+        kind: "password",
+        pass,
+        user,
+      }
+    : {
+        accessToken: googleAccessToken,
+        clientId: googleClientId!,
+        clientSecret: googleClientSecret!,
+        kind: "oauth2",
+        redirectUri: googleRedirectUri,
+        refreshToken: googleRefreshToken!,
+        user,
+      };
 
   const host = process.env.EMAIL_SMTP_HOST?.trim() || "smtp.gmail.com";
   const port = Number(process.env.EMAIL_SMTP_PORT || "465");
@@ -120,11 +170,11 @@ export function getSmtpConfig(): SmtpConfig {
   }
 
   return {
+    auth,
     host,
     port,
     secure,
     user,
-    pass,
     fromAddress,
     fromName,
     replyTo,

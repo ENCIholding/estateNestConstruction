@@ -1,7 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ClipboardList, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, ClipboardList, Info, Loader2, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import ManagementLayout from "@/components/management/ManagementLayout";
 import {
   AlertDialog,
@@ -19,6 +19,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -27,6 +29,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { fetchManagementProjects } from "@/lib/managementData";
 import { deleteDailyLog, loadDailyLogs, saveDailyLog, type BuildOsDailyLog } from "@/lib/buildosShared";
+import { toast } from "@/components/ui/sonner";
 
 type DailyLogFormState = {
   projectId: string;
@@ -69,6 +72,9 @@ export default function ManagementDailyLog() {
   const [deleteTarget, setDeleteTarget] = useState<BuildOsDailyLog | null>(null);
   const [form, setForm] = useState<DailyLogFormState>(initialForm());
   const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [initialFingerprint, setInitialFingerprint] = useState(JSON.stringify(initialForm()));
+  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
 
   const { data: projects = [] } = useQuery({
     queryKey: ["management-projects"],
@@ -102,9 +108,49 @@ export default function ManagementDailyLog() {
 
   const openForm = (record?: BuildOsDailyLog | null) => {
     setEditingRecord(record || null);
-    setForm(initialForm(record));
+    const nextState = initialForm(record);
+    setForm(nextState);
+    setInitialFingerprint(JSON.stringify(nextState));
     setError("");
+    setSaving(false);
+    setLastSavedAt(null);
     setShowForm(true);
+  };
+  const isDirty = useMemo(
+    () => JSON.stringify(form) !== initialFingerprint,
+    [form, initialFingerprint]
+  );
+
+  useEffect(() => {
+    if (!showForm || !isDirty) {
+      return;
+    }
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isDirty, showForm]);
+
+  const handleAttemptClose = () => {
+    if (saving) {
+      return;
+    }
+
+    if (
+      isDirty &&
+      !window.confirm(
+        "Discard the unsaved daily-log changes? This form does not autosave until you click Save."
+      )
+    ) {
+      return;
+    }
+
+    setShowForm(false);
+    setEditingRecord(null);
   };
 
   const handleSave = async (event: FormEvent) => {
@@ -115,31 +161,43 @@ export default function ManagementDailyLog() {
       return;
     }
 
-    await saveDailyLog({
-      id: editingRecord?.id,
-      projectId: form.projectId,
-      date: form.date,
-      weather: form.weather,
-      crewCount: Number(form.crewCount) || undefined,
-      tradesOnsite: form.tradesOnsite.split(",").map((item) => item.trim()).filter(Boolean),
-      materialsDelivered: form.materialsDelivered,
-      inspections: form.inspections,
-      delaysBlockers: form.delaysBlockers,
-      safetyNotes: form.safetyNotes,
-      comments: form.comments,
-      photoUrl: form.photoUrl,
-      createdBy: form.createdBy,
-    });
+    try {
+      setSaving(true);
+      await saveDailyLog({
+        id: editingRecord?.id,
+        projectId: form.projectId,
+        date: form.date,
+        weather: form.weather,
+        crewCount: Number(form.crewCount) || undefined,
+        tradesOnsite: form.tradesOnsite.split(",").map((item) => item.trim()).filter(Boolean),
+        materialsDelivered: form.materialsDelivered,
+        inspections: form.inspections,
+        delaysBlockers: form.delaysBlockers,
+        safetyNotes: form.safetyNotes,
+        comments: form.comments,
+        photoUrl: form.photoUrl,
+        createdBy: form.createdBy,
+      });
 
-    await queryClient.invalidateQueries({
-      predicate: (query) =>
-        Array.isArray(query.queryKey) &&
-        typeof query.queryKey[0] === "string" &&
-        (query.queryKey[0].startsWith("buildos") || query.queryKey[0].startsWith("management")),
-    });
+      await queryClient.invalidateQueries({
+        predicate: (query) =>
+          Array.isArray(query.queryKey) &&
+          typeof query.queryKey[0] === "string" &&
+          (query.queryKey[0].startsWith("buildos") || query.queryKey[0].startsWith("management")),
+      });
 
-    setShowForm(false);
-    setEditingRecord(null);
+      setInitialFingerprint(JSON.stringify(form));
+      setLastSavedAt(new Date().toISOString());
+      toast.success(
+        editingRecord
+          ? "Daily-log changes were saved to ENCI BuildOS."
+          : "Daily log was added to ENCI BuildOS."
+      );
+      setShowForm(false);
+      setEditingRecord(null);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDelete = async () => {
@@ -285,12 +343,49 @@ export default function ManagementDailyLog() {
         )}
       </div>
 
-      <Dialog open={showForm} onOpenChange={(nextOpen) => !nextOpen && setShowForm(false)}>
+      <Dialog open={showForm} onOpenChange={(nextOpen) => !nextOpen && handleAttemptClose()}>
         <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingRecord ? "Edit Daily Log" : "New Daily Log"}</DialogTitle>
+            <DialogDescription>
+              This form does not autosave. Click Save to persist the daily log into ENCI BuildOS.
+            </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSave} className="space-y-6">
+            <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-border/70 bg-background/70 px-4 py-3 text-sm">
+              <Badge
+                className={
+                  saving
+                    ? "rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-300"
+                    : isDirty
+                      ? "rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                      : "rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                }
+              >
+                {saving ? "Saving" : isDirty ? "Unsaved changes" : "Ready"}
+              </Badge>
+              <div className="flex items-center gap-2 text-muted-foreground">
+                {saving ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : isDirty ? (
+                  <AlertTriangle className="h-4 w-4 text-amber-500" />
+                ) : (
+                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                )}
+                <span>
+                  {saving
+                    ? "Saving the daily log..."
+                    : isDirty
+                      ? "Changes are not saved until you click Save."
+                      : lastSavedAt
+                        ? `Saved ${new Intl.DateTimeFormat("en-CA", {
+                            hour: "numeric",
+                            minute: "2-digit",
+                          }).format(new Date(lastSavedAt))}.`
+                        : "Loaded values are ready for review or editing."}
+                </span>
+              </div>
+            </div>
             {error ? (
               <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
                 {error}
@@ -357,12 +452,25 @@ export default function ManagementDailyLog() {
                 <Textarea rows={4} value={form.comments} onChange={(event) => setForm((current) => ({ ...current, comments: event.target.value }))} />
               </div>
             </div>
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => setShowForm(false)}>
+            <DialogFooter className="items-center justify-between gap-3 sm:space-x-0">
+              <div className="flex items-start gap-2 text-sm text-muted-foreground">
+                <Info className="mt-0.5 h-4 w-4 shrink-0 text-enc-orange" />
+                <p>
+                  {isDirty
+                    ? "Unsaved daily-log edits will be lost if you close this form now."
+                    : "Daily logs stay saved after you click Save. Until then, the edits only live in this form window."}
+                </p>
+              </div>
+              <div className="flex flex-col-reverse gap-2 sm:flex-row">
+              <Button type="button" variant="outline" onClick={handleAttemptClose}>
                 Cancel
               </Button>
-              <Button type="submit">{editingRecord ? "Update Daily Log" : "Save Daily Log"}</Button>
-            </div>
+              <Button type="submit" disabled={saving}>
+                {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                {editingRecord ? "Save Daily Log Changes" : "Save Daily Log"}
+              </Button>
+              </div>
+            </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>

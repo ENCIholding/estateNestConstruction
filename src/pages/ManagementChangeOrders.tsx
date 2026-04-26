@@ -1,7 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { FileWarning, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, FileWarning, Info, Loader2, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import ManagementLayout from "@/components/management/ManagementLayout";
 import {
   AlertDialog,
@@ -19,45 +19,75 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import Input from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { toast } from "@/components/ui/sonner";
 import { fetchManagementProjects, formatCurrency } from "@/lib/managementData";
 import {
   deleteChangeOrder,
   loadChangeOrders,
+  loadMasterDatabaseRecords,
   saveChangeOrder,
   type BuildOsChangeOrder,
 } from "@/lib/buildosShared";
+import {
+  getVendorInsightByRecordId,
+  getVendorMemoryShortlist,
+} from "@/lib/vendorMemory";
 
 type ChangeOrderFormState = {
   projectId: string;
   title: string;
+  vendorRecordId: string;
   costCategory: string;
   scopeSummary: string;
   reason: string;
   budgetImpact: string;
   timeImpactDays: string;
   status: BuildOsChangeOrder["status"];
+  updatedBy: string;
   internalNotes: string;
   clientSummary: string;
   vendorSummary: string;
   attachmentUrl: string;
 };
 
+function formatAuditDateTime(value?: string) {
+  if (!value) {
+    return "Not recorded";
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("en-CA", {
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    month: "short",
+  }).format(parsed);
+}
+
 function initialForm(record?: BuildOsChangeOrder | null): ChangeOrderFormState {
   return {
     projectId: record?.projectId || "",
     title: record?.title || "",
+    vendorRecordId: record?.vendorRecordId || "",
     costCategory: record?.costCategory || "",
     scopeSummary: record?.scopeSummary || "",
     reason: record?.reason || "",
     budgetImpact: record?.budgetImpact ? String(record.budgetImpact) : "",
     timeImpactDays: record?.timeImpactDays ? String(record.timeImpactDays) : "",
     status: record?.status || "Draft",
+    updatedBy: record?.updatedBy || "Estate Nest Team",
     internalNotes: record?.internalNotes || "",
     clientSummary: record?.clientSummary || "",
     vendorSummary: record?.vendorSummary || "",
@@ -74,6 +104,9 @@ export default function ManagementChangeOrders() {
   const [deleteTarget, setDeleteTarget] = useState<BuildOsChangeOrder | null>(null);
   const [form, setForm] = useState<ChangeOrderFormState>(initialForm());
   const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [initialFingerprint, setInitialFingerprint] = useState(JSON.stringify(initialForm()));
+  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
 
   const { data: projects = [] } = useQuery({
     queryKey: ["management-projects"],
@@ -83,10 +116,31 @@ export default function ManagementChangeOrders() {
     queryKey: ["buildos-change-orders"],
     queryFn: async () => loadChangeOrders(),
   });
+  const { data: masterRecords = [] } = useQuery({
+    queryKey: ["buildos-master-database"],
+    queryFn: async () => loadMasterDatabaseRecords(),
+  });
 
   const projectMap = useMemo(
     () => new Map(projects.map((project) => [project.id, project])),
     [projects]
+  );
+  const vendorMap = useMemo(
+    () =>
+      new Map(
+        masterRecords
+          .filter((record) => record.type === "Vendor (Trade)")
+          .map((record) => [record.id, record.companyName || record.personName])
+      ),
+    [masterRecords]
+  );
+  const selectedVendorInsight = useMemo(
+    () => getVendorInsightByRecordId(masterRecords, form.vendorRecordId),
+    [form.vendorRecordId, masterRecords]
+  );
+  const vendorShortlist = useMemo(
+    () => getVendorMemoryShortlist(masterRecords, form.projectId || undefined),
+    [form.projectId, masterRecords]
   );
 
   const filteredRecords = useMemo(() => {
@@ -113,9 +167,49 @@ export default function ManagementChangeOrders() {
 
   const openForm = (record?: BuildOsChangeOrder | null) => {
     setEditingRecord(record || null);
-    setForm(initialForm(record));
+    const nextState = initialForm(record);
+    setForm(nextState);
+    setInitialFingerprint(JSON.stringify(nextState));
     setError("");
+    setSaving(false);
+    setLastSavedAt(null);
     setShowForm(true);
+  };
+  const isDirty = useMemo(
+    () => JSON.stringify(form) !== initialFingerprint,
+    [form, initialFingerprint]
+  );
+
+  useEffect(() => {
+    if (!showForm || !isDirty) {
+      return;
+    }
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isDirty, showForm]);
+
+  const handleAttemptClose = () => {
+    if (saving) {
+      return;
+    }
+
+    if (
+      isDirty &&
+      !window.confirm(
+        "Discard the unsaved change-order changes? This form does not autosave until you click Save."
+      )
+    ) {
+      return;
+    }
+
+    setShowForm(false);
+    setEditingRecord(null);
   };
 
   const handleSave = async (event: FormEvent) => {
@@ -127,31 +221,45 @@ export default function ManagementChangeOrders() {
       return;
     }
 
-    await saveChangeOrder({
-      id: editingRecord?.id,
-      projectId: form.projectId,
-      title: form.title,
-      costCategory: form.costCategory,
-      scopeSummary: form.scopeSummary,
-      reason: form.reason,
-      budgetImpact: Number(form.budgetImpact) || 0,
-      timeImpactDays: Number(form.timeImpactDays) || 0,
-      status: form.status,
-      internalNotes: form.internalNotes,
-      clientSummary: form.clientSummary,
-      vendorSummary: form.vendorSummary,
-      attachmentUrl: form.attachmentUrl,
-    });
+    try {
+      setSaving(true);
+      await saveChangeOrder({
+        id: editingRecord?.id,
+        projectId: form.projectId,
+        title: form.title,
+        vendorRecordId: form.vendorRecordId || undefined,
+        costCategory: form.costCategory,
+        scopeSummary: form.scopeSummary,
+        reason: form.reason,
+        budgetImpact: Number(form.budgetImpact) || 0,
+        timeImpactDays: Number(form.timeImpactDays) || 0,
+        status: form.status,
+        updatedBy: form.updatedBy,
+        internalNotes: form.internalNotes,
+        clientSummary: form.clientSummary,
+        vendorSummary: form.vendorSummary,
+        attachmentUrl: form.attachmentUrl,
+      });
 
-    await queryClient.invalidateQueries({
-      predicate: (query) =>
-        Array.isArray(query.queryKey) &&
-        typeof query.queryKey[0] === "string" &&
-        (query.queryKey[0].startsWith("buildos") || query.queryKey[0].startsWith("management")),
-    });
+      await queryClient.invalidateQueries({
+        predicate: (query) =>
+          Array.isArray(query.queryKey) &&
+          typeof query.queryKey[0] === "string" &&
+          (query.queryKey[0].startsWith("buildos") || query.queryKey[0].startsWith("management")),
+      });
 
-    setShowForm(false);
-    setEditingRecord(null);
+      setInitialFingerprint(JSON.stringify(form));
+      setLastSavedAt(new Date().toISOString());
+      toast.success(
+        editingRecord
+          ? "Change-order changes were saved to ENCI BuildOS."
+          : "Change order was added to ENCI BuildOS."
+      );
+      setShowForm(false);
+      setEditingRecord(null);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDelete = async () => {
@@ -276,9 +384,9 @@ export default function ManagementChangeOrders() {
                       </div>
 
                       <p className="text-sm leading-6 text-muted-foreground">{record.scopeSummary}</p>
-                      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                        <div className="dashboard-item p-3">
-                          <p className="text-sm font-medium text-foreground">Budget impact</p>
+                        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                          <div className="dashboard-item p-3">
+                            <p className="text-sm font-medium text-foreground">Budget impact</p>
                           <p className="mt-2 text-sm text-muted-foreground">
                             {formatCurrency(record.budgetImpact)}
                           </p>
@@ -295,12 +403,44 @@ export default function ManagementChangeOrders() {
                             {record.costCategory || "Not set"}
                           </p>
                         </div>
-                        <div className="dashboard-item p-3">
-                          <p className="text-sm font-medium text-foreground">Reason</p>
-                          <p className="mt-2 text-sm text-muted-foreground">{record.reason}</p>
+                          <div className="dashboard-item p-3">
+                            <p className="text-sm font-medium text-foreground">Reason</p>
+                            <p className="mt-2 text-sm text-muted-foreground">{record.reason}</p>
+                          </div>
+                        </div>
+                        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                          <div className="dashboard-item p-3">
+                            <p className="text-sm font-medium text-foreground">Vendor memory</p>
+                            <p className="mt-2 text-sm text-muted-foreground">
+                              {record.vendorRecordId
+                                ? vendorMap.get(record.vendorRecordId) || "Linked vendor not found"
+                                : "No vendor linked"}
+                            </p>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              {record.vendorRecordId
+                                ? getVendorInsightByRecordId(masterRecords, record.vendorRecordId)?.riskStatus || "No vendor memory yet"
+                                : "Add the trade responsible for this scope movement."}
+                            </p>
+                          </div>
+                          <div className="dashboard-item p-3">
+                            <p className="text-sm font-medium text-foreground">Audit actor</p>
+                            <p className="mt-2 text-sm text-muted-foreground">
+                              {record.updatedBy || "Actor not recorded"}
+                            </p>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              Last changed {formatAuditDateTime(record.updatedAt)}
+                            </p>
+                          </div>
+                          <div className="dashboard-item p-3">
+                            <p className="text-sm font-medium text-foreground">Revenue control</p>
+                            <p className="mt-2 text-sm text-muted-foreground">
+                              {record.status === "Pending Approval" || record.status === "Draft"
+                                ? `${formatCurrency(record.budgetImpact)} remains unapproved revenue at risk`
+                                : "Impact is already reflected in the approved / implemented layer."}
+                            </p>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
                     <div className="flex flex-wrap gap-2">
                       <Button variant="outline" className="rounded-full" onClick={() => openForm(record)}>
@@ -330,14 +470,52 @@ export default function ManagementChangeOrders() {
         )}
       </div>
 
-      <Dialog open={showForm} onOpenChange={(nextOpen) => !nextOpen && setShowForm(false)}>
+      <Dialog open={showForm} onOpenChange={(nextOpen) => !nextOpen && handleAttemptClose()}>
         <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {editingRecord ? "Edit Change Order" : "New Change Order"}
             </DialogTitle>
+            <DialogDescription>
+              This form does not autosave. Click Save to persist the change order into ENCI BuildOS.
+            </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSave} className="space-y-6">
+            <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-border/70 bg-background/70 px-4 py-3 text-sm">
+              <Badge
+                className={
+                  saving
+                    ? "rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-300"
+                    : isDirty
+                      ? "rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                      : "rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                }
+              >
+                {saving ? "Saving" : isDirty ? "Unsaved changes" : "Ready"}
+              </Badge>
+              <div className="flex items-center gap-2 text-muted-foreground">
+                {saving ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : isDirty ? (
+                  <AlertTriangle className="h-4 w-4 text-amber-500" />
+                ) : (
+                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                )}
+                <span>
+                  {saving
+                    ? "Saving the change order..."
+                    : isDirty
+                      ? "Changes are not saved until you click Save."
+                      : lastSavedAt
+                        ? `Saved ${new Intl.DateTimeFormat("en-CA", {
+                            hour: "numeric",
+                            minute: "2-digit",
+                          }).format(new Date(lastSavedAt))}.`
+                        : "Loaded values are ready for review or editing."}
+                </span>
+              </div>
+            </div>
+
             {error ? (
               <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
                 {error}
@@ -377,6 +555,28 @@ export default function ManagementChangeOrders() {
                   <option value="Approved">Approved</option>
                   <option value="Rejected">Rejected</option>
                   <option value="Implemented">Implemented</option>
+                </select>
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label>Responsible vendor / trade</Label>
+                <select
+                  value={form.vendorRecordId}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      vendorRecordId: event.target.value,
+                    }))
+                  }
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                >
+                  <option value="">Select vendor</option>
+                  {masterRecords
+                    .filter((record) => record.type === "Vendor (Trade)")
+                    .map((record) => (
+                      <option key={record.id} value={record.id}>
+                        {record.companyName || record.personName}
+                      </option>
+                    ))}
                 </select>
               </div>
               <div className="space-y-2 md:col-span-2">
@@ -443,6 +643,15 @@ export default function ManagementChangeOrders() {
                 />
               </div>
               <div className="space-y-2">
+                <Label>Updated by</Label>
+                <Input
+                  value={form.updatedBy}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, updatedBy: event.target.value }))
+                  }
+                />
+              </div>
+              <div className="space-y-2">
                 <Label>Client-facing summary</Label>
                 <Textarea
                   rows={2}
@@ -474,14 +683,86 @@ export default function ManagementChangeOrders() {
               </div>
             </div>
 
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => setShowForm(false)}>
+            {selectedVendorInsight || vendorShortlist.topVendors.length || vendorShortlist.cautionVendors.length || vendorShortlist.blockedVendors.length ? (
+              <div className="rounded-3xl border border-border/70 bg-background/70 p-5">
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold text-foreground">Vendor memory in scope control</p>
+                  <p className="text-sm leading-6 text-muted-foreground">
+                    Link the responsible trade so change orders become relationship-aware revenue control, not isolated paperwork.
+                  </p>
+                </div>
+
+                {selectedVendorInsight ? (
+                  <div className="mt-4 rounded-2xl border border-border/70 bg-background/80 p-4">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-sm font-semibold text-foreground">{selectedVendorInsight.label}</p>
+                      <span className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
+                        {selectedVendorInsight.riskStatus}
+                      </span>
+                    </div>
+                    <p className="mt-3 text-sm text-muted-foreground">
+                      {selectedVendorInsight.averageScore
+                        ? `${selectedVendorInsight.averageScore.toFixed(1)}/5 average score`
+                        : "No score recorded yet"}{" "}
+                      · {selectedVendorInsight.deficiencyCount} repeat issue{selectedVendorInsight.deficiencyCount === 1 ? "" : "s"} · Work again: {selectedVendorInsight.workAgain}
+                    </p>
+                  </div>
+                ) : null}
+
+                <div className="mt-4 grid gap-3 md:grid-cols-3">
+                  <div className="rounded-2xl border border-border/70 bg-background/80 p-4">
+                    <p className="text-sm font-medium text-foreground">Top vendors</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {vendorShortlist.topVendors.length ? vendorShortlist.topVendors.map((vendor) => (
+                        <span key={vendor.id} className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs text-emerald-700 dark:text-emerald-300">
+                          {vendor.label}
+                        </span>
+                      )) : <span className="text-xs text-muted-foreground">No preferred vendors linked yet.</span>}
+                    </div>
+                  </div>
+                  <div className="rounded-2xl border border-border/70 bg-background/80 p-4">
+                    <p className="text-sm font-medium text-foreground">Use with caution</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {vendorShortlist.cautionVendors.length ? vendorShortlist.cautionVendors.map((vendor) => (
+                        <span key={vendor.id} className="rounded-full bg-amber-500/10 px-3 py-1 text-xs text-amber-700 dark:text-amber-300">
+                          {vendor.label}
+                        </span>
+                      )) : <span className="text-xs text-muted-foreground">No caution vendors in view.</span>}
+                    </div>
+                  </div>
+                  <div className="rounded-2xl border border-border/70 bg-background/80 p-4">
+                    <p className="text-sm font-medium text-foreground">Do not use</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {vendorShortlist.blockedVendors.length ? vendorShortlist.blockedVendors.map((vendor) => (
+                        <span key={vendor.id} className="rounded-full bg-rose-500/10 px-3 py-1 text-xs text-rose-700 dark:text-rose-300">
+                          {vendor.label}
+                        </span>
+                      )) : <span className="text-xs text-muted-foreground">No blocked vendors in this shortlist.</span>}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+
+            <DialogFooter className="items-center justify-between gap-3 sm:space-x-0">
+              <div className="flex items-start gap-2 text-sm text-muted-foreground">
+                <Info className="mt-0.5 h-4 w-4 shrink-0 text-enc-orange" />
+                <p>
+                  {isDirty
+                    ? "Unsaved change-order edits will be lost if you close this form now."
+                    : "Change orders stay saved after you click Save. Until then, the edits only live in this form window."}
+                </p>
+              </div>
+              <div className="flex flex-col-reverse gap-2 sm:flex-row">
+              <Button type="button" variant="outline" onClick={handleAttemptClose}>
                 Cancel
               </Button>
-              <Button type="submit">
-                {editingRecord ? "Update Change Order" : "Save Change Order"}
+              <Button type="submit" disabled={saving}>
+                {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                {editingRecord ? "Save Change Order Changes" : "Save Change Order"}
               </Button>
-            </div>
+              </div>
+            </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>

@@ -14,6 +14,10 @@ import {
   BUILDOS_TASK_STATUSES,
 } from "@/lib/buildosWorkspace";
 import type { ManagementProject } from "@/lib/managementData";
+import {
+  getVendorInsightByRecordId,
+  getVendorMemoryShortlist,
+} from "@/lib/vendorMemory";
 
 export type BuildOsTaskFormState = {
   projectId: string;
@@ -76,6 +80,8 @@ export default function BuildOsTaskForm({
   const assigneeOptions = records.filter((record) =>
     ["Internal Team", "Vendor (Trade)", "Consultant", "Inspector", "Other"].includes(record.type)
   );
+  const selectedVendorInsight = getVendorInsightByRecordId(records, form.assignedRecordId);
+  const vendorShortlist = getVendorMemoryShortlist(records, form.projectId || undefined);
 
   const update = <K extends keyof BuildOsTaskFormState>(key: K, value: BuildOsTaskFormState[K]) =>
     onChange({
@@ -186,6 +192,64 @@ export default function BuildOsTaskForm({
           placeholder="Use only if the assignee is not in Master Database"
         />
       </div>
+      {selectedVendorInsight || vendorShortlist.topVendors.length || vendorShortlist.cautionVendors.length || vendorShortlist.blockedVendors.length ? (
+        <div className="space-y-3 rounded-3xl border border-border/70 bg-background/70 p-4 md:col-span-2">
+          <div>
+            <Label>Vendor memory</Label>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              Bring trade memory directly into the task assignment step so field work reflects real vendor history, not just the latest name on a list.
+            </p>
+          </div>
+
+          {selectedVendorInsight ? (
+            <div className="rounded-2xl border border-border/70 bg-background/80 p-4 text-sm text-muted-foreground">
+              <p className="font-medium text-foreground">{selectedVendorInsight.label}</p>
+              <p className="mt-2">
+                {selectedVendorInsight.riskStatus} · {selectedVendorInsight.tradeCategory}
+              </p>
+              <p className="mt-2">
+                {selectedVendorInsight.averageScore
+                  ? `${selectedVendorInsight.averageScore.toFixed(1)}/5 average score`
+                  : "No score recorded yet"}{" "}
+                · {selectedVendorInsight.deficiencyCount} repeat issue{selectedVendorInsight.deficiencyCount === 1 ? "" : "s"} · Work again: {selectedVendorInsight.workAgain}
+              </p>
+            </div>
+          ) : null}
+
+          <div className="grid gap-3 md:grid-cols-3">
+            <div className="rounded-2xl border border-border/70 bg-background/80 p-4">
+              <p className="text-sm font-medium text-foreground">Top vendors</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {vendorShortlist.topVendors.length ? vendorShortlist.topVendors.map((vendor) => (
+                  <span key={vendor.id} className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs text-emerald-700 dark:text-emerald-300">
+                    {vendor.label}
+                  </span>
+                )) : <span className="text-xs text-muted-foreground">No preferred vendors linked yet.</span>}
+              </div>
+            </div>
+            <div className="rounded-2xl border border-border/70 bg-background/80 p-4">
+              <p className="text-sm font-medium text-foreground">Use with caution</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {vendorShortlist.cautionVendors.length ? vendorShortlist.cautionVendors.map((vendor) => (
+                  <span key={vendor.id} className="rounded-full bg-amber-500/10 px-3 py-1 text-xs text-amber-700 dark:text-amber-300">
+                    {vendor.label}
+                  </span>
+                )) : <span className="text-xs text-muted-foreground">No caution vendors in view.</span>}
+              </div>
+            </div>
+            <div className="rounded-2xl border border-border/70 bg-background/80 p-4">
+              <p className="text-sm font-medium text-foreground">Do not use</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {vendorShortlist.blockedVendors.length ? vendorShortlist.blockedVendors.map((vendor) => (
+                  <span key={vendor.id} className="rounded-full bg-rose-500/10 px-3 py-1 text-xs text-rose-700 dark:text-rose-300">
+                    {vendor.label}
+                  </span>
+                )) : <span className="text-xs text-muted-foreground">No blocked vendors in this shortlist.</span>}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
       <div className="space-y-2">
         <Label>Start date</Label>
         <Input
