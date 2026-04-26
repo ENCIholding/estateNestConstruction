@@ -373,7 +373,7 @@ export default function BuildOsDocumentForm({
                     {selectedVendorInsight.averageScore
                       ? `${selectedVendorInsight.averageScore.toFixed(1)}/5 average score`
                       : "No score recorded yet"}{" "}
-                    · {selectedVendorInsight.deficiencyCount} repeat issue{selectedVendorInsight.deficiencyCount === 1 ? "" : "s"} · Work again: {selectedVendorInsight.workAgain}
+                    | {selectedVendorInsight.deficiencyCount} repeat issue{selectedVendorInsight.deficiencyCount === 1 ? "" : "s"} | Work again: {selectedVendorInsight.workAgain}
                   </p>
                 </div>
               ) : null}

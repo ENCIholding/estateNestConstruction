@@ -51,6 +51,19 @@ export type ProjectParticipantCounts = {
   vendors: number;
 };
 
+export type ProjectParticipantHighlight = {
+  count: number;
+  labels: string[];
+  role:
+    | "Buyers"
+    | "Investors"
+    | "Lawyers"
+    | "Lenders"
+    | "Realtors"
+    | "Stakeholders"
+    | "Vendors (Trades)";
+};
+
 export type ProjectVendorInsight = VendorMemoryInsight;
 
 export type PortfolioControlSnapshot = {
@@ -110,6 +123,7 @@ export type ProjectControlSnapshot = {
   marginImpact: number | null;
   nextThreeActions: string[];
   participantCounts: ProjectParticipantCounts;
+  participantHighlights: ProjectParticipantHighlight[];
   pendingChangeOrderAgingDays: number;
   pendingChangeOrderCount: number;
   profitAtRisk: number;
@@ -238,6 +252,53 @@ function buildParticipantCounts(records: BuildOsMasterRecord[]): ProjectParticip
     total: records.length,
     vendors: records.filter((record) => record.type === "Vendor (Trade)").length,
   };
+}
+
+function buildParticipantHighlights(records: BuildOsMasterRecord[]): ProjectParticipantHighlight[] {
+  const mapRecordLabel = (record: BuildOsMasterRecord) =>
+    record.companyName || record.personName || "Record";
+
+  const groups = [
+    {
+      match: (record: BuildOsMasterRecord) => record.type === "Stakeholder (Client)",
+      role: "Stakeholders" as const,
+    },
+    {
+      match: (record: BuildOsMasterRecord) => record.type === "Buyer",
+      role: "Buyers" as const,
+    },
+    {
+      match: (record: BuildOsMasterRecord) => record.type === "Realtor",
+      role: "Realtors" as const,
+    },
+    {
+      match: (record: BuildOsMasterRecord) => record.type === "Lawyer",
+      role: "Lawyers" as const,
+    },
+    {
+      match: (record: BuildOsMasterRecord) => record.type === "Lender",
+      role: "Lenders" as const,
+    },
+    {
+      match: (record: BuildOsMasterRecord) => record.type === "Investor",
+      role: "Investors" as const,
+    },
+    {
+      match: (record: BuildOsMasterRecord) => record.type === "Vendor (Trade)",
+      role: "Vendors (Trades)" as const,
+    },
+  ];
+
+  return groups
+    .map(({ match, role }) => {
+      const linked = records.filter(match);
+      return {
+        count: linked.length,
+        labels: linked.slice(0, 4).map(mapRecordLabel),
+        role,
+      };
+    })
+    .filter((group) => group.count > 0);
 }
 
 function buildScopeAssessment({
@@ -775,6 +836,7 @@ export function buildProjectControlSnapshot({
     marginImpact,
     nextThreeActions,
     participantCounts: buildParticipantCounts(relevantRecords),
+    participantHighlights: buildParticipantHighlights(relevantRecords),
     pendingChangeOrderAgingDays,
     pendingChangeOrderCount: pendingChangeOrders.length,
     profitAtRisk,

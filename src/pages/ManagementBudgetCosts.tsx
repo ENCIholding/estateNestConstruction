@@ -2,6 +2,9 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { DollarSign, Landmark, Search, TriangleAlert } from "lucide-react";
 import ManagementLayout from "@/components/management/ManagementLayout";
+import ProjectDecisionSupportPanel from "@/components/projects/ProjectDecisionSupportPanel";
+import ProjectParticipantPresence from "@/components/projects/ProjectParticipantPresence";
+import ProjectSignalBadgeCluster from "@/components/projects/ProjectSignalBadgeCluster";
 import Badge from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Input from "@/components/ui/input";
@@ -164,6 +167,18 @@ export default function ManagementBudgetCosts() {
 
   const warningCount = financialRows.filter(({ health }) => health === "Warning").length;
   const criticalCount = financialRows.filter(({ health }) => health === "Critical").length;
+  const portfolioExpectedProfit = financialRows.reduce(
+    (total, row) => total + (row.snapshot.expectedProfit || 0),
+    0
+  );
+  const portfolioCurrentProfit = financialRows.reduce(
+    (total, row) => total + (row.snapshot.currentProfit || 0),
+    0
+  );
+  const portfolioProfitAtRisk = financialRows.reduce(
+    (total, row) => total + row.snapshot.profitAtRisk,
+    0
+  );
 
   return (
     <ManagementLayout currentPageName="budget-costs">
@@ -184,7 +199,7 @@ export default function ManagementBudgetCosts() {
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-7">
           <Card className="dashboard-panel p-2">
             <CardContent className="p-5">
               <p className="text-sm font-medium text-muted-foreground">Original budgets</p>
@@ -203,6 +218,30 @@ export default function ManagementBudgetCosts() {
           </Card>
           <Card className="dashboard-panel p-2">
             <CardContent className="p-5">
+              <p className="text-sm font-medium text-muted-foreground">Expected profit</p>
+              <p className="mt-3 text-3xl font-semibold text-foreground">
+                {formatCurrency(portfolioExpectedProfit)}
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="dashboard-panel p-2">
+            <CardContent className="p-5">
+              <p className="text-sm font-medium text-muted-foreground">Current profit</p>
+              <p className="mt-3 text-3xl font-semibold text-foreground">
+                {formatCurrency(portfolioCurrentProfit)}
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="dashboard-panel p-2">
+            <CardContent className="p-5">
+              <p className="text-sm font-medium text-muted-foreground">Profit at risk</p>
+              <p className="mt-3 text-3xl font-semibold text-foreground">
+                {formatCurrency(portfolioProfitAtRisk)}
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="dashboard-panel p-2">
+            <CardContent className="p-5">
               <p className="text-sm font-medium text-muted-foreground">Committed costs</p>
               <p className="mt-3 text-3xl font-semibold text-foreground">
                 {formatCurrency(portfolioOverview.committedCosts)}
@@ -211,25 +250,11 @@ export default function ManagementBudgetCosts() {
           </Card>
           <Card className="dashboard-panel p-2">
             <CardContent className="p-5">
-              <p className="text-sm font-medium text-muted-foreground">Cash inflows tracked</p>
+              <p className="text-sm font-medium text-muted-foreground">Unpaid obligations</p>
               <p className="mt-3 text-3xl font-semibold text-foreground">
-                {formatCurrency(portfolioOverview.cashInflows)}
-              </p>
-            </CardContent>
-          </Card>
-          <Card className="dashboard-panel p-2">
-            <CardContent className="p-5">
-              <p className="text-sm font-medium text-muted-foreground">Unpaid client invoices</p>
-              <p className="mt-3 text-3xl font-semibold text-foreground">
-                {formatCurrency(portfolioOverview.unpaidClientInvoices)}
-              </p>
-            </CardContent>
-          </Card>
-          <Card className="dashboard-panel p-2">
-            <CardContent className="p-5">
-              <p className="text-sm font-medium text-muted-foreground">Unpaid vendor bills</p>
-              <p className="mt-3 text-3xl font-semibold text-foreground">
-                {formatCurrency(portfolioOverview.unpaidVendorBills)}
+                {formatCurrency(
+                  portfolioOverview.unpaidClientInvoices + portfolioOverview.unpaidVendorBills
+                )}
               </p>
             </CardContent>
           </Card>
@@ -292,6 +317,16 @@ export default function ManagementBudgetCosts() {
               <div className="dashboard-item p-4">
                 <p className="font-medium text-foreground">Pending change-order exposure</p>
                 <p className="mt-2">{formatCurrency(portfolioOverview.pendingChangeOrderExposure)}</p>
+              </div>
+              <div className="dashboard-item p-4">
+                <p className="font-medium text-foreground">Real profit visibility</p>
+                <p className="mt-2">
+                  Expected {formatCurrency(portfolioExpectedProfit)} | Current{" "}
+                  {formatCurrency(portfolioCurrentProfit)}
+                </p>
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                  Profit at risk remains {formatCurrency(portfolioProfitAtRisk)} across live jobs.
+                </p>
               </div>
               <div className="dashboard-item p-4">
                 <p className="font-medium text-foreground">Projects in warning</p>
@@ -368,23 +403,7 @@ export default function ManagementBudgetCosts() {
                             {snapshot.scopeStatus}
                           </Badge>
                         </div>
-
-                        <div className="flex flex-wrap gap-2">
-                          {snapshot.riskSignals.map((risk) => (
-                            <Badge
-                              key={`${project.id}-${risk.label}`}
-                              className={
-                                risk.tone === "red"
-                                  ? "rounded-full bg-rose-500/10 text-rose-700 dark:text-rose-300"
-                                  : risk.tone === "yellow"
-                                    ? "rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300"
-                                    : "rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-                              }
-                            >
-                              {risk.label}: {risk.level}
-                            </Badge>
-                          ))}
-                        </div>
+                        <ProjectSignalBadgeCluster snapshot={snapshot} />
 
                         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                           <div>
@@ -459,6 +478,19 @@ export default function ManagementBudgetCosts() {
                               {project.scope_subject || "Not set"}
                             </p>
                           </div>
+                        </div>
+                        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
+                          <ProjectDecisionSupportPanel
+                            includeActions={false}
+                            snapshot={snapshot}
+                            title="Profit & scope control"
+                            caption="Expected profit, current profit, pending scope exposure, and cash position stay visible here so money decisions are made on one read."
+                          />
+                          <ProjectParticipantPresence
+                            compact
+                            snapshot={snapshot}
+                            title="Stakeholder / lawyer / realtor visibility"
+                          />
                         </div>
                       </div>
 

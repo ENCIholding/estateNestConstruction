@@ -205,13 +205,13 @@ export default function BuildOsTaskForm({
             <div className="rounded-2xl border border-border/70 bg-background/80 p-4 text-sm text-muted-foreground">
               <p className="font-medium text-foreground">{selectedVendorInsight.label}</p>
               <p className="mt-2">
-                {selectedVendorInsight.riskStatus} · {selectedVendorInsight.tradeCategory}
+                {selectedVendorInsight.riskStatus} | {selectedVendorInsight.tradeCategory}
               </p>
               <p className="mt-2">
                 {selectedVendorInsight.averageScore
                   ? `${selectedVendorInsight.averageScore.toFixed(1)}/5 average score`
                   : "No score recorded yet"}{" "}
-                · {selectedVendorInsight.deficiencyCount} repeat issue{selectedVendorInsight.deficiencyCount === 1 ? "" : "s"} · Work again: {selectedVendorInsight.workAgain}
+                | {selectedVendorInsight.deficiencyCount} repeat issue{selectedVendorInsight.deficiencyCount === 1 ? "" : "s"} | Work again: {selectedVendorInsight.workAgain}
               </p>
             </div>
           ) : null}

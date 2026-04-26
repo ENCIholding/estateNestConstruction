@@ -11,8 +11,11 @@ import {
   Trash2,
   TriangleAlert,
 } from "lucide-react";
-import ManagementLayout from "@/components/management/ManagementLayout";
 import BuildOsDocumentForm from "@/components/documents/BuildOsDocumentForm";
+import ManagementLayout from "@/components/management/ManagementLayout";
+import ProjectDecisionSupportPanel from "@/components/projects/ProjectDecisionSupportPanel";
+import ProjectParticipantPresence from "@/components/projects/ProjectParticipantPresence";
+import ProjectSignalBadgeCluster from "@/components/projects/ProjectSignalBadgeCluster";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,10 +33,18 @@ import Input from "@/components/ui/input";
 import {
   buildProjectDocuments,
   fetchManagementProjects,
+  formatCurrency,
 } from "@/lib/managementData";
+import { buildProjectControlSnapshot } from "@/lib/projectControl";
 import {
   deleteDocument,
+  loadBuildOsChangeOrders,
+  loadBuildOsClientInvoices,
   loadBuildOsDocuments,
+  loadBuildOsProjectParticipantAssignments,
+  loadBuildOsTasks,
+  loadBuildOsVendorBills,
+  loadDeficiencies,
   loadMasterDatabaseRecords,
   saveDocument,
   type BuildOsDocumentRecord,
@@ -151,16 +162,75 @@ export default function ManagementDocuments() {
     queryKey: ["management-projects"],
     queryFn: fetchManagementProjects,
   });
-
   const { data: customDocuments = [] } = useQuery({
     queryKey: ["buildos-documents"],
     queryFn: async () => loadBuildOsDocuments(),
   });
-
+  const { data: changeOrders = [] } = useQuery({
+    queryKey: ["buildos-change-orders"],
+    queryFn: async () => loadBuildOsChangeOrders(),
+  });
+  const { data: clientInvoices = [] } = useQuery({
+    queryKey: ["buildos-client-invoices"],
+    queryFn: async () => loadBuildOsClientInvoices(),
+  });
+  const { data: vendorBills = [] } = useQuery({
+    queryKey: ["buildos-vendor-bills"],
+    queryFn: async () => loadBuildOsVendorBills(),
+  });
+  const { data: deficiencies = [] } = useQuery({
+    queryKey: ["buildos-deficiencies"],
+    queryFn: async () => loadDeficiencies(),
+  });
+  const { data: tasks = [] } = useQuery({
+    queryKey: ["buildos-tasks"],
+    queryFn: async () => loadBuildOsTasks(),
+  });
+  const { data: participantAssignments = [] } = useQuery({
+    queryKey: ["buildos-project-participants"],
+    queryFn: async () => loadBuildOsProjectParticipantAssignments(),
+  });
   const { data: masterRecords = [] } = useQuery({
     queryKey: ["buildos-master-database"],
     queryFn: async () => loadMasterDatabaseRecords(),
   });
+
+  const customDocumentMap = useMemo(
+    () => new Map(customDocuments.map((document) => [document.id, document])),
+    [customDocuments]
+  );
+
+  const projectControlById = useMemo(
+    () =>
+      new Map(
+        projects.map((project) => [
+          project.id,
+          buildProjectControlSnapshot({
+            assignment:
+              participantAssignments.find((item) => item.projectId === project.id) || null,
+            changeOrders,
+            clientInvoices,
+            deficiencies,
+            documents: customDocuments,
+            project,
+            records: masterRecords,
+            tasks,
+            vendorBills,
+          }),
+        ] as const)
+      ),
+    [
+      changeOrders,
+      clientInvoices,
+      customDocuments,
+      deficiencies,
+      masterRecords,
+      participantAssignments,
+      projects,
+      tasks,
+      vendorBills,
+    ]
+  );
 
   const registryDocuments = useMemo(
     () =>
@@ -226,8 +296,7 @@ export default function ManagementDocuments() {
         (document.linkedRecordLabel || "").toLowerCase().includes(query) ||
         document.documentType.toLowerCase().includes(query) ||
         document.tags.some((tag) => tag.toLowerCase().includes(query));
-      const matchesKind =
-        kindFilter === "all" || document.documentType === kindFilter;
+      const matchesKind = kindFilter === "all" || document.documentType === kindFilter;
       return matchesSearch && matchesKind;
     });
   }, [displayDocuments, kindFilter, search]);
@@ -244,8 +313,8 @@ export default function ManagementDocuments() {
       customOnly: customOnly.length,
       required: required.length,
       expiring: expiring.length,
-      versioned,
       linkedEntities,
+      versioned,
     };
   }, [displayDocuments]);
 
@@ -256,11 +325,11 @@ export default function ManagementDocuments() {
         const requiredCount = linked.filter((document) => document.requiredForProject).length;
         const expiringCount = linked.filter((document) => isExpiringSoon(document.expiryDate)).length;
         return {
-          id: project.id,
-          name: project.project_name,
-          linkedCount: linked.length,
-          requiredCount,
           expiringCount,
+          id: project.id,
+          linkedCount: linked.length,
+          name: project.project_name,
+          requiredCount,
         };
       }),
     [displayDocuments, projects]
@@ -307,8 +376,9 @@ export default function ManagementDocuments() {
               <p className="mt-4 max-w-4xl text-sm leading-6 text-muted-foreground">
                 ENCI BuildOS now tracks project documents, relationship-linked files,
                 version labels, expiry awareness, and required-record readiness. Registry
-                permit links remain visible, while BuildOS documents support structured edits
-                on this device.
+                permit links remain visible, while BuildOS documents now carry project
+                risk, participant visibility, and audit context instead of living as
+                disconnected storage entries.
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -316,10 +386,7 @@ export default function ManagementDocuments() {
                 variant="outline"
                 className="rounded-full"
                 onClick={() =>
-                  downloadCsv(
-                    "enci-buildos-documents.csv",
-                    buildCsv(filteredDocuments)
-                  )
+                  downloadCsv("enci-buildos-documents.csv", buildCsv(filteredDocuments))
                 }
               >
                 <Download className="mr-2 h-4 w-4" />
@@ -434,6 +501,11 @@ export default function ManagementDocuments() {
                       <p className="mt-2">{project.linkedCount} linked document(s)</p>
                       <p className="mt-1">{project.requiredCount} marked as required</p>
                       <p className="mt-1">{project.expiringCount} expiring or due soon</p>
+                      {projectControlById.get(project.id) ? (
+                        <p className="mt-1">
+                          Profit at risk {formatCurrency(projectControlById.get(project.id)?.profitAtRisk || 0)} | Scope {projectControlById.get(project.id)?.scopeStatus}
+                        </p>
+                      ) : null}
                     </div>
                   ))
                 ) : (
@@ -501,150 +573,165 @@ export default function ManagementDocuments() {
             </CardHeader>
             <CardContent className="space-y-3">
               {filteredDocuments.length ? (
-                filteredDocuments.map((document) => (
-                  <div key={document.id} className="dashboard-item p-4">
-                    <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-                      <div className="space-y-3">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <div className="dashboard-icon h-11 w-11">
-                            <FileStack className="h-5 w-5 text-white" />
-                          </div>
-                          <div>
-                            <p className="text-sm font-semibold text-foreground">{document.title}</p>
-                            <div className="mt-2 flex flex-wrap gap-2">
-                              <Badge className="rounded-full bg-muted text-muted-foreground">
-                                {document.documentType}
-                              </Badge>
-                              <Badge
-                                className={
-                                  document.source === "registry"
-                                    ? "rounded-full bg-slate-500/10 text-slate-700 dark:text-slate-300"
-                                    : "rounded-full bg-enc-orange/10 text-enc-orange"
-                                }
-                              >
-                                {document.source === "registry" ? "Registry link" : "BuildOS"}
-                              </Badge>
-                              {document.requiredForProject ? (
-                                <Badge className="rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
-                                  Required
+                filteredDocuments.map((document) => {
+                  const snapshot = document.projectId
+                    ? projectControlById.get(document.projectId) || null
+                    : null;
+                  const sourceDocument = customDocumentMap.get(document.id);
+                  const vendorInsight = getVendorInsightByRecordId(
+                    masterRecords,
+                    document.linkedRecordId
+                  );
+
+                  return (
+                    <div key={document.id} className="dashboard-item p-4">
+                      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                        <div className="space-y-3">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <div className="dashboard-icon h-11 w-11">
+                              <FileStack className="h-5 w-5 text-white" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-semibold text-foreground">{document.title}</p>
+                              <div className="mt-2 flex flex-wrap gap-2">
+                                <Badge className="rounded-full bg-muted text-muted-foreground">
+                                  {document.documentType}
                                 </Badge>
-                              ) : null}
-                              {isExpiringSoon(document.expiryDate) ? (
-                                <Badge className="rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300">
-                                  Expiring soon
+                                <Badge
+                                  className={
+                                    document.source === "registry"
+                                      ? "rounded-full bg-slate-500/10 text-slate-700 dark:text-slate-300"
+                                      : "rounded-full bg-enc-orange/10 text-enc-orange"
+                                  }
+                                >
+                                  {document.source === "registry" ? "Registry link" : "BuildOS"}
                                 </Badge>
-                              ) : null}
+                                {document.requiredForProject ? (
+                                  <Badge className="rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
+                                    Required
+                                  </Badge>
+                                ) : null}
+                                {isExpiringSoon(document.expiryDate) ? (
+                                  <Badge className="rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300">
+                                    Expiring soon
+                                  </Badge>
+                                ) : null}
+                              </div>
                             </div>
                           </div>
-                        </div>
 
-                        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                          <div>
-                            <p className="text-sm font-medium text-foreground">Project</p>
-                            <p className="mt-1 text-sm text-muted-foreground">
-                              {document.projectName || "Not linked"}
-                            </p>
+                          {snapshot ? <ProjectSignalBadgeCluster snapshot={snapshot} /> : null}
+
+                          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                            <div>
+                              <p className="text-sm font-medium text-foreground">Project</p>
+                              <p className="mt-1 text-sm text-muted-foreground">
+                                {document.projectName || "Not linked"}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-foreground">Entity</p>
+                              <p className="mt-1 text-sm text-muted-foreground">
+                                {document.linkedRecordLabel || "Not linked"}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-foreground">Version</p>
+                              <p className="mt-1 text-sm text-muted-foreground">
+                                {document.versionLabel || "Current"}
+                              </p>
+                              <p className="mt-1 text-xs text-muted-foreground">
+                                {document.editable
+                                  ? `Group ${sourceDocument?.versionGroup || "unassigned"}`
+                                  : "Registry source"}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-foreground">Audit trail</p>
+                              <p className="mt-1 text-sm text-muted-foreground">
+                                {(sourceDocument?.updatedBy || document.uploader || "Unknown")} on {formatDate(document.uploadDate)}
+                              </p>
+                              <p className="mt-1 text-xs text-muted-foreground">
+                                Last updated {formatDate(sourceDocument?.updatedAt)}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-sm font-medium text-foreground">Entity</p>
-                            <p className="mt-1 text-sm text-muted-foreground">
-                              {document.linkedRecordLabel || "Not linked"}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-foreground">Version</p>
-                            <p className="mt-1 text-sm text-muted-foreground">
-                              {document.versionLabel || "Current"}
-                            </p>
-                            <p className="mt-1 text-xs text-muted-foreground">
-                              {document.editable
-                                ? `Group ${customDocuments.find((item) => item.id === document.id)?.versionGroup || "unassigned"}`
-                                : "Registry source"}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-foreground">Audit trail</p>
-                            <p className="mt-1 text-sm text-muted-foreground">
-                              {(customDocuments.find((item) => item.id === document.id)?.updatedBy || document.uploader || "Unknown")} on {formatDate(document.uploadDate)}
-                            </p>
-                            <p className="mt-1 text-xs text-muted-foreground">
-                              Last updated {formatDate(customDocuments.find((item) => item.id === document.id)?.updatedAt)}
-                            </p>
-                            <p className="mt-1 text-xs text-muted-foreground">
-                              Last updated {formatDate(customDocuments.find((item) => item.id === document.id)?.updatedAt)}
-                            </p>
-                          </div>
-                        </div>
-                        {(() => {
-                          const vendorInsight = getVendorInsightByRecordId(masterRecords, document.linkedRecordId);
-                          return vendorInsight ? (
+
+                          {snapshot ? (
+                            <ProjectDecisionSupportPanel
+                              compact
+                              snapshot={snapshot}
+                              title="Project document context"
+                            />
+                          ) : null}
+                          {snapshot ? (
+                            <ProjectParticipantPresence
+                              compact
+                              snapshot={snapshot}
+                              title="Relationship visibility"
+                            />
+                          ) : null}
+                          {vendorInsight ? (
                             <div className="dashboard-item p-3 text-sm text-muted-foreground">
-                              Vendor memory: {vendorInsight.label} · {vendorInsight.riskStatus} · {vendorInsight.deficiencyCount} repeat issue{vendorInsight.deficiencyCount === 1 ? "" : "s"}
+                              Vendor memory: {vendorInsight.label} | {vendorInsight.riskStatus} | {vendorInsight.deficiencyCount} repeat issue{vendorInsight.deficiencyCount === 1 ? "" : "s"}
                             </div>
-                          ) : null;
-                        })()}
+                          ) : null}
 
-                        {document.tags.length ? (
-                          <div className="flex flex-wrap gap-2">
-                            {document.tags.map((tag) => (
-                              <Badge
-                                key={`${document.id}-${tag}`}
-                                className="rounded-full bg-enc-orange/10 text-enc-orange"
+                          {document.tags.length ? (
+                            <div className="flex flex-wrap gap-2">
+                              {document.tags.map((tag) => (
+                                <Badge
+                                  key={`${document.id}-${tag}`}
+                                  className="rounded-full bg-enc-orange/10 text-enc-orange"
+                                >
+                                  {tag}
+                                </Badge>
+                              ))}
+                            </div>
+                          ) : null}
+
+                          {document.notes ? (
+                            <p className="text-sm leading-6 text-muted-foreground">{document.notes}</p>
+                          ) : null}
+                        </div>
+
+                        <div className="flex flex-wrap gap-2">
+                          {document.url ? (
+                            <Button asChild variant="outline" className="rounded-full">
+                              <a href={document.url} target="_blank" rel="noopener noreferrer">
+                                <ExternalLink className="mr-2 h-4 w-4" />
+                                Preview
+                              </a>
+                            </Button>
+                          ) : null}
+                          {document.editable ? (
+                            <>
+                              <Button
+                                variant="outline"
+                                className="rounded-full"
+                                onClick={() => {
+                                  setEditingDocument(sourceDocument || null);
+                                  setShowForm(true);
+                                }}
                               >
-                                {tag}
-                              </Badge>
-                            ))}
-                          </div>
-                        ) : null}
-
-                        {document.notes ? (
-                          <p className="text-sm leading-6 text-muted-foreground">{document.notes}</p>
-                        ) : null}
-                      </div>
-
-                      <div className="flex flex-wrap gap-2">
-                        {document.url ? (
-                          <Button asChild variant="outline" className="rounded-full">
-                            <a href={document.url} target="_blank" rel="noopener noreferrer">
-                              <ExternalLink className="mr-2 h-4 w-4" />
-                              Preview
-                            </a>
-                          </Button>
-                        ) : null}
-                        {document.editable ? (
-                          <>
-                            <Button
-                              variant="outline"
-                              className="rounded-full"
-                              onClick={() => {
-                                const sourceDocument = customDocuments.find(
-                                  (item) => item.id === document.id
-                                );
-                                setEditingDocument(sourceDocument || null);
-                                setShowForm(true);
-                              }}
-                            >
-                              <Pencil className="mr-2 h-4 w-4" />
-                              Edit
-                            </Button>
-                            <Button
-                              variant="outline"
-                              className="rounded-full text-rose-600 hover:text-rose-700"
-                              onClick={() =>
-                                setDeleteTarget(
-                                  customDocuments.find((item) => item.id === document.id) || null
-                                )
-                              }
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Remove
-                            </Button>
-                          </>
-                        ) : null}
+                                <Pencil className="mr-2 h-4 w-4" />
+                                Edit
+                              </Button>
+                              <Button
+                                variant="outline"
+                                className="rounded-full text-rose-600 hover:text-rose-700"
+                                onClick={() => setDeleteTarget(sourceDocument || null)}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Remove
+                              </Button>
+                            </>
+                          ) : null}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               ) : (
                 <div className="dashboard-item p-6 text-sm leading-6 text-muted-foreground">
                   No document records match the current filter.

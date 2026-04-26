@@ -1,8 +1,21 @@
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, CheckCircle2, FileWarning, Info, Loader2, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  FileWarning,
+  Info,
+  Loader2,
+  Pencil,
+  Plus,
+  Search,
+  Trash2,
+} from "lucide-react";
 import ManagementLayout from "@/components/management/ManagementLayout";
+import ProjectDecisionSupportPanel from "@/components/projects/ProjectDecisionSupportPanel";
+import ProjectParticipantPresence from "@/components/projects/ProjectParticipantPresence";
+import ProjectSignalBadgeCluster from "@/components/projects/ProjectSignalBadgeCluster";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,9 +42,16 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/sonner";
 import { fetchManagementProjects, formatCurrency } from "@/lib/managementData";
+import { buildProjectControlSnapshot } from "@/lib/projectControl";
 import {
   deleteChangeOrder,
+  loadBuildOsClientInvoices,
+  loadBuildOsDocuments,
+  loadBuildOsProjectParticipantAssignments,
+  loadBuildOsTasks,
+  loadBuildOsVendorBills,
   loadChangeOrders,
+  loadDeficiencies,
   loadMasterDatabaseRecords,
   saveChangeOrder,
   type BuildOsChangeOrder,
@@ -120,11 +140,32 @@ export default function ManagementChangeOrders() {
     queryKey: ["buildos-master-database"],
     queryFn: async () => loadMasterDatabaseRecords(),
   });
+  const { data: clientInvoices = [] } = useQuery({
+    queryKey: ["buildos-client-invoices"],
+    queryFn: async () => loadBuildOsClientInvoices(),
+  });
+  const { data: vendorBills = [] } = useQuery({
+    queryKey: ["buildos-vendor-bills"],
+    queryFn: async () => loadBuildOsVendorBills(),
+  });
+  const { data: deficiencies = [] } = useQuery({
+    queryKey: ["buildos-deficiencies"],
+    queryFn: async () => loadDeficiencies(),
+  });
+  const { data: documents = [] } = useQuery({
+    queryKey: ["buildos-documents"],
+    queryFn: async () => loadBuildOsDocuments(),
+  });
+  const { data: tasks = [] } = useQuery({
+    queryKey: ["buildos-tasks"],
+    queryFn: async () => loadBuildOsTasks(),
+  });
+  const { data: participantAssignments = [] } = useQuery({
+    queryKey: ["buildos-project-participants"],
+    queryFn: async () => loadBuildOsProjectParticipantAssignments(),
+  });
 
-  const projectMap = useMemo(
-    () => new Map(projects.map((project) => [project.id, project])),
-    [projects]
-  );
+  const projectMap = useMemo(() => new Map(projects.map((project) => [project.id, project])), [projects]);
   const vendorMap = useMemo(
     () =>
       new Map(
@@ -141,6 +182,37 @@ export default function ManagementChangeOrders() {
   const vendorShortlist = useMemo(
     () => getVendorMemoryShortlist(masterRecords, form.projectId || undefined),
     [form.projectId, masterRecords]
+  );
+  const projectControlById = useMemo(
+    () =>
+      new Map(
+        projects.map((project) => [
+          project.id,
+          buildProjectControlSnapshot({
+            assignment:
+              participantAssignments.find((item) => item.projectId === project.id) || null,
+            changeOrders,
+            clientInvoices,
+            deficiencies,
+            documents,
+            project,
+            records: masterRecords,
+            tasks,
+            vendorBills,
+          }),
+        ] as const)
+      ),
+    [
+      projects,
+      participantAssignments,
+      changeOrders,
+      clientInvoices,
+      deficiencies,
+      documents,
+      masterRecords,
+      tasks,
+      vendorBills,
+    ]
   );
 
   const filteredRecords = useMemo(() => {
@@ -286,7 +358,9 @@ export default function ManagementChangeOrders() {
               </p>
               <h1 className="mt-3 text-3xl font-bold text-foreground">Change Orders</h1>
               <p className="mt-4 max-w-4xl text-sm leading-6 text-muted-foreground">
-                Change orders now track scope, budget, time impact, status, notes, and attachment links. Approved change orders should feed revised budget visibility across ENCI BuildOS.
+                Change orders are treated here as revenue control, scope control,
+                and margin protection. The page keeps the vendor memory,
+                stakeholder visibility, and project-level profit context visible.
               </p>
             </div>
 
@@ -360,54 +434,60 @@ export default function ManagementChangeOrders() {
 
         {filteredRecords.length ? (
           <div className="grid gap-4">
-            {filteredRecords.map((record) => (
-              <Card key={record.id} className="dashboard-panel p-2">
-                <CardContent className="space-y-4 p-6">
-                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                    <div className="space-y-3">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h2 className="text-xl font-semibold text-foreground">{record.title}</h2>
-                        <Badge className="rounded-full bg-muted text-muted-foreground">
-                          {projectMap.get(record.projectId)?.project_name || "Unlinked project"}
-                        </Badge>
-                        <Badge
-                          className={
-                            record.status === "Approved" || record.status === "Implemented"
-                              ? "rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-                              : record.status === "Rejected"
-                                ? "rounded-full bg-rose-500/10 text-rose-700 dark:text-rose-300"
-                                : "rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300"
-                          }
-                        >
-                          {record.status}
-                        </Badge>
-                      </div>
+            {filteredRecords.map((record) => {
+              const project = projectMap.get(record.projectId);
+              const snapshot = project ? projectControlById.get(project.id) : null;
 
-                      <p className="text-sm leading-6 text-muted-foreground">{record.scopeSummary}</p>
+              return (
+                <Card key={record.id} className="dashboard-panel p-2">
+                  <CardContent className="space-y-4 p-6">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="space-y-4">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h2 className="text-xl font-semibold text-foreground">{record.title}</h2>
+                          <Badge className="rounded-full bg-muted text-muted-foreground">
+                            {project?.project_name || "Unlinked project"}
+                          </Badge>
+                          <Badge
+                            className={
+                              record.status === "Approved" || record.status === "Implemented"
+                                ? "rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                                : record.status === "Rejected"
+                                  ? "rounded-full bg-rose-500/10 text-rose-700 dark:text-rose-300"
+                                  : "rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                            }
+                          >
+                            {record.status}
+                          </Badge>
+                        </div>
+                        {snapshot ? <ProjectSignalBadgeCluster snapshot={snapshot} /> : null}
+
+                        <p className="text-sm leading-6 text-muted-foreground">{record.scopeSummary}</p>
                         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                           <div className="dashboard-item p-3">
                             <p className="text-sm font-medium text-foreground">Budget impact</p>
-                          <p className="mt-2 text-sm text-muted-foreground">
-                            {formatCurrency(record.budgetImpact)}
-                          </p>
-                        </div>
-                        <div className="dashboard-item p-3">
-                          <p className="text-sm font-medium text-foreground">Time impact</p>
-                          <p className="mt-2 text-sm text-muted-foreground">
-                            {record.timeImpactDays} day(s)
-                          </p>
-                        </div>
-                        <div className="dashboard-item p-3">
-                          <p className="text-sm font-medium text-foreground">Category</p>
-                          <p className="mt-2 text-sm text-muted-foreground">
-                            {record.costCategory || "Not set"}
-                          </p>
-                        </div>
+                            <p className="mt-2 text-sm text-muted-foreground">
+                              {formatCurrency(record.budgetImpact)}
+                            </p>
+                          </div>
+                          <div className="dashboard-item p-3">
+                            <p className="text-sm font-medium text-foreground">Time impact</p>
+                            <p className="mt-2 text-sm text-muted-foreground">
+                              {record.timeImpactDays} day(s)
+                            </p>
+                          </div>
+                          <div className="dashboard-item p-3">
+                            <p className="text-sm font-medium text-foreground">Category</p>
+                            <p className="mt-2 text-sm text-muted-foreground">
+                              {record.costCategory || "Not set"}
+                            </p>
+                          </div>
                           <div className="dashboard-item p-3">
                             <p className="text-sm font-medium text-foreground">Reason</p>
                             <p className="mt-2 text-sm text-muted-foreground">{record.reason}</p>
                           </div>
                         </div>
+
                         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                           <div className="dashboard-item p-3">
                             <p className="text-sm font-medium text-foreground">Vendor memory</p>
@@ -436,30 +516,51 @@ export default function ManagementChangeOrders() {
                             <p className="mt-2 text-sm text-muted-foreground">
                               {record.status === "Pending Approval" || record.status === "Draft"
                                 ? `${formatCurrency(record.budgetImpact)} remains unapproved revenue at risk`
-                                : "Impact is already reflected in the approved / implemented layer."}
+                                : "Impact is already reflected in the approved or implemented layer."}
                             </p>
                           </div>
                         </div>
+
+                        {snapshot ? (
+                          <div className="grid gap-4 xl:grid-cols-[minmax(0,1.05fr)_minmax(320px,0.95fr)]">
+                            <ProjectDecisionSupportPanel
+                              includeActions={false}
+                              snapshot={snapshot}
+                              title="Project profit & scope context"
+                              caption="The live project profit, cash, and scope position sits beside this change order so approval decisions stay tied to margin protection."
+                            />
+                            <ProjectParticipantPresence
+                              compact
+                              snapshot={snapshot}
+                              title="Visible deal participants"
+                            />
+                          </div>
+                        ) : null}
                       </div>
 
-                    <div className="flex flex-wrap gap-2">
-                      <Button variant="outline" className="rounded-full" onClick={() => openForm(record)}>
-                        <Pencil className="mr-2 h-4 w-4" />
-                        Edit
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="rounded-full text-rose-600 hover:text-rose-700"
-                        onClick={() => setDeleteTarget(record)}
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Remove
-                      </Button>
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          variant="outline"
+                          className="rounded-full"
+                          onClick={() => openForm(record)}
+                        >
+                          <Pencil className="mr-2 h-4 w-4" />
+                          Edit
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="rounded-full text-rose-600 hover:text-rose-700"
+                          onClick={() => setDeleteTarget(record)}
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Remove
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         ) : (
           <Card className="dashboard-panel p-2">
@@ -683,7 +784,10 @@ export default function ManagementChangeOrders() {
               </div>
             </div>
 
-            {selectedVendorInsight || vendorShortlist.topVendors.length || vendorShortlist.cautionVendors.length || vendorShortlist.blockedVendors.length ? (
+            {selectedVendorInsight ||
+            vendorShortlist.topVendors.length ||
+            vendorShortlist.cautionVendors.length ||
+            vendorShortlist.blockedVendors.length ? (
               <div className="rounded-3xl border border-border/70 bg-background/70 p-5">
                 <div className="space-y-2">
                   <p className="text-sm font-semibold text-foreground">Vendor memory in scope control</p>
@@ -704,7 +808,7 @@ export default function ManagementChangeOrders() {
                       {selectedVendorInsight.averageScore
                         ? `${selectedVendorInsight.averageScore.toFixed(1)}/5 average score`
                         : "No score recorded yet"}{" "}
-                      · {selectedVendorInsight.deficiencyCount} repeat issue{selectedVendorInsight.deficiencyCount === 1 ? "" : "s"} · Work again: {selectedVendorInsight.workAgain}
+                      | {selectedVendorInsight.deficiencyCount} repeat issue{selectedVendorInsight.deficiencyCount === 1 ? "" : "s"} | Work again: {selectedVendorInsight.workAgain}
                     </p>
                   </div>
                 ) : null}
@@ -754,13 +858,13 @@ export default function ManagementChangeOrders() {
                 </p>
               </div>
               <div className="flex flex-col-reverse gap-2 sm:flex-row">
-              <Button type="button" variant="outline" onClick={handleAttemptClose}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={saving}>
-                {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                {editingRecord ? "Save Change Order Changes" : "Save Change Order"}
-              </Button>
+                <Button type="button" variant="outline" onClick={handleAttemptClose}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={saving}>
+                  {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  {editingRecord ? "Save Change Order Changes" : "Save Change Order"}
+                </Button>
               </div>
             </DialogFooter>
           </form>
