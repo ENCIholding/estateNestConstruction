@@ -19,8 +19,8 @@ function BrandMark({ compact = false }: { compact?: boolean }) {
       <div className="absolute inset-0 bg-gradient-hero opacity-15" />
       <div className="relative flex h-full w-full items-center justify-center rounded-[1rem] bg-white">
         <img
-          src="/brand/estate-nest-capital-logo.jpg"
-          alt="Estate Nest Capital logo"
+          src="/brand/enci-buildos-logo.jpeg"
+          alt="Estate Nest Capital and ENCI BuildOS logo"
           className="h-full w-full object-contain"
         />
       </div>

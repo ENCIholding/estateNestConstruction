@@ -5,6 +5,7 @@ export type ManagementProject = {
   status: string;
   estimated_budget: number;
   selling_price?: number;
+  contracted_revenue?: number;
   start_date?: string;
   estimated_end_date?: string;
   actual_end_date?: string;
@@ -20,6 +21,9 @@ export type ManagementProject = {
   primary_contact_email?: string;
   next_milestone?: string;
   status_note?: string;
+  scope_subject?: string;
+  scope_summary?: string;
+  scope_note?: string;
 };
 
 export type ProjectRegistryState = {

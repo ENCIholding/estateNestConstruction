@@ -32,10 +32,30 @@ const emailPassAliases = [
   "MAIL_PASSWORD",
   "MAIL_PASS",
 ];
+const googleOAuthClientIdAliases = [
+  "EMAIL_GOOGLE_CLIENT_ID",
+  "GOOGLE_OAUTH_CLIENT_ID",
+  "GOOGLE_CLIENT_ID",
+];
+const googleOAuthClientSecretAliases = [
+  "EMAIL_GOOGLE_CLIENT_SECRET",
+  "GOOGLE_OAUTH_CLIENT_SECRET",
+  "GOOGLE_CLIENT_SECRET",
+];
+const googleOAuthRefreshTokenAliases = [
+  "EMAIL_GOOGLE_REFRESH_TOKEN",
+  "GOOGLE_OAUTH_REFRESH_TOKEN",
+  "GOOGLE_REFRESH_TOKEN",
+];
 
 const missingVars = requiredVars.filter((name) => !process.env[name]);
 const hasEmailUser = emailUserAliases.some((name) => process.env[name]);
 const hasEmailPass = emailPassAliases.some((name) => process.env[name]);
+const hasGoogleClientId = googleOAuthClientIdAliases.some((name) => process.env[name]);
+const hasGoogleClientSecret = googleOAuthClientSecretAliases.some((name) => process.env[name]);
+const hasGoogleRefreshToken = googleOAuthRefreshTokenAliases.some((name) => process.env[name]);
+const hasGoogleOAuthMail =
+  hasEmailUser && hasGoogleClientId && hasGoogleClientSecret && hasGoogleRefreshToken;
 
 if (missingVars.length > 0) {
   console.error("Missing required management environment variables:");
@@ -45,13 +65,16 @@ if (missingVars.length > 0) {
   process.exit(1);
 }
 
-if (!hasEmailUser || !hasEmailPass) {
+if (!(hasEmailUser && hasEmailPass) && !hasGoogleOAuthMail) {
   console.error("Missing dashboard email environment variables:");
   if (!hasEmailUser) {
     console.error(`- one of: ${emailUserAliases.join(", ")}`);
   }
-  if (!hasEmailPass) {
+  if (!hasEmailPass && !hasGoogleOAuthMail) {
     console.error(`- one of: ${emailPassAliases.join(", ")}`);
+    console.error(
+      `- or Google OAuth mail variables: ${googleOAuthClientIdAliases.join(", ")} | ${googleOAuthClientSecretAliases.join(", ")} | ${googleOAuthRefreshTokenAliases.join(", ")}`
+    );
   }
   process.exit(1);
 }

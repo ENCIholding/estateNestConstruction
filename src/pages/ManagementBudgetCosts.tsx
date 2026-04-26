@@ -8,18 +8,21 @@ import Input from "@/components/ui/input";
 import {
   buildProjectAlerts,
   getPortfolioFinancialOverview,
-  getProjectFinancialSummary,
-  getProjectHealthStatus,
 } from "@/lib/buildosIntelligence";
+import { buildProjectControlSnapshot } from "@/lib/projectControl";
 import {
   loadBuildOsChangeOrders,
   loadBuildOsClientInvoices,
+  loadBuildOsDailyLogs,
   loadBuildOsDeficiencies,
   loadBuildOsDocuments,
+  loadBuildOsProjectParticipantAssignments,
   loadBuildOsTasks,
   loadBuildOsVendorBills,
+  loadMasterDatabaseRecords,
 } from "@/lib/buildosShared";
 import { fetchManagementProjects, formatCurrency } from "@/lib/managementData";
+import { buildProjectAuditSnapshot } from "@/lib/projectAudit";
 
 function formatRatio(value: number | null) {
   if (value === null) {
@@ -62,6 +65,10 @@ export default function ManagementBudgetCosts() {
     queryKey: ["buildos-deficiencies"],
     queryFn: async () => loadBuildOsDeficiencies(),
   });
+  const { data: dailyLogs = [] } = useQuery({
+    queryKey: ["buildos-daily-logs"],
+    queryFn: async () => loadBuildOsDailyLogs(),
+  });
   const { data: tasks = [] } = useQuery({
     queryKey: ["buildos-tasks"],
     queryFn: async () => loadBuildOsTasks(),
@@ -69,6 +76,14 @@ export default function ManagementBudgetCosts() {
   const { data: documents = [] } = useQuery({
     queryKey: ["buildos-documents"],
     queryFn: async () => loadBuildOsDocuments(),
+  });
+  const { data: records = [] } = useQuery({
+    queryKey: ["buildos-master-database"],
+    queryFn: async () => loadMasterDatabaseRecords(),
+  });
+  const { data: participantAssignments = [] } = useQuery({
+    queryKey: ["buildos-project-participants"],
+    queryFn: async () => loadBuildOsProjectParticipantAssignments(),
   });
 
   const portfolioOverview = useMemo(
@@ -80,31 +95,52 @@ export default function ManagementBudgetCosts() {
   const financialRows = useMemo(
     () =>
       projects.map((project) => {
-        const alerts = buildProjectAlerts(
-          project,
+        const snapshot = buildProjectControlSnapshot({
+          assignment:
+            participantAssignments.find((item) => item.projectId === project.id) || null,
           changeOrders,
           clientInvoices,
-          vendorBills,
           deficiencies,
           documents,
-          tasks
-        );
-        const summary = getProjectFinancialSummary(
           project,
+          records,
+          tasks,
+          vendorBills,
+        });
+        const auditSnapshot = buildProjectAuditSnapshot({
+          assignment:
+            participantAssignments.find((item) => item.projectId === project.id) || null,
           changeOrders,
           clientInvoices,
-          vendorBills
-        );
-        const health = getProjectHealthStatus(project, summary, deficiencies, alerts);
+          dailyLogs,
+          documents,
+          projectId: project.id,
+          records,
+          tasks,
+          vendorBills,
+        });
 
         return {
+          auditSnapshot,
           project,
-          alerts,
-          summary,
-          health,
+          alerts: snapshot.alerts,
+          summary: snapshot.projectSummary,
+          health: snapshot.projectHealth,
+          snapshot,
         };
       }),
-    [projects, changeOrders, clientInvoices, vendorBills, deficiencies, documents, tasks]
+    [
+      projects,
+      changeOrders,
+      clientInvoices,
+      dailyLogs,
+      vendorBills,
+      deficiencies,
+      documents,
+      tasks,
+      participantAssignments,
+      records,
+    ]
   );
 
   const filteredRows = useMemo(() => {
@@ -298,7 +334,7 @@ export default function ManagementBudgetCosts() {
             </CardHeader>
             <CardContent className="space-y-3">
               {filteredRows.length ? (
-                filteredRows.map(({ project, summary, health, alerts }) => (
+                filteredRows.map(({ project, summary, health, alerts, auditSnapshot, snapshot }) => (
                   <div key={project.id} className="dashboard-item p-4">
                     <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                       <div className="space-y-4">
@@ -320,6 +356,34 @@ export default function ManagementBudgetCosts() {
                           >
                             {health}
                           </Badge>
+                          <Badge
+                            className={
+                              snapshot.scopeTone === "red"
+                                ? "rounded-full bg-rose-500/10 text-rose-700 dark:text-rose-300"
+                                : snapshot.scopeTone === "yellow"
+                                  ? "rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                                  : "rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                            }
+                          >
+                            {snapshot.scopeStatus}
+                          </Badge>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2">
+                          {snapshot.riskSignals.map((risk) => (
+                            <Badge
+                              key={`${project.id}-${risk.label}`}
+                              className={
+                                risk.tone === "red"
+                                  ? "rounded-full bg-rose-500/10 text-rose-700 dark:text-rose-300"
+                                  : risk.tone === "yellow"
+                                    ? "rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                                    : "rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                              }
+                            >
+                              {risk.label}: {risk.level}
+                            </Badge>
+                          ))}
                         </div>
 
                         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -371,6 +435,30 @@ export default function ManagementBudgetCosts() {
                               {formatCurrency(summary.unpaidVendorBills)}
                             </p>
                           </div>
+                          <div>
+                            <p className="text-sm font-medium text-foreground">Expected profit</p>
+                            <p className="mt-1 text-sm text-muted-foreground">
+                              {formatCurrency(snapshot.expectedProfit ?? undefined)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-foreground">Current profit</p>
+                            <p className="mt-1 text-sm text-muted-foreground">
+                              {formatCurrency(snapshot.currentProfit ?? undefined)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-foreground">Profit at risk</p>
+                            <p className="mt-1 text-sm text-muted-foreground">
+                              {formatCurrency(snapshot.profitAtRisk)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-foreground">Scope subject</p>
+                            <p className="mt-1 text-sm text-muted-foreground">
+                              {project.scope_subject || "Not set"}
+                            </p>
+                          </div>
                         </div>
                       </div>
 
@@ -389,6 +477,13 @@ export default function ManagementBudgetCosts() {
                         </p>
                         <p>Lender draw tracking: {formatCurrency(summary.lenderDrawTracked)}</p>
                         <p>Active alerts: {alerts.length}</p>
+                        <p>Actor coverage: {auditSnapshot.actorCoverage}%</p>
+                        <p>
+                          Last linked change:{" "}
+                          {auditSnapshot.entries[0]
+                            ? `${auditSnapshot.entries[0].actor} | ${auditSnapshot.entries[0].changedAt}`
+                            : "No tracked changes yet"}
+                        </p>
                       </div>
                     </div>
                   </div>

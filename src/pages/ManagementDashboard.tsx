@@ -12,6 +12,7 @@ import {
 import { Link } from "react-router-dom";
 import ManagementLayout from "@/components/management/ManagementLayout";
 import ManagementEmailComposer from "@/components/management/ManagementEmailComposer";
+import PortfolioCommandCenter from "@/components/dashboard/PortfolioCommandCenter";
 import StatsCard from "@/components/dashboard/StatsCard";
 import Badge from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,22 +21,24 @@ import {
   type DashboardStatus,
   fetchManagementJson,
   fetchManagementProjects,
-  type ManagementProject,
 } from "@/lib/managementData";
 import {
   buildPortfolioAlerts,
   getPortfolioFinancialOverview,
-  getProjectFinancialSummary,
-  getProjectHealthStatus,
-  getSuggestedNextActions,
 } from "@/lib/buildosIntelligence";
+import {
+  buildPortfolioControlSnapshot,
+  buildProjectControlSnapshot,
+} from "@/lib/projectControl";
 import {
   loadChangeOrders,
   loadClientInvoices,
   loadBuildOsDocuments,
   loadDeficiencies,
+  loadBuildOsProjectParticipantAssignments,
   loadTasks,
   loadVendorBills,
+  loadMasterDatabaseRecords,
 } from "@/lib/buildosShared";
 import { managementModules } from "@/lib/management";
 import { getTaskSummary } from "@/lib/buildosTasks";
@@ -47,8 +50,8 @@ type ActionItem = {
   title: string;
 };
 
-function formatCurrency(value?: number) {
-  if (!value) {
+function formatCurrency(value?: number | null) {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
     return "Not set";
   }
 
@@ -92,6 +95,18 @@ function getStatusBadge(status?: string) {
   }
 
   return "bg-muted text-muted-foreground";
+}
+
+function getToneBadgeClass(tone: "green" | "yellow" | "red") {
+  if (tone === "red") {
+    return "bg-rose-500/10 text-rose-700 dark:text-rose-300";
+  }
+
+  if (tone === "yellow") {
+    return "bg-amber-500/10 text-amber-700 dark:text-amber-300";
+  }
+
+  return "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300";
 }
 
 function getRegistryLabel(source: DashboardStatus["projectRegistry"]["source"]) {
@@ -151,6 +166,20 @@ export default function ManagementDashboard() {
     queryKey: ["buildos-documents"],
     queryFn: async () => loadBuildOsDocuments(),
   });
+  const {
+    data: masterRecords = [],
+    isLoading: recordsLoading,
+  } = useQuery({
+    queryKey: ["buildos-master-database"],
+    queryFn: async () => loadMasterDatabaseRecords(),
+  });
+  const {
+    data: participantAssignments = [],
+    isLoading: participantAssignmentsLoading,
+  } = useQuery({
+    queryKey: ["buildos-project-participants"],
+    queryFn: async () => loadBuildOsProjectParticipantAssignments(),
+  });
 
   const activeProjects = useMemo(
     () =>
@@ -178,6 +207,46 @@ export default function ManagementDashboard() {
     [changeOrders, clientInvoices, deficiencies, documents, projects, tasks, vendorBills]
   );
   const taskSummary = useMemo(() => getTaskSummary(tasks), [tasks]);
+  const projectControlEntries = useMemo(
+    () =>
+      projects.map((project) => ({
+        project,
+        snapshot: buildProjectControlSnapshot({
+          assignment:
+            participantAssignments.find((item) => item.projectId === project.id) || null,
+          changeOrders,
+          clientInvoices,
+          deficiencies,
+          documents,
+          project,
+          records: masterRecords,
+          tasks,
+          vendorBills,
+        }),
+      })),
+    [
+      changeOrders,
+      clientInvoices,
+      deficiencies,
+      documents,
+      masterRecords,
+      participantAssignments,
+      projects,
+      tasks,
+      vendorBills,
+    ]
+  );
+  const projectControlById = useMemo(
+    () =>
+      new Map(
+        projectControlEntries.map((entry) => [entry.project.id, entry.snapshot] as const)
+      ),
+    [projectControlEntries]
+  );
+  const portfolioControl = useMemo(
+    () => buildPortfolioControlSnapshot(projectControlEntries),
+    [projectControlEntries]
+  );
 
   const operationalActions = useMemo<ActionItem[]>(() => {
     const actions: ActionItem[] = [];
@@ -250,7 +319,12 @@ export default function ManagementDashboard() {
     (action) => action.severity === "critical" || action.severity === "warning"
   ).length;
 
-  if (projectsLoading || statusLoading) {
+  if (
+    projectsLoading ||
+    statusLoading ||
+    recordsLoading ||
+    participantAssignmentsLoading
+  ) {
     return (
       <ManagementLayout currentPageName="dashboard">
         <div className="dashboard-panel p-8">
@@ -304,6 +378,8 @@ export default function ManagementDashboard() {
           </div>
         </div>
 
+        <PortfolioCommandCenter snapshot={portfolioControl} />
+
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <StatsCard
             title="Revised Budget"
@@ -318,9 +394,9 @@ export default function ManagementDashboard() {
             icon={ShieldCheck}
           />
           <StatsCard
-            title="Unpaid Client Invoices"
-            value={formatCurrency(portfolioFinancials.unpaidClientInvoices)}
-            subtitle="Open inflow pressure across the portfolio"
+            title="Profit At Risk"
+            value={formatCurrency(portfolioControl.profitAtRisk)}
+            subtitle="Current margin pressure across live jobs"
             icon={Mail}
           />
           <StatsCard
@@ -468,24 +544,12 @@ export default function ManagementDashboard() {
           <CardContent className="space-y-3">
             {projects.length ? (
               projects.map((project) => {
-                const projectSummary = getProjectFinancialSummary(
-                  project,
-                  changeOrders,
-                  clientInvoices,
-                  vendorBills
-                );
-                const health = getProjectHealthStatus(
-                  project,
-                  projectSummary,
-                  deficiencies,
-                  portfolioAlerts
-                );
-                const nextActions = getSuggestedNextActions(
-                  project,
-                  projectSummary,
-                  portfolioAlerts
-                );
+                const snapshot = projectControlById.get(project.id);
                 const projectTasks = tasks.filter((item) => item.projectId === project.id);
+
+                if (!snapshot) {
+                  return null;
+                }
 
                 return (
                 <div key={project.id} className="dashboard-item p-5">
@@ -497,32 +561,64 @@ export default function ManagementDashboard() {
                           {project.status}
                         </span>
                         <Badge
-                          className={
-                            health === "Critical"
-                              ? "rounded-full bg-rose-500/10 text-rose-700 dark:text-rose-300"
-                              : health === "Warning"
-                                ? "rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300"
-                                : "rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-                          }
+                          className={getToneBadgeClass(snapshot.financialHealthTone)}
                         >
-                          {health}
+                          {snapshot.projectHealth}
+                        </Badge>
+                        <Badge className={getToneBadgeClass(snapshot.scopeTone)}>
+                          {snapshot.scopeStatus}
                         </Badge>
                       </div>
                       <p className="mt-2 text-sm text-muted-foreground">{project.civic_address}</p>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {snapshot.riskSignals.map((risk) => (
+                          <Badge
+                            key={`${project.id}-${risk.label}`}
+                            className={getToneBadgeClass(risk.tone)}
+                          >
+                            {risk.label}: {risk.level}
+                          </Badge>
+                        ))}
+                      </div>
                       <div className="mt-3 flex flex-wrap gap-4 text-sm text-muted-foreground">
-                        <span>Original budget: {formatCurrency(projectSummary.originalBudget)}</span>
-                        <span>Revised budget: {formatCurrency(projectSummary.revisedBudget)}</span>
+                        <span>Scope subject: {project.scope_subject || "Not set"}</span>
                         <span>Target completion: {formatDate(project.estimated_end_date)}</span>
                         <span>{projectTasks.length} live task(s)</span>
                         <span>
                           Manager: {project.project_manager || project.primary_contact_email || "Unassigned"}
                         </span>
                       </div>
-                      {nextActions.length ? (
+                      <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                        <div className="rounded-2xl border border-border/70 bg-background/80 p-3">
+                          <p className="text-sm font-medium text-foreground">Expected Profit</p>
+                          <p className="mt-2 text-sm text-muted-foreground">
+                            {formatCurrency(snapshot.expectedProfit)}
+                          </p>
+                        </div>
+                        <div className="rounded-2xl border border-border/70 bg-background/80 p-3">
+                          <p className="text-sm font-medium text-foreground">Current Profit</p>
+                          <p className="mt-2 text-sm text-muted-foreground">
+                            {formatCurrency(snapshot.currentProfit)}
+                          </p>
+                        </div>
+                        <div className="rounded-2xl border border-border/70 bg-background/80 p-3">
+                          <p className="text-sm font-medium text-foreground">Profit At Risk</p>
+                          <p className="mt-2 text-sm text-muted-foreground">
+                            {formatCurrency(snapshot.profitAtRisk)}
+                          </p>
+                        </div>
+                        <div className="rounded-2xl border border-border/70 bg-background/80 p-3">
+                          <p className="text-sm font-medium text-foreground">Pending CO Exposure</p>
+                          <p className="mt-2 text-sm text-muted-foreground">
+                            {formatCurrency(snapshot.projectSummary.pendingChangeOrderExposure)}
+                          </p>
+                        </div>
+                      </div>
+                      {snapshot.nextThreeActions.length ? (
                         <div className="mt-3 rounded-2xl border border-border/70 bg-background/80 p-3">
                           <p className="text-sm font-medium text-foreground">Suggested next actions</p>
                           <ul className="mt-2 space-y-1 text-sm leading-6 text-muted-foreground">
-                            {nextActions.map((action) => (
+                            {snapshot.nextThreeActions.map((action) => (
                               <li key={`${project.id}-${action}`}>{action}</li>
                             ))}
                           </ul>

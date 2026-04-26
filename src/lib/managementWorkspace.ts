@@ -125,6 +125,7 @@ export function saveProjectToWorkspace(project: Partial<ManagementProject>) {
     status: project.status?.trim() || "Planning",
     estimated_budget: project.estimated_budget,
     selling_price: project.selling_price,
+    contracted_revenue: project.contracted_revenue,
     start_date: project.start_date || undefined,
     estimated_end_date: project.estimated_end_date || undefined,
     actual_end_date: project.actual_end_date || undefined,
@@ -140,6 +141,9 @@ export function saveProjectToWorkspace(project: Partial<ManagementProject>) {
     primary_contact_email: project.primary_contact_email?.trim() || undefined,
     next_milestone: project.next_milestone?.trim() || undefined,
     status_note: project.status_note?.trim() || undefined,
+    scope_subject: project.scope_subject?.trim() || undefined,
+    scope_summary: project.scope_summary?.trim() || undefined,
+    scope_note: project.scope_note?.trim() || undefined,
   };
 
   const nextUpserts = workspace.upserts.filter((item) => item.id !== normalized.id);

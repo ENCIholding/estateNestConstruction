@@ -80,10 +80,20 @@ export default async function handler(req: any, res: any) {
       host: config.host,
       port: config.port,
       secure: config.secure,
-      auth: {
-        user: config.user,
-        pass: config.pass,
-      },
+      auth:
+        config.auth.kind === "password"
+          ? {
+              user: config.auth.user,
+              pass: config.auth.pass,
+            }
+          : {
+              type: "OAuth2",
+              user: config.auth.user,
+              clientId: config.auth.clientId,
+              clientSecret: config.auth.clientSecret,
+              refreshToken: config.auth.refreshToken,
+              accessToken: config.auth.accessToken,
+            },
     });
 
     const info = await transporter.sendMail({

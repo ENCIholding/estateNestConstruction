@@ -33,6 +33,7 @@ import {
   saveMasterDatabaseRecord,
   type BuildOsMasterRecord,
 } from "@/lib/buildosShared";
+import { buildVendorMemorySnapshot } from "@/lib/vendorMemory";
 
 function getOverallRating(record: BuildOsMasterRecord) {
   const scores = [
@@ -49,6 +50,10 @@ function getOverallRating(record: BuildOsMasterRecord) {
   }
 
   return `${(scores.reduce((total, value) => total + value, 0) / scores.length).toFixed(1)} / 5`;
+}
+
+function formatScore(value: number | null) {
+  return value === null ? "Not scored" : `${value.toFixed(1)} / 5`;
 }
 
 export default function ManagementVendors() {
@@ -69,6 +74,7 @@ export default function ManagementVendors() {
     () => records.filter((record) => record.type === "Vendor (Trade)"),
     [records]
   );
+  const vendorMemory = useMemo(() => buildVendorMemorySnapshot(records), [records]);
 
   const filteredVendors = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -175,6 +181,76 @@ export default function ManagementVendors() {
 
         <Card className="dashboard-panel p-2">
           <CardHeader>
+            <CardTitle className="text-xl text-foreground">Vendor Memory Signals</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-4 xl:grid-cols-3">
+            <div className="dashboard-item p-4">
+              <p className="text-sm font-semibold text-foreground">Top vendors</p>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                These partners are the strongest current reuse candidates based on score, history, and recommendation.
+              </p>
+              <div className="mt-4 space-y-3">
+                {vendorMemory.topVendors.length ? (
+                  vendorMemory.topVendors.slice(0, 3).map((vendor) => (
+                    <div key={vendor.id} className="rounded-2xl border border-border/70 bg-background/70 p-3">
+                      <p className="text-sm font-medium text-foreground">{vendor.label}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {vendor.tradeCategory} | {formatScore(vendor.averageScore)} | {vendor.linkedProjectCount} linked project(s)
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">No top-vendor pattern is visible yet.</p>
+                )}
+              </div>
+            </div>
+
+            <div className="dashboard-item p-4">
+              <p className="text-sm font-semibold text-foreground">Use with caution</p>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                These vendors need closer oversight because callbacks, responsiveness, or delivery history are trending the wrong way.
+              </p>
+              <div className="mt-4 space-y-3">
+                {vendorMemory.cautionVendors.length ? (
+                  vendorMemory.cautionVendors.slice(0, 4).map((vendor) => (
+                    <div key={vendor.id} className="rounded-2xl border border-border/70 bg-background/70 p-3">
+                      <p className="text-sm font-medium text-foreground">{vendor.label}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {vendor.deficiencyCount} issue(s) | {vendor.averageResponseDays ?? "n/a"} day avg response | {vendor.riskStatus}
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">No caution vendors are currently flagged.</p>
+                )}
+              </div>
+            </div>
+
+            <div className="dashboard-item p-4">
+              <p className="text-sm font-semibold text-foreground">Do not use / high risk</p>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                Keep these names visible before awarding work so bad history is not forgotten between projects.
+              </p>
+              <div className="mt-4 space-y-3">
+                {vendorMemory.blockedVendors.length ? (
+                  vendorMemory.blockedVendors.slice(0, 4).map((vendor) => (
+                    <div key={vendor.id} className="rounded-2xl border border-rose-200/70 bg-rose-50/70 p-3 dark:border-rose-900/50 dark:bg-rose-950/20">
+                      <p className="text-sm font-medium text-foreground">{vendor.label}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {vendor.workAgain} | {vendor.riskStatus} | {vendor.deficiencyCount} issue(s)
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">No high-risk vendors are currently flagged.</p>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="dashboard-panel p-2">
+          <CardHeader>
             <CardTitle className="text-xl text-foreground">Filter registry</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px_220px]">
@@ -271,6 +347,25 @@ export default function ManagementVendors() {
                             <p className="mt-2 text-sm text-muted-foreground">
                               {vendor.insuranceExpiry || "Not set"}
                             </p>
+                          </div>
+                        </div>
+
+                        <div className="grid gap-3 text-sm text-muted-foreground md:grid-cols-3">
+                          <div className="dashboard-item p-3">
+                            <p className="text-sm font-medium text-foreground">Repeat issues</p>
+                            <p className="mt-2">{vendor.deficiencyCount || 0} callback issue(s)</p>
+                          </div>
+                          <div className="dashboard-item p-3">
+                            <p className="text-sm font-medium text-foreground">Average response</p>
+                            <p className="mt-2">
+                              {typeof vendor.averageResponseDays === "number"
+                                ? `${vendor.averageResponseDays} day(s)`
+                                : "Not tracked"}
+                            </p>
+                          </div>
+                          <div className="dashboard-item p-3">
+                            <p className="text-sm font-medium text-foreground">Memory signal</p>
+                            <p className="mt-2">{risk}</p>
                           </div>
                         </div>
 

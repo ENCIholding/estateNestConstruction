@@ -70,12 +70,14 @@ export type BuildOsChangeOrder = {
   id: string;
   projectId: string;
   title: string;
+  vendorRecordId?: string;
   costCategory?: string;
   scopeSummary: string;
   reason: string;
   budgetImpact: number;
   timeImpactDays: number;
   status: ChangeOrderStatus;
+  updatedBy?: string;
   internalNotes?: string;
   clientSummary?: string;
   vendorSummary?: string;
@@ -136,6 +138,7 @@ export type BuildOsClientInvoice = {
   dueDate: string;
   amount: number;
   status: ClientInvoiceStatus;
+  updatedBy?: string;
   notes?: string;
   drawReference?: string;
   createdAt: string;
@@ -151,6 +154,7 @@ export type BuildOsVendorBill = {
   dueDate: string;
   amount: number;
   status: VendorBillStatus;
+  updatedBy?: string;
   notes?: string;
   attachmentUrl?: string;
   createdAt: string;
@@ -178,6 +182,7 @@ export type BuildOsDocumentRecord = {
   documentType: BuildOsDocumentType;
   tags: string[];
   uploader?: string;
+  updatedBy?: string;
   uploadDate: string;
   versionLabel?: string;
   versionGroup?: string;
@@ -200,6 +205,7 @@ export type BuildOsProjectParticipantAssignment = {
   lenderIds: string[];
   investorIds: string[];
   otherRecordIds: string[];
+  updatedBy?: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -691,6 +697,7 @@ export function saveChangeOrder(record: Partial<BuildOsChangeOrder>) {
     id: record.id || createId("co"),
     projectId: record.projectId || "",
     title: cleanString(record.title) || "Untitled Change Order",
+    vendorRecordId: cleanString(record.vendorRecordId),
     costCategory: cleanString(record.costCategory),
     scopeSummary: cleanString(record.scopeSummary) || "Scope summary not provided.",
     reason: cleanString(record.reason) || "Reason not provided.",
@@ -703,6 +710,7 @@ export function saveChangeOrder(record: Partial<BuildOsChangeOrder>) {
         ? Math.round(record.timeImpactDays)
         : 0,
     status: record.status || "Draft",
+    updatedBy: cleanString(record.updatedBy),
     internalNotes: cleanString(record.internalNotes),
     clientSummary: cleanString(record.clientSummary),
     vendorSummary: cleanString(record.vendorSummary),
@@ -812,6 +820,7 @@ export function saveClientInvoice(record: Partial<BuildOsClientInvoice>) {
     amount:
       typeof record.amount === "number" && Number.isFinite(record.amount) ? record.amount : 0,
     status: record.status || "Draft",
+    updatedBy: cleanString(record.updatedBy),
     notes: cleanString(record.notes),
     drawReference: cleanString(record.drawReference),
     createdAt: existing?.createdAt || timestamp,
@@ -836,6 +845,7 @@ export function loadDocuments() {
     ...record,
     tags: cleanStringArray(record.tags),
     uploadDate: cleanString(record.uploadDate) || new Date().toISOString().slice(0, 10),
+    updatedBy: cleanString(record.updatedBy),
     createdAt: record.createdAt || nowIso(),
     updatedAt: record.updatedAt || record.createdAt || nowIso(),
     requiredForProject: Boolean(record.requiredForProject),
@@ -856,6 +866,7 @@ export function saveDocument(record: Partial<BuildOsDocumentRecord>) {
     documentType: record.documentType || "Other",
     tags: cleanStringArray(record.tags),
     uploader: cleanString(record.uploader),
+    updatedBy: cleanString(record.updatedBy),
     uploadDate: cleanString(record.uploadDate) || new Date().toISOString().slice(0, 10),
     versionLabel: cleanString(record.versionLabel),
     versionGroup: cleanString(record.versionGroup),
@@ -883,6 +894,7 @@ export function loadProjectParticipantAssignments() {
       lenderIds: cleanStringArray(record.lenderIds),
       investorIds: cleanStringArray(record.investorIds),
       otherRecordIds: cleanStringArray(record.otherRecordIds),
+      updatedBy: cleanString(record.updatedBy),
       createdAt: record.createdAt || nowIso(),
       updatedAt: record.updatedAt || record.createdAt || nowIso(),
     })
@@ -912,6 +924,7 @@ export function saveProjectParticipantAssignment(
     lenderIds: cleanStringArray(record.lenderIds),
     investorIds: cleanStringArray(record.investorIds),
     otherRecordIds: cleanStringArray(record.otherRecordIds),
+    updatedBy: cleanString(record.updatedBy),
     createdAt: existing?.createdAt || timestamp,
     updatedAt: timestamp,
   };
@@ -1026,6 +1039,7 @@ export function saveVendorBill(record: Partial<BuildOsVendorBill>) {
     amount:
       typeof record.amount === "number" && Number.isFinite(record.amount) ? record.amount : 0,
     status: record.status || "Received",
+    updatedBy: cleanString(record.updatedBy),
     notes: cleanString(record.notes),
     attachmentUrl: cleanString(record.attachmentUrl),
     createdAt: existing?.createdAt || timestamp,

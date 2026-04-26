@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
+import FormSaveStateNotice from "@/components/forms/FormSaveStateNotice";
 import {
   Dialog,
   DialogContent,
@@ -13,12 +14,18 @@ import { Button } from "@/components/ui/button";
 import Input from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { toast } from "@/components/ui/sonner";
+import useUnsavedChangesGuard from "@/hooks/useUnsavedChangesGuard";
 import { fetchManagementProjects } from "@/lib/managementData";
 import {
   BUILDOS_DOCUMENT_TYPES,
   loadMasterDatabaseRecords,
   type BuildOsDocumentRecord,
 } from "@/lib/buildosShared";
+import {
+  getVendorInsightByRecordId,
+  getVendorMemoryShortlist,
+} from "@/lib/vendorMemory";
 
 type BuildOsDocumentFormProps = {
   open: boolean;
@@ -35,6 +42,7 @@ type FormState = {
   documentType: BuildOsDocumentRecord["documentType"];
   tags: string;
   uploader: string;
+  updatedBy: string;
   uploadDate: string;
   versionLabel: string;
   versionGroup: string;
@@ -52,6 +60,7 @@ function buildInitialState(record?: BuildOsDocumentRecord | null): FormState {
     documentType: record?.documentType || "Other",
     tags: (record?.tags || []).join(", "),
     uploader: record?.uploader || "",
+    updatedBy: record?.updatedBy || record?.uploader || "Estate Nest Team",
     uploadDate: record?.uploadDate || new Date().toISOString().slice(0, 10),
     versionLabel: record?.versionLabel || "",
     versionGroup: record?.versionGroup || "",
@@ -72,6 +81,10 @@ export default function BuildOsDocumentForm({
   const [form, setForm] = useState<FormState>(buildInitialState(record));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [initialFingerprint, setInitialFingerprint] = useState(
+    JSON.stringify(buildInitialState(record))
+  );
+  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
 
   const { data: projects = [] } = useQuery({
     queryKey: ["management-projects"],
@@ -91,12 +104,35 @@ export default function BuildOsDocumentForm({
       })),
     [masterRecords]
   );
+  const selectedVendorInsight = useMemo(
+    () => getVendorInsightByRecordId(masterRecords, form.linkedRecordId),
+    [form.linkedRecordId, masterRecords]
+  );
+  const vendorShortlist = useMemo(
+    () => getVendorMemoryShortlist(masterRecords, form.projectId || undefined),
+    [form.projectId, masterRecords]
+  );
+  const isDirty = useMemo(
+    () => JSON.stringify(form) !== initialFingerprint,
+    [form, initialFingerprint]
+  );
+  const handleAttemptClose = useUnsavedChangesGuard({
+    discardMessage:
+      "Discard the unsaved document changes? This form does not autosave until you click Save.",
+    isDirty,
+    onConfirmClose: onClose,
+    open,
+    saving,
+  });
 
   useEffect(() => {
     if (open) {
-      setForm(buildInitialState(record));
+      const initialState = buildInitialState(record);
+      setForm(initialState);
+      setInitialFingerprint(JSON.stringify(initialState));
       setSaving(false);
       setError("");
+      setLastSavedAt(null);
     }
   }, [open, record]);
 
@@ -127,6 +163,7 @@ export default function BuildOsDocumentForm({
           .map((item) => item.trim())
           .filter(Boolean),
         uploader: form.uploader || undefined,
+        updatedBy: form.updatedBy || form.uploader || undefined,
         uploadDate: form.uploadDate,
         versionLabel: form.versionLabel || undefined,
         versionGroup: form.versionGroup || undefined,
@@ -135,6 +172,13 @@ export default function BuildOsDocumentForm({
         url: form.url || undefined,
         notes: form.notes || undefined,
       });
+      setInitialFingerprint(JSON.stringify(form));
+      setLastSavedAt(new Date().toISOString());
+      toast.success(
+        record
+          ? "Document changes were saved to ENCI BuildOS."
+          : "Document was added to ENCI BuildOS."
+      );
       onSaved();
       onClose();
     } catch (submitError) {
@@ -145,7 +189,7 @@ export default function BuildOsDocumentForm({
   };
 
   return (
-    <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
+    <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && handleAttemptClose()}>
       <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{record ? "Edit Document" : "Add Document"}</DialogTitle>
@@ -156,6 +200,13 @@ export default function BuildOsDocumentForm({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          <FormSaveStateNotice
+            isDirty={isDirty}
+            lastSavedAt={lastSavedAt}
+            message="This form does not autosave. Click Save to persist the document in ENCI BuildOS."
+            saving={saving}
+          />
+
           {error ? (
             <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
               {error}
@@ -238,6 +289,15 @@ export default function BuildOsDocumentForm({
               />
             </div>
             <div className="space-y-2">
+              <Label>Updated by</Label>
+              <Input
+                value={form.updatedBy}
+                onChange={(event) =>
+                  setForm((current) => ({ ...current, updatedBy: event.target.value }))
+                }
+              />
+            </div>
+            <div className="space-y-2">
               <Label>Upload date</Label>
               <Input
                 type="date"
@@ -289,6 +349,70 @@ export default function BuildOsDocumentForm({
             </div>
           </section>
 
+          {selectedVendorInsight || vendorShortlist.topVendors.length || vendorShortlist.cautionVendors.length || vendorShortlist.blockedVendors.length ? (
+            <section className="rounded-3xl border border-border/70 bg-background/70 p-5">
+              <div className="space-y-2">
+                <p className="text-sm font-semibold text-foreground">Vendor memory in this workflow</p>
+                <p className="text-sm leading-6 text-muted-foreground">
+                  Keep vendor-linked files tied to the right trade so the document trail supports real relationship memory, not just storage.
+                </p>
+              </div>
+
+              {selectedVendorInsight ? (
+                <div className="mt-4 rounded-2xl border border-border/70 bg-background/80 p-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-sm font-semibold text-foreground">{selectedVendorInsight.label}</p>
+                    <span className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
+                      {selectedVendorInsight.riskStatus}
+                    </span>
+                    <span className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
+                      {selectedVendorInsight.tradeCategory}
+                    </span>
+                  </div>
+                  <p className="mt-3 text-sm text-muted-foreground">
+                    {selectedVendorInsight.averageScore
+                      ? `${selectedVendorInsight.averageScore.toFixed(1)}/5 average score`
+                      : "No score recorded yet"}{" "}
+                    · {selectedVendorInsight.deficiencyCount} repeat issue{selectedVendorInsight.deficiencyCount === 1 ? "" : "s"} · Work again: {selectedVendorInsight.workAgain}
+                  </p>
+                </div>
+              ) : null}
+
+              <div className="mt-4 grid gap-3 md:grid-cols-3">
+                <div className="rounded-2xl border border-border/70 bg-background/80 p-4">
+                  <p className="text-sm font-medium text-foreground">Top vendors</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {vendorShortlist.topVendors.length ? vendorShortlist.topVendors.map((vendor) => (
+                      <span key={vendor.id} className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs text-emerald-700 dark:text-emerald-300">
+                        {vendor.label}
+                      </span>
+                    )) : <span className="text-xs text-muted-foreground">No preferred vendors linked yet.</span>}
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-border/70 bg-background/80 p-4">
+                  <p className="text-sm font-medium text-foreground">Use with caution</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {vendorShortlist.cautionVendors.length ? vendorShortlist.cautionVendors.map((vendor) => (
+                      <span key={vendor.id} className="rounded-full bg-amber-500/10 px-3 py-1 text-xs text-amber-700 dark:text-amber-300">
+                        {vendor.label}
+                      </span>
+                    )) : <span className="text-xs text-muted-foreground">No caution vendors in view.</span>}
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-border/70 bg-background/80 p-4">
+                  <p className="text-sm font-medium text-foreground">Do not use</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {vendorShortlist.blockedVendors.length ? vendorShortlist.blockedVendors.map((vendor) => (
+                      <span key={vendor.id} className="rounded-full bg-rose-500/10 px-3 py-1 text-xs text-rose-700 dark:text-rose-300">
+                        {vendor.label}
+                      </span>
+                    )) : <span className="text-xs text-muted-foreground">No blocked vendors in this shortlist.</span>}
+                  </div>
+                </div>
+              </div>
+            </section>
+          ) : null}
+
           <section className="space-y-4">
             <div className="space-y-2">
               <Label>Document URL / storage reference</Label>
@@ -326,7 +450,7 @@ export default function BuildOsDocumentForm({
           </section>
 
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={handleAttemptClose}>
               Cancel
             </Button>
             <Button type="submit" disabled={saving}>

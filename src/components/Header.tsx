@@ -47,7 +47,7 @@ const Header = () => {
                   key={item.label}
                   variant="ghost"
                   asChild
-                  className={`${sharedNavClasses} ${item.isContact ? "shadow-[0_12px_30px_rgba(249,115,22,0.16)]" : ""}`}
+                  className={`${sharedNavClasses} ${item.isContact ? "shadow-[0_12px_30px_rgba(63,140,39,0.18)]" : ""}`}
                 >
                   <Link to={item.path}>{item.label}</Link>
                 </Button>

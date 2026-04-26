@@ -35,6 +35,7 @@ import {
   saveMasterDatabaseRecord,
   type BuildOsMasterRecord,
 } from "@/lib/buildosShared";
+import { buildVendorMemorySnapshot } from "@/lib/vendorMemory";
 
 type SessionPayload = {
   user?: {
@@ -97,6 +98,10 @@ function getViewMatch(view: string, record: BuildOsMasterRecord) {
   return record.type === view;
 }
 
+function formatScore(value: number | null) {
+  return value === null ? "Not scored" : `${value.toFixed(1)} / 5`;
+}
+
 export default function ManagementMasterDatabase() {
   const queryClient = useQueryClient();
   const [view, setView] = useState("all");
@@ -153,6 +158,7 @@ export default function ManagementMasterDatabase() {
     }),
     [records]
   );
+  const vendorMemory = useMemo(() => buildVendorMemorySnapshot(records), [records]);
 
   const summaryCards: Array<{ label: string; count: number; icon: LucideIcon }> = [
     { label: "Total Records", count: counts.total, icon: Users2 },
@@ -243,6 +249,78 @@ export default function ManagementMasterDatabase() {
             </Card>
           ))}
         </div>
+
+        <Card className="dashboard-panel p-2">
+          <CardHeader>
+            <CardTitle className="text-xl text-foreground">Vendor Memory</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-4 xl:grid-cols-3">
+            <div className="dashboard-item p-4">
+              <p className="text-sm font-semibold text-foreground">Top vendors</p>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                These are the vendors the system currently trusts most based on score, reuse, and project history.
+              </p>
+              <div className="mt-4 space-y-3">
+                {vendorMemory.topVendors.length ? (
+                  vendorMemory.topVendors.slice(0, 3).map((vendor) => (
+                    <div key={vendor.id} className="rounded-2xl border border-border/70 bg-background/70 p-3">
+                      <p className="text-sm font-medium text-foreground">{vendor.label}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {vendor.tradeCategory} | {formatScore(vendor.averageScore)} | {vendor.linkedProjectCount} linked project(s)
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">No preferred vendors are scored strongly enough yet.</p>
+                )}
+              </div>
+            </div>
+
+            <div className="dashboard-item p-4">
+              <p className="text-sm font-semibold text-foreground">Repeat issues / caution</p>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                Keep these trade partners visible so repeat callbacks and slow response patterns do not disappear into notes.
+              </p>
+              <div className="mt-4 space-y-3">
+                {vendorMemory.repeatIssueVendors.length || vendorMemory.cautionVendors.length ? (
+                  [...vendorMemory.repeatIssueVendors, ...vendorMemory.cautionVendors]
+                    .slice(0, 4)
+                    .map((vendor) => (
+                      <div key={vendor.id} className="rounded-2xl border border-border/70 bg-background/70 p-3">
+                        <p className="text-sm font-medium text-foreground">{vendor.label}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {vendor.deficiencyCount} callback issue(s) | {vendor.averageResponseDays ?? "n/a"} day avg response | {vendor.riskStatus}
+                        </p>
+                      </div>
+                    ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">No repeat-issue vendor pattern is visible yet.</p>
+                )}
+              </div>
+            </div>
+
+            <div className="dashboard-item p-4">
+              <p className="text-sm font-semibold text-foreground">Do not use / high risk</p>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                These records stay obvious here so the system remembers risk before the next award decision is made.
+              </p>
+              <div className="mt-4 space-y-3">
+                {vendorMemory.blockedVendors.length ? (
+                  vendorMemory.blockedVendors.slice(0, 4).map((vendor) => (
+                    <div key={vendor.id} className="rounded-2xl border border-rose-200/70 bg-rose-50/70 p-3 dark:border-rose-900/50 dark:bg-rose-950/20">
+                      <p className="text-sm font-medium text-foreground">{vendor.label}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {vendor.workAgain} | {vendor.riskStatus} | {vendor.deficiencyCount} issue(s)
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">No vendor is currently marked do-not-use or high risk.</p>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         <Card className="dashboard-panel p-2">
           <CardHeader>
@@ -353,6 +431,31 @@ export default function ManagementMasterDatabase() {
                           </p>
                         </div>
                       </div>
+
+                      {record.type === "Vendor (Trade)" ? (
+                        <div className="grid gap-3 text-sm text-muted-foreground md:grid-cols-3">
+                          <div className="dashboard-item p-3">
+                            <p className="text-sm font-medium text-foreground">Memory score</p>
+                            <p className="mt-2">
+                              {formatScore(
+                                vendorMemory.vendors.find((vendor) => vendor.id === record.id)?.averageScore ?? null
+                              )}
+                            </p>
+                          </div>
+                          <div className="dashboard-item p-3">
+                            <p className="text-sm font-medium text-foreground">Repeat issue count</p>
+                            <p className="mt-2">
+                              {vendorMemory.vendors.find((vendor) => vendor.id === record.id)?.deficiencyCount || 0}
+                            </p>
+                          </div>
+                          <div className="dashboard-item p-3">
+                            <p className="text-sm font-medium text-foreground">Memory signal</p>
+                            <p className="mt-2">
+                              {vendorMemory.vendors.find((vendor) => vendor.id === record.id)?.riskStatus || "Preferred"}
+                            </p>
+                          </div>
+                        </div>
+                      ) : null}
 
                       {record.tags.length ? (
                         <div className="flex flex-wrap gap-2">

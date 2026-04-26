@@ -38,6 +38,7 @@ import {
   saveDocument,
   type BuildOsDocumentRecord,
 } from "@/lib/buildosShared";
+import { getVendorInsightByRecordId } from "@/lib/vendorMemory";
 
 type DisplayDocument = {
   id: string;
@@ -564,13 +565,21 @@ export default function ManagementDocuments() {
                           <div>
                             <p className="text-sm font-medium text-foreground">Audit trail</p>
                             <p className="mt-1 text-sm text-muted-foreground">
-                              {document.uploader || "Unknown"} on {formatDate(document.uploadDate)}
+                              {(customDocuments.find((item) => item.id === document.id)?.updatedBy || document.uploader || "Unknown")} on {formatDate(document.uploadDate)}
                             </p>
                             <p className="mt-1 text-xs text-muted-foreground">
                               Last updated {formatDate(customDocuments.find((item) => item.id === document.id)?.updatedAt)}
                             </p>
                           </div>
                         </div>
+                        {(() => {
+                          const vendorInsight = getVendorInsightByRecordId(masterRecords, document.linkedRecordId);
+                          return vendorInsight ? (
+                            <div className="dashboard-item p-3 text-sm text-muted-foreground">
+                              Vendor memory: {vendorInsight.label} · {vendorInsight.riskStatus} · {vendorInsight.deficiencyCount} repeat issue{vendorInsight.deficiencyCount === 1 ? "" : "s"}
+                            </div>
+                          ) : null;
+                        })()}
 
                         {document.tags.length ? (
                           <div className="flex flex-wrap gap-2">

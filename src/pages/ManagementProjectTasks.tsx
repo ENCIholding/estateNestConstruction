@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Plus, Search, TimerReset, Trash2 } from "lucide-react";
+import FormSaveStateNotice from "@/components/forms/FormSaveStateNotice";
 import ManagementLayout from "@/components/management/ManagementLayout";
 import BuildOsTaskForm, {
   createTaskFormState,
@@ -22,6 +23,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import Input from "@/components/ui/input";
+import { toast } from "@/components/ui/sonner";
+import useUnsavedChangesGuard from "@/hooks/useUnsavedChangesGuard";
 import { fetchManagementProjects } from "@/lib/managementData";
 import {
   deleteTask,
@@ -37,6 +40,7 @@ import {
   isTaskDueSoon,
   isTaskOverdue,
 } from "@/lib/buildosTasks";
+import { getVendorInsightByRecordId } from "@/lib/vendorMemory";
 
 function getStatusBadge(status: BuildOsTask["status"]) {
   if (status === "Completed") {
@@ -93,6 +97,11 @@ export default function ManagementProjectTasks() {
   const [deleteTarget, setDeleteTarget] = useState<BuildOsTask | null>(null);
   const [form, setForm] = useState<BuildOsTaskFormState>(createTaskFormState());
   const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [initialFingerprint, setInitialFingerprint] = useState(
+    JSON.stringify(createTaskFormState())
+  );
+  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
 
   const { data: projects = [] } = useQuery({
     queryKey: ["management-projects"],
@@ -139,10 +148,29 @@ export default function ManagementProjectTasks() {
 
   const openForm = (record?: BuildOsTask | null) => {
     setEditingRecord(record || null);
-    setForm(createTaskFormState(record));
+    const nextState = createTaskFormState(record);
+    setForm(nextState);
+    setInitialFingerprint(JSON.stringify(nextState));
     setError("");
+    setSaving(false);
+    setLastSavedAt(null);
     setShowForm(true);
   };
+  const isDirty = useMemo(
+    () => JSON.stringify(form) !== initialFingerprint,
+    [form, initialFingerprint]
+  );
+  const handleAttemptClose = useUnsavedChangesGuard({
+    discardMessage:
+      "Discard the unsaved task changes? This form does not autosave until you click Save.",
+    isDirty,
+    onConfirmClose: () => {
+      setShowForm(false);
+      setEditingRecord(null);
+    },
+    open: showForm,
+    saving,
+  });
 
   const handleSave = async (event: FormEvent) => {
     event.preventDefault();
@@ -158,30 +186,44 @@ export default function ManagementProjectTasks() {
       return;
     }
 
-    await saveTask({
-      id: editingRecord?.id,
-      projectId: form.projectId,
-      title: form.title,
-      description: form.description,
-      location: form.location,
-      phase: form.phase,
-      status: form.status,
-      priority: form.priority,
-      assignedRecordId: form.assignedRecordId || undefined,
-      assignedLabel: form.assignedLabel,
-      startDate: form.startDate,
-      dueDate: form.dueDate,
-      milestone: form.milestone,
-      predecessorIds: form.predecessorIds,
-      inspectionDate: form.inspectionDate,
-      percentComplete: Number(form.percentComplete) || 0,
-      mobileNote: form.mobileNote,
-      lastUpdatedBy: form.lastUpdatedBy,
-    });
+    try {
+      setSaving(true);
+      await saveTask({
+        id: editingRecord?.id,
+        projectId: form.projectId,
+        title: form.title,
+        description: form.description,
+        location: form.location,
+        phase: form.phase,
+        status: form.status,
+        priority: form.priority,
+        assignedRecordId: form.assignedRecordId || undefined,
+        assignedLabel: form.assignedLabel,
+        startDate: form.startDate,
+        dueDate: form.dueDate,
+        milestone: form.milestone,
+        predecessorIds: form.predecessorIds,
+        inspectionDate: form.inspectionDate,
+        percentComplete: Number(form.percentComplete) || 0,
+        mobileNote: form.mobileNote,
+        lastUpdatedBy: form.lastUpdatedBy,
+      });
 
-    await invalidateBuildOsQueries(queryClient);
-    setShowForm(false);
-    setEditingRecord(null);
+      await invalidateBuildOsQueries(queryClient);
+      setInitialFingerprint(JSON.stringify(form));
+      setLastSavedAt(new Date().toISOString());
+      toast.success(
+        editingRecord
+          ? "Task changes were saved to ENCI BuildOS."
+          : "Task was added to ENCI BuildOS."
+      );
+      setShowForm(false);
+      setEditingRecord(null);
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : "Failed to save task.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDelete = async () => {
@@ -294,6 +336,7 @@ export default function ManagementProjectTasks() {
               const predecessorTitles = task.predecessorIds
                 .map((taskId) => tasks.find((item) => item.id === taskId)?.title)
                 .filter(Boolean);
+              const vendorInsight = getVendorInsightByRecordId(records, task.assignedRecordId);
 
               return (
                 <Card key={task.id} className="dashboard-panel p-2">
@@ -311,6 +354,19 @@ export default function ManagementProjectTasks() {
                           {task.milestone ? (
                             <Badge className="rounded-full bg-enc-orange/10 text-enc-orange">
                               Milestone
+                            </Badge>
+                          ) : null}
+                          {vendorInsight ? (
+                            <Badge
+                              className={
+                                vendorInsight.riskStatus === "High Risk Vendor"
+                                  ? "rounded-full bg-rose-500/10 text-rose-700 dark:text-rose-300"
+                                  : vendorInsight.riskStatus === "Use with Caution"
+                                    ? "rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                                    : "rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                              }
+                            >
+                              {vendorInsight.riskStatus}
                             </Badge>
                           ) : null}
                           {overdue ? (
@@ -353,8 +409,16 @@ export default function ManagementProjectTasks() {
                             <p className="mt-2 text-sm text-muted-foreground">
                               {task.lastUpdatedBy || "Not recorded"}
                             </p>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              Last changed {task.updatedAt}
+                            </p>
                           </div>
                         </div>
+                        {vendorInsight ? (
+                          <div className="dashboard-item p-3 text-sm text-muted-foreground">
+                            Vendor memory: {vendorInsight.label} · {vendorInsight.deficiencyCount} repeat issue{vendorInsight.deficiencyCount === 1 ? "" : "s"} · Work again: {vendorInsight.workAgain}
+                          </div>
+                        ) : null}
 
                         {predecessorTitles.length ? (
                           <div className="dashboard-item p-3 text-sm leading-6 text-muted-foreground">
@@ -414,12 +478,18 @@ export default function ManagementProjectTasks() {
         </Card>
       </div>
 
-      <Dialog open={showForm} onOpenChange={(nextOpen) => !nextOpen && setShowForm(false)}>
+      <Dialog open={showForm} onOpenChange={(nextOpen) => !nextOpen && handleAttemptClose()}>
         <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingRecord ? "Edit Task" : "New Task"}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSave} className="space-y-6">
+            <FormSaveStateNotice
+              isDirty={isDirty}
+              lastSavedAt={lastSavedAt}
+              message="This form does not autosave. Click Save to persist the task in ENCI BuildOS."
+              saving={saving}
+            />
             {error ? (
               <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
                 {error}
@@ -433,10 +503,10 @@ export default function ManagementProjectTasks() {
               onChange={setForm}
             />
             <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => setShowForm(false)}>
+              <Button type="button" variant="outline" onClick={handleAttemptClose}>
                 Cancel
               </Button>
-              <Button type="submit">{editingRecord ? "Update Task" : "Save Task"}</Button>
+              <Button type="submit" disabled={saving}>{editingRecord ? "Update Task" : "Save Task"}</Button>
             </div>
           </form>
         </DialogContent>

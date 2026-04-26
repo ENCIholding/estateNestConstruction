@@ -5,6 +5,7 @@ export type ManagementProject = {
   status: string;
   estimated_budget?: number;
   selling_price?: number;
+  contracted_revenue?: number;
   start_date?: string;
   estimated_end_date?: string;
   actual_end_date?: string;
@@ -20,6 +21,9 @@ export type ManagementProject = {
   primary_contact_email?: string;
   next_milestone?: string;
   status_note?: string;
+  scope_subject?: string;
+  scope_summary?: string;
+  scope_note?: string;
 };
 
 export type ProjectRegistrySource = "environment" | "temporary" | "unconfigured";
@@ -503,8 +507,10 @@ export function buildProjectsCsv(projects: ManagementProject[]) {
     "Status",
     "Address",
     "Budget Baseline",
+    "Contracted Revenue",
     "Deposit Recorded",
     "Selling Price",
+    "Scope Subject",
     "Project Manager",
     "Primary Contact",
     "Development Permit Linked",
@@ -517,8 +523,10 @@ export function buildProjectsCsv(projects: ManagementProject[]) {
     project.status,
     project.civic_address,
     project.estimated_budget ?? "",
+    project.contracted_revenue ?? "",
     project.deposit_amount ?? "",
     project.selling_price ?? "",
+    project.scope_subject || "",
     project.project_manager || project.project_owner || "",
     project.primary_contact_email || "",
     project.development_permit_pdf ? "Yes" : "No",
@@ -571,6 +579,8 @@ export function getProjectControlGaps(project: ManagementProject) {
   return [
     !project.legal_land_description ? "Legal land description is missing." : null,
     !project.estimated_budget ? "Budget baseline is missing." : null,
+    !project.scope_subject ? "Scope subject is missing." : null,
+    !project.scope_summary ? "Scope summary is missing." : null,
     !project.project_manager && !project.project_owner
       ? "Project owner or manager is not assigned."
       : null,
