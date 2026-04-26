@@ -570,6 +570,9 @@ export default function ManagementDocuments() {
                             <p className="mt-1 text-xs text-muted-foreground">
                               Last updated {formatDate(customDocuments.find((item) => item.id === document.id)?.updatedAt)}
                             </p>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              Last updated {formatDate(customDocuments.find((item) => item.id === document.id)?.updatedAt)}
+                            </p>
                           </div>
                         </div>
                         {(() => {
