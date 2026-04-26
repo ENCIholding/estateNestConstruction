@@ -21,7 +21,7 @@ export default function HeroSection() {
             </p>
             <h1 className="max-w-4xl text-5xl font-bold tracking-tight text-white md:text-6xl lg:text-7xl">
               Project delivery with
-              <span className="block gradient-text"> clearer controls and real accountability</span>
+              <span className="hero-gradient-text block"> clearer controls and real accountability</span>
             </h1>
             <p className="max-w-3xl text-xl leading-8 text-white/90 md:text-2xl">
               Estate Nest Capital Inc. is building a practical platform for pre-construction planning,

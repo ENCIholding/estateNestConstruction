@@ -26,6 +26,14 @@ const initialFormState: EmailFormState = {
 const EMAIL_CONFIDENTIALITY_NOTICE =
   "The contents of this email message and any attachments are intended solely for the addressee(s) and may contain confidential and/or privileged information and may be legally protected from disclosure. If you are not the intended recipient of this message or their agent, or if this message has been addressed to you in error, please immediately alert the sender by reply email and then delete this message and any attachments. If you are not the intended recipient, you are hereby notified that any use, dissemination, copying, or storage of this message or its attachments is strictly prohibited. Please note that any views or opinions presented in this email are solely those of the author and do not necessarily represent those of Estate Nest Capital Inc. Finally, the recipient should check this email and any attachments for the presence of viruses. Estate Nest Capital Inc accepts no liability for any damage caused by any virus transmitted by this email.";
 
+function humanizeEmailError(message: string) {
+  if (message.includes("Dashboard email is not configured")) {
+    return "Dashboard email is not configured on this deployment yet. Add EMAIL_SMTP_USER plus GOOGLE_OAUTH_CLIENT_ID, GOOGLE_OAUTH_CLIENT_SECRET, and GOOGLE_OAUTH_REFRESH_TOKEN in Vercel, then redeploy.";
+  }
+
+  return message;
+}
+
 function splitEmails(value: string) {
   return value
     .split(",")
@@ -118,7 +126,7 @@ export default function ManagementEmailComposer() {
       setForm(initialFormState);
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Email send failed"
+        error instanceof Error ? humanizeEmailError(error.message) : "Email send failed"
       );
     } finally {
       setSending(false);
@@ -140,6 +148,9 @@ export default function ManagementEmailComposer() {
             The Estate Nest signature and confidentiality notice are appended
             automatically, and a copy is always sent back to your inbox. This
             composer does not yet file messages back into a project activity log.
+          </p>
+          <p className="mt-3 max-w-2xl text-xs leading-6 text-muted-foreground">
+            Google OAuth deployments require <code>EMAIL_SMTP_USER</code>, <code>GOOGLE_OAUTH_CLIENT_ID</code>, <code>GOOGLE_OAUTH_CLIENT_SECRET</code>, and <code>GOOGLE_OAUTH_REFRESH_TOKEN</code> in Vercel.
           </p>
         </div>
 
