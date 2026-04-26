@@ -12,7 +12,7 @@ import {
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   const sharedNavClasses =
-    "rounded-full border border-white/15 bg-white/5 px-5 text-sm font-medium tracking-wide text-white backdrop-blur-sm transition-all hover:border-enc-orange-light/40 hover:bg-white/12 hover:text-enc-orange-light";
+    "rounded-full border border-white/15 bg-white/6 px-5 text-sm font-medium tracking-wide text-white backdrop-blur-sm transition-all hover:border-enc-yellow-light/45 hover:bg-white/14 hover:text-enc-yellow-light";
 
   const navigationItems = [
     { label: "Home", path: "/" },
@@ -25,7 +25,7 @@ const Header = () => {
   ];
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-enc-text-primary">
+    <header className="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-[linear-gradient(135deg,rgba(14,36,18,0.96),rgba(27,58,24,0.96),rgba(55,86,23,0.94))] shadow-[0_20px_48px_rgba(0,0,0,0.22)] backdrop-blur-md">
       <a href="#main-content" className="skip-link">
         Skip to main content
       </a>

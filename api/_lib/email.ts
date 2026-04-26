@@ -6,6 +6,17 @@ const DEFAULT_INBOX_COPY = "hello@estatenest.capital";
 const CONFIDENTIALITY_NOTICE =
   "The contents of this email message and any attachments are intended solely for the addressee(s) and may contain confidential and/or privileged information and may be legally protected from disclosure. If you are not the intended recipient of this message or their agent, or if this message has been addressed to you in error, please immediately alert the sender by reply email and then delete this message and any attachments. If you are not the intended recipient, you are hereby notified that any use, dissemination, copying, or storage of this message or its attachments is strictly prohibited. Please note that any views or opinions presented in this email are solely those of the author and do not necessarily represent those of Estate Nest Capital Inc. Finally, the recipient should check this email and any attachments for the presence of viruses. Estate Nest Capital Inc accepts no liability for any damage caused by any virus transmitted by this email.";
 
+function readFirstEnv(...names: string[]) {
+  for (const name of names) {
+    const value = process.env[name]?.trim();
+    if (value) {
+      return value;
+    }
+  }
+
+  return undefined;
+}
+
 type SmtpConfig = {
   auth:
     | {
@@ -75,55 +86,71 @@ function getBoolean(value: string | undefined, fallback: boolean): boolean {
 }
 
 export function getSmtpConfig(): SmtpConfig {
-  const user =
-    process.env.EMAIL_SMTP_USER?.trim() ||
-    process.env.EMAIL_SMTP_USERNAME?.trim() ||
-    process.env.EMAIL_FROM_ADDRESS?.trim() ||
-    process.env.EMAIL_USERNAME?.trim() ||
-    process.env.EMAIL_USER?.trim() ||
-    process.env.SMTP_USER?.trim() ||
-    process.env.SMTP_USERNAME?.trim() ||
-    process.env.GMAIL_USER?.trim() ||
-    process.env.GOOGLE_WORKSPACE_USER?.trim() ||
-    process.env.MAIL_USER?.trim();
-  const pass =
-    process.env.EMAIL_SMTP_PASS?.trim() ||
-    process.env.EMAIL_SMTP_PASSWORD?.trim() ||
-    process.env.EMAIL_APP_PASSWORD?.trim() ||
-    process.env.EMAIL_PASSWORD?.trim() ||
-    process.env.EMAIL_PASS?.trim() ||
-    process.env.GOOGLE_APP_PASSWORD?.trim() ||
-    process.env.GMAIL_APP_PASSWORD?.trim() ||
-    process.env.GMAIL_PASS?.trim() ||
-    process.env.GOOGLE_WORKSPACE_APP_PASSWORD?.trim() ||
-    process.env.SMTP_PASSWORD?.trim() ||
-    process.env.SMTP_PASS?.trim() ||
-    process.env.MAIL_PASSWORD?.trim() ||
-    process.env.MAIL_PASS?.trim();
-  const googleClientId =
-    process.env.EMAIL_GOOGLE_CLIENT_ID?.trim() ||
-    process.env.GOOGLE_OAUTH_CLIENT_ID?.trim() ||
-    process.env.GOOGLE_CLIENT_ID?.trim();
-  const googleClientSecret =
-    process.env.EMAIL_GOOGLE_CLIENT_SECRET?.trim() ||
-    process.env.GOOGLE_OAUTH_CLIENT_SECRET?.trim() ||
-    process.env.GOOGLE_CLIENT_SECRET?.trim();
-  const googleRefreshToken =
-    process.env.EMAIL_GOOGLE_REFRESH_TOKEN?.trim() ||
-    process.env.GOOGLE_OAUTH_REFRESH_TOKEN?.trim() ||
-    process.env.GOOGLE_REFRESH_TOKEN?.trim();
-  const googleAccessToken =
-    process.env.EMAIL_GOOGLE_ACCESS_TOKEN?.trim() ||
-    process.env.GOOGLE_OAUTH_ACCESS_TOKEN?.trim() ||
-    process.env.GOOGLE_ACCESS_TOKEN?.trim();
-  const googleRedirectUri =
-    process.env.EMAIL_GOOGLE_REDIRECT_URI?.trim() ||
-    process.env.GOOGLE_OAUTH_REDIRECT_URI?.trim() ||
-    process.env.GOOGLE_REDIRECT_URI?.trim();
+  const user = readFirstEnv(
+    "EMAIL_SMTP_USER",
+    "EMAIL_SMTP_USERNAME",
+    "EMAIL_FROM_ADDRESS",
+    "EMAIL_USERNAME",
+    "EMAIL_USER",
+    "SMTP_USER",
+    "SMTP_USERNAME",
+    "GMAIL_USER",
+    "GOOGLE_WORKSPACE_USER",
+    "MAIL_USER"
+  );
+  const pass = readFirstEnv(
+    "EMAIL_SMTP_PASS",
+    "EMAIL_SMTP_PASSWORD",
+    "EMAIL_APP_PASSWORD",
+    "EMAIL_PASSWORD",
+    "EMAIL_PASS",
+    "GOOGLE_APP_PASSWORD",
+    "GMAIL_APP_PASSWORD",
+    "GMAIL_PASS",
+    "GOOGLE_WORKSPACE_APP_PASSWORD",
+    "SMTP_PASSWORD",
+    "SMTP_PASS",
+    "MAIL_PASSWORD",
+    "MAIL_PASS"
+  );
+  const googleClientId = readFirstEnv(
+    "EMAIL_GOOGLE_CLIENT_ID",
+    "GOOGLE_OAUTH_CLIENT_ID",
+    "GOOGLE_CLIENT_ID",
+    "GOOGLE_OAUTH_KEY",
+    "GOOGLE_CLIENT_KEY"
+  );
+  const googleClientSecret = readFirstEnv(
+    "EMAIL_GOOGLE_CLIENT_SECRET",
+    "GOOGLE_OAUTH_CLIENT_SECRET",
+    "GOOGLE_CLIENT_SECRET",
+    "GOOGLE_OAUTH_SECRET",
+    "GOOGLE_CLIENT_SECRET_KEY"
+  );
+  const googleRefreshToken = readFirstEnv(
+    "EMAIL_GOOGLE_REFRESH_TOKEN",
+    "GOOGLE_OAUTH_REFRESH_TOKEN",
+    "GOOGLE_REFRESH_TOKEN",
+    "GOOGLE_OAUTH_TOKEN",
+    "GOOGLE_REFRESH"
+  );
+  const googleAccessToken = readFirstEnv(
+    "EMAIL_GOOGLE_ACCESS_TOKEN",
+    "GOOGLE_OAUTH_ACCESS_TOKEN",
+    "GOOGLE_ACCESS_TOKEN"
+  );
+  const googleRedirectUri = readFirstEnv(
+    "EMAIL_GOOGLE_REDIRECT_URI",
+    "GOOGLE_OAUTH_REDIRECT_URI",
+    "GOOGLE_REDIRECT_URI"
+  );
+  const hasGoogleOAuth = Boolean(
+    user && googleClientId && googleClientSecret && googleRefreshToken
+  );
 
-  if (!user || (!pass && !(googleClientId && googleClientSecret && googleRefreshToken))) {
+  if (!user || (!pass && !hasGoogleOAuth)) {
     throw new Error(
-      "Dashboard email is not configured on this deployment yet. Configure either EMAIL_SMTP_USER with EMAIL_SMTP_PASS or the Google OAuth mail variables required by ENCI BuildOS."
+      "Dashboard email is not configured on this deployment yet. In Vercel, add EMAIL_SMTP_USER plus either EMAIL_SMTP_PASS or these Google OAuth mail variables: GOOGLE_OAUTH_CLIENT_ID, GOOGLE_OAUTH_CLIENT_SECRET, and GOOGLE_OAUTH_REFRESH_TOKEN."
     );
   }
 

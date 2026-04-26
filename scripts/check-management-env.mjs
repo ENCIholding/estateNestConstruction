@@ -36,16 +36,22 @@ const googleOAuthClientIdAliases = [
   "EMAIL_GOOGLE_CLIENT_ID",
   "GOOGLE_OAUTH_CLIENT_ID",
   "GOOGLE_CLIENT_ID",
+  "GOOGLE_OAUTH_KEY",
+  "GOOGLE_CLIENT_KEY",
 ];
 const googleOAuthClientSecretAliases = [
   "EMAIL_GOOGLE_CLIENT_SECRET",
   "GOOGLE_OAUTH_CLIENT_SECRET",
   "GOOGLE_CLIENT_SECRET",
+  "GOOGLE_OAUTH_SECRET",
+  "GOOGLE_CLIENT_SECRET_KEY",
 ];
 const googleOAuthRefreshTokenAliases = [
   "EMAIL_GOOGLE_REFRESH_TOKEN",
   "GOOGLE_OAUTH_REFRESH_TOKEN",
   "GOOGLE_REFRESH_TOKEN",
+  "GOOGLE_OAUTH_TOKEN",
+  "GOOGLE_REFRESH",
 ];
 
 const missingVars = requiredVars.filter((name) => !process.env[name]);
@@ -73,7 +79,7 @@ if (!(hasEmailUser && hasEmailPass) && !hasGoogleOAuthMail) {
   if (!hasEmailPass && !hasGoogleOAuthMail) {
     console.error(`- one of: ${emailPassAliases.join(", ")}`);
     console.error(
-      `- or Google OAuth mail variables: ${googleOAuthClientIdAliases.join(", ")} | ${googleOAuthClientSecretAliases.join(", ")} | ${googleOAuthRefreshTokenAliases.join(", ")}`
+      `- or Google OAuth mail variables in Vercel: ${googleOAuthClientIdAliases.join(", ")} | ${googleOAuthClientSecretAliases.join(", ")} | ${googleOAuthRefreshTokenAliases.join(", ")}`
     );
   }
   process.exit(1);

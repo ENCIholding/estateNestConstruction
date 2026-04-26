@@ -47,6 +47,9 @@ For the current server-side ENCI BuildOS mailer, the practical env set is:
 - `GOOGLE_OAUTH_REFRESH_TOKEN`
 - optional: `GOOGLE_OAUTH_REDIRECT_URI`
 
+These values must exist in the Vercel project for the deployment that is sending mail.
+Client ID alone is not enough for live server-side sending. ENCI BuildOS also needs the Google OAuth client secret and a refresh token for the `hello@estatenest.capital` mailbox, then the deployment must be redeployed so the new values are picked up.
+
 If you stay with app-password SMTP instead, the simpler path remains:
 
 - `EMAIL_SMTP_USER`
