@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import heroImage from "@/assets/hero-building.jpg";
+import heroImage from "@/assets/hero-enci-home.png";
 
 export default function HeroSection() {
   return (
@@ -8,9 +8,9 @@ export default function HeroSection() {
         <img
           src={heroImage}
           alt="Estate Nest Capital concept image representing residential and commercial development work in Edmonton, Alberta"
-          className="h-full w-full object-cover"
+          className="h-full w-full object-cover object-center"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/45 to-black/75" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/35 to-black/70" />
       </div>
 
       <div className="relative container mx-auto px-6 py-24 pt-36">
