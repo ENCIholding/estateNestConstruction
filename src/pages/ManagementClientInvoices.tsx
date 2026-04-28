@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Download, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { Download, Pencil, Plus, RotateCcw, Search, Trash, Trash2 } from "lucide-react";
 import FormSaveStateNotice from "@/components/forms/FormSaveStateNotice";
 import ManagementLayout from "@/components/management/ManagementLayout";
 import ProjectDecisionSupportPanel from "@/components/projects/ProjectDecisionSupportPanel";
@@ -43,6 +43,8 @@ import {
   loadClientInvoices,
   loadMasterDatabaseRecords,
   loadDeficiencies,
+  purgeClientInvoice,
+  restoreClientInvoice,
   saveClientInvoice,
   type BuildOsClientInvoice,
 } from "@/lib/buildosShared";
@@ -89,9 +91,11 @@ export default function ManagementClientInvoices() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [showArchived, setShowArchived] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingRecord, setEditingRecord] = useState<BuildOsClientInvoice | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<BuildOsClientInvoice | null>(null);
+  const [deleteReason, setDeleteReason] = useState("");
   const [form, setForm] = useState<InvoiceFormState>(initialForm());
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -107,8 +111,8 @@ export default function ManagementClientInvoices() {
     queryFn: async () => loadMasterDatabaseRecords(),
   });
   const { data: invoices = [] } = useQuery({
-    queryKey: ["buildos-client-invoices"],
-    queryFn: async () => loadClientInvoices(),
+    queryKey: ["buildos-client-invoices", showArchived],
+    queryFn: async () => loadClientInvoices({ includeDeleted: showArchived }),
   });
   const { data: changeOrders = [] } = useQuery({
     queryKey: ["buildos-change-orders"],
@@ -297,14 +301,44 @@ export default function ManagementClientInvoices() {
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
-    await deleteClientInvoice(deleteTarget.id);
+    await deleteClientInvoice(deleteTarget.id, {
+      actor: deleteTarget.updatedBy || "ENCI BuildOS",
+      reason: deleteReason,
+    });
     setDeleteTarget(null);
+    setDeleteReason("");
     await queryClient.invalidateQueries({
       predicate: (query) =>
         Array.isArray(query.queryKey) &&
         typeof query.queryKey[0] === "string" &&
         (query.queryKey[0].startsWith("buildos") || query.queryKey[0].startsWith("management")),
     });
+    toast.success("Client invoice archived.");
+  };
+
+  const handleRestore = async (invoice: BuildOsClientInvoice) => {
+    await restoreClientInvoice(invoice.id, {
+      actor: invoice.updatedBy || "ENCI BuildOS",
+      reason: "Invoice restored for active review.",
+    });
+    await queryClient.invalidateQueries({
+      predicate: (query) =>
+        Array.isArray(query.queryKey) &&
+        typeof query.queryKey[0] === "string" &&
+        (query.queryKey[0].startsWith("buildos") || query.queryKey[0].startsWith("management")),
+    });
+    toast.success("Client invoice restored.");
+  };
+
+  const handlePurge = async (invoice: BuildOsClientInvoice) => {
+    await purgeClientInvoice(invoice.id);
+    await queryClient.invalidateQueries({
+      predicate: (query) =>
+        Array.isArray(query.queryKey) &&
+        typeof query.queryKey[0] === "string" &&
+        (query.queryKey[0].startsWith("buildos") || query.queryKey[0].startsWith("management")),
+    });
+    toast.success("Archived invoice purged.");
   };
 
   const totalOutstanding = filteredInvoices
@@ -382,7 +416,7 @@ export default function ManagementClientInvoices() {
           <CardHeader>
             <CardTitle className="text-xl text-foreground">Filter invoices</CardTitle>
           </CardHeader>
-          <CardContent className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px]">
+          <CardContent className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px_auto]">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -404,6 +438,13 @@ export default function ManagementClientInvoices() {
               <option value="Paid">Paid</option>
               <option value="Overdue">Overdue</option>
             </select>
+            <Button
+              variant="outline"
+              className="rounded-full"
+              onClick={() => setShowArchived((current) => !current)}
+            >
+              {showArchived ? "Hide archived" : "Show archived"}
+            </Button>
           </CardContent>
         </Card>
 
@@ -428,7 +469,7 @@ export default function ManagementClientInvoices() {
                             {project?.project_name || "Unlinked project"}
                           </Badge>
                           <Badge className="rounded-full bg-enc-orange/10 text-enc-orange">
-                            {invoice.status}
+                            {invoice.deletedAt ? "Archived" : invoice.status}
                           </Badge>
                         </div>
                         {snapshot ? <ProjectSignalBadgeCluster snapshot={snapshot} /> : null}
@@ -482,6 +523,11 @@ export default function ManagementClientInvoices() {
                           <p className="mt-1 text-xs text-muted-foreground">
                             Last changed {invoice.updatedAt}
                           </p>
+                          {invoice.deletedAt ? (
+                            <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
+                              Archived {invoice.deletedAt} | {invoice.deletionReason || "Reason not recorded"}
+                            </p>
+                          ) : null}
                         </div>
 
                         {invoice.notes ? (
@@ -494,22 +540,48 @@ export default function ManagementClientInvoices() {
                         ) : null}
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        <Button
-                          variant="outline"
-                          className="rounded-full"
-                          onClick={() => openForm(invoice)}
-                        >
-                          <Pencil className="mr-2 h-4 w-4" />
-                          Edit
-                        </Button>
-                        <Button
-                          variant="outline"
-                          className="rounded-full text-rose-600 hover:text-rose-700"
-                          onClick={() => setDeleteTarget(invoice)}
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Remove
-                        </Button>
+                        {!invoice.deletedAt ? (
+                          <>
+                            <Button
+                              variant="outline"
+                              className="rounded-full"
+                              onClick={() => openForm(invoice)}
+                            >
+                              <Pencil className="mr-2 h-4 w-4" />
+                              Edit
+                            </Button>
+                            <Button
+                              variant="outline"
+                              className="rounded-full text-rose-600 hover:text-rose-700"
+                              onClick={() => {
+                                setDeleteTarget(invoice);
+                                setDeleteReason("");
+                              }}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Archive
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button
+                              variant="outline"
+                              className="rounded-full"
+                              onClick={() => void handleRestore(invoice)}
+                            >
+                              <RotateCcw className="mr-2 h-4 w-4" />
+                              Restore
+                            </Button>
+                            <Button
+                              variant="outline"
+                              className="rounded-full text-rose-600 hover:text-rose-700"
+                              onClick={() => void handlePurge(invoice)}
+                            >
+                              <Trash className="mr-2 h-4 w-4" />
+                              Purge
+                            </Button>
+                          </>
+                        )}
                       </div>
                     </div>
                   </CardContent>
@@ -683,18 +755,29 @@ export default function ManagementClientInvoices() {
       <AlertDialog open={Boolean(deleteTarget)} onOpenChange={() => setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Remove invoice</AlertDialogTitle>
+            <AlertDialogTitle>Archive invoice</AlertDialogTitle>
             <AlertDialogDescription>
-              Remove "{deleteTarget?.invoiceNumber}" from Client Invoices?
+              Archive "{deleteTarget?.invoiceNumber}" and keep it in the audit trail.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="invoice-delete-reason">Reason for archive *</Label>
+            <Textarea
+              id="invoice-delete-reason"
+              rows={3}
+              value={deleteReason}
+              onChange={(event) => setDeleteReason(event.target.value)}
+              placeholder="Example: replaced by corrected invoice number"
+            />
+          </div>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               className="bg-rose-600 hover:bg-rose-700"
+              disabled={!deleteReason.trim()}
               onClick={() => void handleDelete()}
             >
-              Remove
+              Archive
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

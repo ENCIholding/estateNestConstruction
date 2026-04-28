@@ -7,7 +7,9 @@ import {
   FileStack,
   Pencil,
   Plus,
+  RotateCcw,
   Search,
+  Trash,
   Trash2,
   TriangleAlert,
 } from "lucide-react";
@@ -30,6 +32,7 @@ import Badge from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Input from "@/components/ui/input";
+import { toast } from "@/components/ui/sonner";
 import {
   buildProjectDocuments,
   fetchManagementProjects,
@@ -46,12 +49,16 @@ import {
   loadBuildOsVendorBills,
   loadDeficiencies,
   loadMasterDatabaseRecords,
+  purgeDocument,
+  restoreDocument,
   saveDocument,
   type BuildOsDocumentRecord,
 } from "@/lib/buildosShared";
 import { getVendorInsightByRecordId } from "@/lib/vendorMemory";
 
 type DisplayDocument = {
+  deletedAt?: string;
+  deletionReason?: string;
   id: string;
   title: string;
   projectId?: string;
@@ -150,9 +157,11 @@ export default function ManagementDocuments() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [kindFilter, setKindFilter] = useState("all");
+  const [showArchived, setShowArchived] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingDocument, setEditingDocument] = useState<BuildOsDocumentRecord | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<BuildOsDocumentRecord | null>(null);
+  const [deleteReason, setDeleteReason] = useState("");
 
   const {
     data: projects = [],
@@ -163,8 +172,8 @@ export default function ManagementDocuments() {
     queryFn: fetchManagementProjects,
   });
   const { data: customDocuments = [] } = useQuery({
-    queryKey: ["buildos-documents"],
-    queryFn: async () => loadBuildOsDocuments(),
+    queryKey: ["buildos-documents", showArchived],
+    queryFn: async () => loadBuildOsDocuments({ includeDeleted: showArchived }),
   });
   const { data: changeOrders = [] } = useQuery({
     queryKey: ["buildos-change-orders"],
@@ -262,6 +271,8 @@ export default function ManagementDocuments() {
     return [
       ...registryDocuments,
       ...customDocuments.map<DisplayDocument>((document) => ({
+        deletedAt: document.deletedAt,
+        deletionReason: document.deletionReason,
         id: document.id,
         title: document.title,
         projectId: document.projectId,
@@ -352,14 +363,44 @@ export default function ManagementDocuments() {
       return;
     }
 
-    await deleteDocument(deleteTarget.id);
+    await deleteDocument(deleteTarget.id, {
+      actor: deleteTarget.updatedBy || deleteTarget.uploader || "ENCI BuildOS",
+      reason: deleteReason,
+    });
     setDeleteTarget(null);
+    setDeleteReason("");
     await queryClient.invalidateQueries({
       predicate: (query) =>
         Array.isArray(query.queryKey) &&
         typeof query.queryKey[0] === "string" &&
         query.queryKey[0].startsWith("buildos"),
     });
+    toast.success("Document archived.");
+  };
+
+  const handleRestore = async (record: BuildOsDocumentRecord) => {
+    await restoreDocument(record.id, {
+      actor: record.updatedBy || record.uploader || "ENCI BuildOS",
+      reason: "Document restored for active project use.",
+    });
+    await queryClient.invalidateQueries({
+      predicate: (query) =>
+        Array.isArray(query.queryKey) &&
+        typeof query.queryKey[0] === "string" &&
+        query.queryKey[0].startsWith("buildos"),
+    });
+    toast.success("Document restored.");
+  };
+
+  const handlePurge = async (record: BuildOsDocumentRecord) => {
+    await purgeDocument(record.id);
+    await queryClient.invalidateQueries({
+      predicate: (query) =>
+        Array.isArray(query.queryKey) &&
+        typeof query.queryKey[0] === "string" &&
+        query.queryKey[0].startsWith("buildos"),
+    });
+    toast.success("Archived document purged.");
   };
 
   return (
@@ -460,7 +501,7 @@ export default function ManagementDocuments() {
             <CardHeader>
               <CardTitle className="text-xl text-foreground">Filter document register</CardTitle>
             </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-[minmax(0,1fr)_220px]">
+            <CardContent className="grid gap-4 md:grid-cols-[minmax(0,1fr)_220px_auto]">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -482,6 +523,13 @@ export default function ManagementDocuments() {
                   </option>
                 ))}
               </select>
+              <Button
+                variant="outline"
+                className="rounded-full"
+                onClick={() => setShowArchived((current) => !current)}
+              >
+                {showArchived ? "Hide archived" : "Show archived"}
+              </Button>
             </CardContent>
           </Card>
 
@@ -616,6 +664,11 @@ export default function ManagementDocuments() {
                                     Expiring soon
                                   </Badge>
                                 ) : null}
+                                {document.deletedAt ? (
+                                  <Badge className="rounded-full bg-slate-500/10 text-slate-700 dark:text-slate-300">
+                                    Archived
+                                  </Badge>
+                                ) : null}
                               </div>
                             </div>
                           </div>
@@ -654,6 +707,11 @@ export default function ManagementDocuments() {
                               <p className="mt-1 text-xs text-muted-foreground">
                                 Last updated {formatDate(sourceDocument?.updatedAt)}
                               </p>
+                              {document.deletedAt ? (
+                                <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
+                                  Archived {formatDate(document.deletedAt)} | {document.deletionReason || "Reason not recorded"}
+                                </p>
+                              ) : null}
                             </div>
                           </div>
 
@@ -706,25 +764,51 @@ export default function ManagementDocuments() {
                           ) : null}
                           {document.editable ? (
                             <>
-                              <Button
-                                variant="outline"
-                                className="rounded-full"
-                                onClick={() => {
-                                  setEditingDocument(sourceDocument || null);
-                                  setShowForm(true);
-                                }}
-                              >
-                                <Pencil className="mr-2 h-4 w-4" />
-                                Edit
-                              </Button>
-                              <Button
-                                variant="outline"
-                                className="rounded-full text-rose-600 hover:text-rose-700"
-                                onClick={() => setDeleteTarget(sourceDocument || null)}
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Remove
-                              </Button>
+                              {!document.deletedAt ? (
+                                <>
+                                  <Button
+                                    variant="outline"
+                                    className="rounded-full"
+                                    onClick={() => {
+                                      setEditingDocument(sourceDocument || null);
+                                      setShowForm(true);
+                                    }}
+                                  >
+                                    <Pencil className="mr-2 h-4 w-4" />
+                                    Edit
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    className="rounded-full text-rose-600 hover:text-rose-700"
+                                    onClick={() => {
+                                      setDeleteTarget(sourceDocument || null);
+                                      setDeleteReason("");
+                                    }}
+                                  >
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Archive
+                                  </Button>
+                                </>
+                              ) : (
+                                <>
+                                  <Button
+                                    variant="outline"
+                                    className="rounded-full"
+                                    onClick={() => sourceDocument && void handleRestore(sourceDocument)}
+                                  >
+                                    <RotateCcw className="mr-2 h-4 w-4" />
+                                    Restore
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    className="rounded-full text-rose-600 hover:text-rose-700"
+                                    onClick={() => sourceDocument && void handlePurge(sourceDocument)}
+                                  >
+                                    <Trash className="mr-2 h-4 w-4" />
+                                    Purge
+                                  </Button>
+                                </>
+                              )}
                             </>
                           ) : null}
                         </div>
@@ -759,18 +843,26 @@ export default function ManagementDocuments() {
       <AlertDialog open={Boolean(deleteTarget)} onOpenChange={() => setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Remove document</AlertDialogTitle>
+            <AlertDialogTitle>Archive document</AlertDialogTitle>
             <AlertDialogDescription>
-              Remove "{deleteTarget?.title}" from the BuildOS document register?
+              Archive "{deleteTarget?.title}" from the BuildOS document register and keep the reason in audit history.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <div className="space-y-2">
+            <Input
+              value={deleteReason}
+              onChange={(event) => setDeleteReason(event.target.value)}
+              placeholder="Reason for archive (required)"
+            />
+          </div>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               className="bg-rose-600 hover:bg-rose-700"
+              disabled={!deleteReason.trim()}
               onClick={() => void handleDelete()}
             >
-              Remove
+              Archive
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -31,9 +31,9 @@ const principles = [
       "Budgets, permits, schedules, and communication trails should be clear enough for clients, lenders, and internal teams to review confidently.",
   },
   {
-    title: "No inflated claims",
+    title: "Execution visibility",
     description:
-      "Concept imagery and capability examples stay labeled honestly so visitors are not asked to mistake them for completed project proof.",
+      "Capability discussions are framed around scope, fit, and delivery approach so the project conversation stays useful and reviewable from the start.",
   },
 ];
 
@@ -86,7 +86,7 @@ const capabilities: CapabilityCard[] = [
   {
     title: "Builder profile and diligence overview",
     description:
-      "A focused profile for clients, lenders, and collaborators who need to understand Estate Nest Capital’s operating approach, controls, and documentation standards.",
+      "A focused profile for clients, lenders, and collaborators who need to understand Estate Nest Capital's operating approach, controls, and documentation standards.",
     image: builderLegacyImage,
     cta: "View builder profile",
     isBuilderProfile: true,
@@ -134,7 +134,15 @@ export default function ContentSection() {
               <span className="text-enc-text-primary"> & Concept References</span>
             </h2>
             <p className="mx-auto mt-6 max-w-3xl text-xl leading-8 text-enc-text-secondary">
-              These visuals are representative references used to discuss fit, scope, and delivery approach. They are not presented as completed proof-of-work unless separately identified in diligence materials.
+              These visuals are representative references used to discuss fit,
+              scope, and delivery approach. They are not presented as completed
+              proof-of-work unless separately identified in diligence materials.
+            </p>
+            <p className="mx-auto mt-4 max-w-4xl text-lg leading-8 text-enc-text-secondary">
+              Estate Nest Capital brings a real operating focus to planning,
+              permit readiness, estimating support, construction coordination,
+              stakeholder communication, and lender-facing documentation
+              discipline.
             </p>
           </div>
 
@@ -181,6 +189,17 @@ export default function ContentSection() {
                 </CardContent>
               </Card>
             ))}
+          </div>
+
+          <div className="mx-auto mt-16 max-w-5xl rounded-[1.75rem] border border-border bg-card p-8 text-center shadow-lg">
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-enc-orange">
+              Experience basis
+            </p>
+            <p className="mt-4 text-lg leading-8 text-enc-text-secondary">
+              Planning, permitting, estimating support, construction
+              coordination, stakeholder communication, and lender documentation
+              readiness.
+            </p>
           </div>
         </div>
       </section>

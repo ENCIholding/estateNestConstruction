@@ -1,0 +1,9 @@
+surface,context,foreground,background,ratio,target,status,notes
+Hero heading,/,,,,>=4.5:1,pending,
+Gradient heading,/,,,,>=3:1 (large) / >=4.5:1,pending,
+Orange text blocks,/,,,,>=4.5:1,pending,
+Light text on brand gradients,/,,,,>=4.5:1,pending,
+Footer links,/,,,,>=4.5:1,pending,
+Management badges,/management/dashboard,,,,>=3:1 / >=4.5:1,pending,
+Disabled module labels,/management/*,,,,>=4.5:1,pending,
+Toast + inline errors,forms,,,,>=4.5:1,pending,

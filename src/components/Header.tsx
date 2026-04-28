@@ -18,10 +18,9 @@ const Header = () => {
     { label: "Home", path: "/" },
     { label: "About Us", path: "/#about" },
     { label: "Builder Profile", path: "/builder-profile" },
-    { label: "Projects", path: "/#projects" },
+    { label: "Capabilities", path: "/#projects" },
     { label: "Investor Relations", path: "/investor-relations" },
     { label: "Contact", path: "/#appointment", isContact: true },
-    { label: "Management", path: "/management/login" },
   ];
 
   return (

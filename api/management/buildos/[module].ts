@@ -4,12 +4,22 @@ import {
   listBuildOsRecords,
   upsertBuildOsRecord,
 } from "../../_lib/buildosStore.js";
+import { BuildOsValidationError, validateBuildOsRecordInput } from "../../_lib/buildosValidation.js";
+import {
+  canAccessBuildOsRecordByProject,
+  filterBuildOsRecordsByProjectScope,
+  sanitizeBuildOsRecordForUser,
+  sanitizeBuildOsRecordsForUser,
+} from "../../_lib/buildosPermissions.js";
 import {
   getBuildOsModuleName,
   resolveBuildOsRecordId,
 } from "../../_lib/buildosModules.js";
 import { getAuthenticatedManagementUser } from "../../_lib/managementSession.js";
-import { canAccessBuildOsModule } from "../../_lib/managementUsers.js";
+import {
+  canAccessBuildOsModule,
+  hasManagementPermission,
+} from "../../_lib/managementUsers.js";
 
 export default async function handler(req: any, res: any) {
   const moduleName = getBuildOsModuleName(req.query?.module);
@@ -32,9 +42,20 @@ export default async function handler(req: any, res: any) {
         return res.status(403).json({ message: "Read access denied" });
       }
 
-      const records = await listBuildOsRecords(moduleName);
+      const includeDeleted =
+        req.query?.includeDeleted === "1" ||
+        req.query?.includeDeleted === "true" ||
+        req.query?.includeDeleted === true;
+
+      if (includeDeleted && !hasManagementPermission(user, "buildos:audit:read")) {
+        return res.status(403).json({ message: "Archived record access denied" });
+      }
+
+      const records = await listBuildOsRecords<Record<string, unknown>>(moduleName, { includeDeleted });
+      const scopedRecords = filterBuildOsRecordsByProjectScope(user, moduleName, records);
+      const sanitizedRecords = sanitizeBuildOsRecordsForUser(user, moduleName, scopedRecords);
       return res.status(200).json({
-        records,
+        records: sanitizedRecords,
         storageMode: getBuildOsStorageMode(),
       });
     }
@@ -53,7 +74,15 @@ export default async function handler(req: any, res: any) {
         return res.status(400).json({ message: "Record payload is required" });
       }
 
-      const recordId = resolveBuildOsRecordId(moduleName, record, body.recordId);
+      const validatedRecord = validateBuildOsRecordInput(moduleName, record);
+
+      if (!canAccessBuildOsRecordByProject(user, moduleName, validatedRecord)) {
+        return res.status(403).json({
+          message: "You do not have project-level access for this record.",
+        });
+      }
+
+      const recordId = resolveBuildOsRecordId(moduleName, validatedRecord, body.recordId);
 
       if (!recordId) {
         return res.status(400).json({
@@ -64,12 +93,16 @@ export default async function handler(req: any, res: any) {
       const saved = await upsertBuildOsRecord({
         actor: user,
         module: moduleName,
-        payload: record,
+        payload: validatedRecord,
         recordId,
       });
 
       return res.status(200).json({
-        record: saved,
+        record: sanitizeBuildOsRecordForUser(
+          user,
+          moduleName,
+          saved as Record<string, unknown>
+        ),
         storageMode: getBuildOsStorageMode(),
       });
     }
@@ -78,6 +111,13 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ message: "Method not allowed" });
   } catch (error) {
     if (error instanceof BuildOsStorageError) {
+      return res.status(error.statusCode).json({
+        message: error.message,
+        storageMode: getBuildOsStorageMode(),
+      });
+    }
+
+    if (error instanceof BuildOsValidationError) {
       return res.status(error.statusCode).json({
         message: error.message,
         storageMode: getBuildOsStorageMode(),

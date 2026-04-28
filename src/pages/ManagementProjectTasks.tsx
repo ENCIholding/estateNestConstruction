@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Plus, Search, TimerReset, Trash2 } from "lucide-react";
+import { Pencil, Plus, RotateCcw, Search, TimerReset, Trash, Trash2 } from "lucide-react";
 import FormSaveStateNotice from "@/components/forms/FormSaveStateNotice";
 import ManagementLayout from "@/components/management/ManagementLayout";
 import BuildOsTaskForm, {
@@ -30,6 +30,8 @@ import {
   deleteTask,
   loadMasterDatabaseRecords,
   loadTasks,
+  purgeTask,
+  restoreTask,
   saveTask,
   type BuildOsTask,
 } from "@/lib/buildosShared";
@@ -92,9 +94,11 @@ export default function ManagementProjectTasks() {
   const [search, setSearch] = useState("");
   const [projectFilter, setProjectFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [showArchived, setShowArchived] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingRecord, setEditingRecord] = useState<BuildOsTask | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<BuildOsTask | null>(null);
+  const [deleteReason, setDeleteReason] = useState("");
   const [form, setForm] = useState<BuildOsTaskFormState>(createTaskFormState());
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -112,8 +116,8 @@ export default function ManagementProjectTasks() {
     queryFn: async () => loadMasterDatabaseRecords(),
   });
   const { data: tasks = [] } = useQuery({
-    queryKey: ["buildos-tasks"],
-    queryFn: async () => loadTasks(),
+    queryKey: ["buildos-tasks", showArchived],
+    queryFn: async () => loadTasks({ includeDeleted: showArchived }),
   });
 
   const projectMap = useMemo(
@@ -228,9 +232,29 @@ export default function ManagementProjectTasks() {
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
-    await deleteTask(deleteTarget.id);
+    await deleteTask(deleteTarget.id, {
+      actor: deleteTarget.lastUpdatedBy || "ENCI BuildOS",
+      reason: deleteReason,
+    });
     setDeleteTarget(null);
+    setDeleteReason("");
     await invalidateBuildOsQueries(queryClient);
+    toast.success("Task archived.");
+  };
+
+  const handleRestore = async (task: BuildOsTask) => {
+    await restoreTask(task.id, {
+      actor: task.lastUpdatedBy || "ENCI BuildOS",
+      reason: "Task restored for active execution tracking.",
+    });
+    await invalidateBuildOsQueries(queryClient);
+    toast.success("Task restored.");
+  };
+
+  const handlePurge = async (task: BuildOsTask) => {
+    await purgeTask(task.id);
+    await invalidateBuildOsQueries(queryClient);
+    toast.success("Archived task purged.");
   };
 
   return (
@@ -290,7 +314,7 @@ export default function ManagementProjectTasks() {
           <CardHeader>
             <CardTitle className="text-xl text-foreground">Filter task register</CardTitle>
           </CardHeader>
-          <CardContent className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px_220px]">
+          <CardContent className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px_220px_auto]">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -324,6 +348,13 @@ export default function ManagementProjectTasks() {
               <option value="Waiting Review">Waiting Review</option>
               <option value="Completed">Completed</option>
             </select>
+            <Button
+              variant="outline"
+              className="rounded-full"
+              onClick={() => setShowArchived((current) => !current)}
+            >
+              {showArchived ? "Hide archived" : "Show archived"}
+            </Button>
           </CardContent>
         </Card>
 
@@ -346,7 +377,7 @@ export default function ManagementProjectTasks() {
                         <div className="flex flex-wrap items-center gap-2">
                           <h2 className="text-xl font-semibold text-foreground">{task.title}</h2>
                           <Badge className={`rounded-full ${getStatusBadge(task.status)}`}>
-                            {task.status}
+                            {task.deletedAt ? "Archived" : task.status}
                           </Badge>
                           <Badge className={`rounded-full ${getPriorityBadge(task.priority)}`}>
                             {task.priority}
@@ -412,6 +443,11 @@ export default function ManagementProjectTasks() {
                             <p className="mt-1 text-xs text-muted-foreground">
                               Last changed {task.updatedAt}
                             </p>
+                            {task.deletedAt ? (
+                              <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
+                                Archived {task.deletedAt} | {task.deletionReason || "Reason not recorded"}
+                              </p>
+                            ) : null}
                           </div>
                         </div>
                         {vendorInsight ? (
@@ -433,18 +469,44 @@ export default function ManagementProjectTasks() {
                       </div>
 
                       <div className="flex flex-wrap gap-2">
-                        <Button variant="outline" className="rounded-full" onClick={() => openForm(task)}>
-                          <Pencil className="mr-2 h-4 w-4" />
-                          Edit
-                        </Button>
-                        <Button
-                          variant="outline"
-                          className="rounded-full text-rose-600 hover:text-rose-700"
-                          onClick={() => setDeleteTarget(task)}
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Remove
-                        </Button>
+                        {!task.deletedAt ? (
+                          <>
+                            <Button variant="outline" className="rounded-full" onClick={() => openForm(task)}>
+                              <Pencil className="mr-2 h-4 w-4" />
+                              Edit
+                            </Button>
+                            <Button
+                              variant="outline"
+                              className="rounded-full text-rose-600 hover:text-rose-700"
+                              onClick={() => {
+                                setDeleteTarget(task);
+                                setDeleteReason("");
+                              }}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Archive
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button
+                              variant="outline"
+                              className="rounded-full"
+                              onClick={() => void handleRestore(task)}
+                            >
+                              <RotateCcw className="mr-2 h-4 w-4" />
+                              Restore
+                            </Button>
+                            <Button
+                              variant="outline"
+                              className="rounded-full text-rose-600 hover:text-rose-700"
+                              onClick={() => void handlePurge(task)}
+                            >
+                              <Trash className="mr-2 h-4 w-4" />
+                              Purge
+                            </Button>
+                          </>
+                        )}
                       </div>
                     </div>
                   </CardContent>
@@ -515,15 +577,24 @@ export default function ManagementProjectTasks() {
       <AlertDialog open={Boolean(deleteTarget)} onOpenChange={() => setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Remove task</AlertDialogTitle>
+            <AlertDialogTitle>Archive task</AlertDialogTitle>
             <AlertDialogDescription>
-              Remove "{deleteTarget?.title}" from the execution register?
+              Archive "{deleteTarget?.title}" from the execution register and record why.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <Input
+            value={deleteReason}
+            onChange={(event) => setDeleteReason(event.target.value)}
+            placeholder="Reason for archive (required)"
+          />
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction className="bg-rose-600 hover:bg-rose-700" onClick={() => void handleDelete()}>
-              Remove
+            <AlertDialogAction
+              className="bg-rose-600 hover:bg-rose-700"
+              disabled={!deleteReason.trim()}
+              onClick={() => void handleDelete()}
+            >
+              Archive
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

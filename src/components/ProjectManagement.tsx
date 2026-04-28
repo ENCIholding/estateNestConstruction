@@ -3,9 +3,9 @@ import { Building2, FileCheck, MessageSquare, Users } from "lucide-react";
 const controls = [
   {
     icon: Users,
-    title: "Trade coordination",
+    title: "Scope clarity and field coordination",
     description:
-      "Sequencing, accountability, and field communication need to be visible if a project is going to stay on track.",
+      "Sequencing, accountability, and field communication need to stay visible if a project is going to hold scope and move cleanly from one milestone to the next.",
   },
   {
     icon: Building2,
@@ -15,15 +15,15 @@ const controls = [
   },
   {
     icon: FileCheck,
-    title: "Permits and compliance tracking",
+    title: "Permit and document readiness",
     description:
-      "Permit references, legal details, and compliance notes should be linked to the project record before being treated as complete.",
+      "Permit references, legal details, inspection records, and compliance notes should be tied to the live project file before they are treated as complete.",
   },
   {
     icon: MessageSquare,
-    title: "Client and lender communication",
+    title: "Client and lender review",
     description:
-      "The goal is to keep updates, questions, and approvals tied to the actual project rather than scattered across inboxes and spreadsheets.",
+      "The goal is to keep updates, questions, approvals, and next steps tied to the actual project rather than scattered across inboxes and spreadsheets.",
   },
 ];
 
@@ -38,7 +38,9 @@ export default function ProjectManagement() {
               <span className="text-enc-text-primary"> & Governance</span>
             </h2>
             <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-              Estate Nest Capital is building around the controls that matter most to delivery: schedules that can be trusted, documentation that can be reviewed, and responsibilities that are visible.
+              Estate Nest Capital organizes construction work around scope
+              clarity, permit readiness, cost discipline, communication
+              records, and lender or client review.
             </p>
           </div>
 
@@ -70,7 +72,9 @@ export default function ProjectManagement() {
           </div>
 
           <p className="mx-auto mt-12 max-w-4xl text-center text-lg leading-8 text-muted-foreground">
-            Specific software and reporting tools may vary by project stage. What matters is that the project controls are real, current, and reviewable by the people relying on them.
+            Specific software and reporting tools may vary by project stage.
+            What matters is that project controls are real, current, and
+            reviewable by the people relying on them.
           </p>
         </div>
       </div>

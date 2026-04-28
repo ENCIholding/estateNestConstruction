@@ -15,6 +15,9 @@ const MODULES: ModuleDescriptor[] = [
   { module: "documents" },
   { module: "project-participants" },
   { module: "tasks" },
+  { module: "presentations" },
+  { module: "videos" },
+  { module: "client-reports" },
   { module: "tenant-profile", singleton: true },
   { module: "automation-settings", singleton: true },
 ];

@@ -5,7 +5,7 @@ import {
 } from "../_lib/auth.js";
 import {
   findManagementUser,
-  getPermissionsForRole,
+  toSessionUser,
   type ManagementRole,
 } from "../_lib/managementUsers.js";
 
@@ -29,16 +29,21 @@ export default function handler(req: any, res: any) {
       });
     }
 
+    const configuredUser = findManagementUser(session.username);
+    const resolvedRole =
+      (session.role || configuredUser?.role || "Admin") as ManagementRole;
+    const resolvedUser = toSessionUser({
+      allowedProjectIds: configuredUser?.allowedProjectIds,
+      displayName: session.displayName || configuredUser?.displayName,
+      role: resolvedRole,
+      username: session.username,
+    });
+
     return res.status(200).json({
       authenticated: true,
       user: {
-        displayName: session.displayName,
-        permissions: getPermissionsForRole(
-          ((session.role || findManagementUser(session.username)?.role || "Admin") as ManagementRole)
-        ),
-        app_role:
-          session.role || findManagementUser(session.username)?.role || "Admin",
-        username: session.username,
+        ...resolvedUser,
+        app_role: resolvedRole,
       },
       redirectTo: "/management/dashboard",
     });

@@ -11,6 +11,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "smoke": "node scripts/smoke-check.mjs",
+    "qa:a11y": "node scripts/accessibility-qa-checklist.mjs",
     "typecheck": "tsc -b",
     "preview": "vite preview",
     "verify:env": "node scripts/check-management-env.mjs",

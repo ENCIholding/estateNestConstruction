@@ -9,8 +9,11 @@ import {
   Loader2,
   Pencil,
   Plus,
+  RotateCcw,
   Search,
+  ShieldAlert,
   Trash2,
+  Trash,
 } from "lucide-react";
 import ManagementLayout from "@/components/management/ManagementLayout";
 import ProjectDecisionSupportPanel from "@/components/projects/ProjectDecisionSupportPanel";
@@ -53,6 +56,8 @@ import {
   loadChangeOrders,
   loadDeficiencies,
   loadMasterDatabaseRecords,
+  purgeChangeOrder,
+  restoreChangeOrder,
   saveChangeOrder,
   type BuildOsChangeOrder,
 } from "@/lib/buildosShared";
@@ -120,8 +125,10 @@ export default function ManagementChangeOrders() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showForm, setShowForm] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
   const [editingRecord, setEditingRecord] = useState<BuildOsChangeOrder | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<BuildOsChangeOrder | null>(null);
+  const [deleteReason, setDeleteReason] = useState("");
   const [form, setForm] = useState<ChangeOrderFormState>(initialForm());
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -133,8 +140,8 @@ export default function ManagementChangeOrders() {
     queryFn: fetchManagementProjects,
   });
   const { data: changeOrders = [] } = useQuery({
-    queryKey: ["buildos-change-orders"],
-    queryFn: async () => loadChangeOrders(),
+    queryKey: ["buildos-change-orders", showArchived],
+    queryFn: async () => loadChangeOrders({ includeDeleted: showArchived }),
   });
   const { data: masterRecords = [] } = useQuery({
     queryKey: ["buildos-master-database"],
@@ -230,10 +237,12 @@ export default function ManagementChangeOrders() {
     });
   }, [changeOrders, projectMap, search, statusFilter]);
 
-  const approvedImpact = changeOrders
+  const activeChangeOrders = changeOrders.filter((record) => !record.deletedAt);
+  const archivedChangeOrders = changeOrders.filter((record) => Boolean(record.deletedAt));
+  const approvedImpact = activeChangeOrders
     .filter((record) => ["Approved", "Implemented"].includes(record.status))
     .reduce((total, record) => total + record.budgetImpact, 0);
-  const pendingExposure = changeOrders
+  const pendingExposure = activeChangeOrders
     .filter((record) => ["Draft", "Pending Approval"].includes(record.status))
     .reduce((total, record) => total + record.budgetImpact, 0);
 
@@ -336,14 +345,44 @@ export default function ManagementChangeOrders() {
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
-    await deleteChangeOrder(deleteTarget.id);
+    await deleteChangeOrder(deleteTarget.id, {
+      actor: deleteTarget.updatedBy || "ENCI BuildOS",
+      reason: deleteReason,
+    });
     setDeleteTarget(null);
+    setDeleteReason("");
     await queryClient.invalidateQueries({
       predicate: (query) =>
         Array.isArray(query.queryKey) &&
         typeof query.queryKey[0] === "string" &&
         (query.queryKey[0].startsWith("buildos") || query.queryKey[0].startsWith("management")),
     });
+    toast.success("Change order archived.");
+  };
+
+  const handleRestore = async (record: BuildOsChangeOrder) => {
+    await restoreChangeOrder(record.id, {
+      actor: record.updatedBy || "ENCI BuildOS",
+      reason: "Change order restored for active review.",
+    });
+    await queryClient.invalidateQueries({
+      predicate: (query) =>
+        Array.isArray(query.queryKey) &&
+        typeof query.queryKey[0] === "string" &&
+        (query.queryKey[0].startsWith("buildos") || query.queryKey[0].startsWith("management")),
+    });
+    toast.success("Change order restored.");
+  };
+
+  const handlePurge = async (record: BuildOsChangeOrder) => {
+    await purgeChangeOrder(record.id);
+    await queryClient.invalidateQueries({
+      predicate: (query) =>
+        Array.isArray(query.queryKey) &&
+        typeof query.queryKey[0] === "string" &&
+        (query.queryKey[0].startsWith("buildos") || query.queryKey[0].startsWith("management")),
+    });
+    toast.success("Archived change order purged.");
   };
 
   return (
@@ -378,7 +417,7 @@ export default function ManagementChangeOrders() {
           <Card className="dashboard-panel p-2">
             <CardContent className="p-5">
               <p className="text-sm font-medium text-muted-foreground">Change orders</p>
-              <p className="mt-3 text-3xl font-semibold text-foreground">{changeOrders.length}</p>
+              <p className="mt-3 text-3xl font-semibold text-foreground">{activeChangeOrders.length}</p>
             </CardContent>
           </Card>
           <Card className="dashboard-panel p-2">
@@ -397,7 +436,7 @@ export default function ManagementChangeOrders() {
             <CardContent className="p-5">
               <p className="text-sm font-medium text-muted-foreground">Awaiting decision</p>
               <p className="mt-3 text-3xl font-semibold text-foreground">
-                {changeOrders.filter((record) => ["Draft", "Pending Approval"].includes(record.status)).length}
+                {activeChangeOrders.filter((record) => ["Draft", "Pending Approval"].includes(record.status)).length}
               </p>
             </CardContent>
           </Card>
@@ -407,7 +446,7 @@ export default function ManagementChangeOrders() {
           <CardHeader>
             <CardTitle className="text-xl text-foreground">Filter change orders</CardTitle>
           </CardHeader>
-          <CardContent className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px]">
+          <CardContent className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px_auto]">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -427,8 +466,15 @@ export default function ManagementChangeOrders() {
               <option value="Pending Approval">Pending Approval</option>
               <option value="Approved">Approved</option>
               <option value="Rejected">Rejected</option>
-              <option value="Implemented">Implemented</option>
-            </select>
+                <option value="Implemented">Implemented</option>
+              </select>
+              <Button
+                variant="outline"
+                className="rounded-full"
+                onClick={() => setShowArchived((current) => !current)}
+              >
+                {showArchived ? "Hide archived" : "Show archived"}
+              </Button>
           </CardContent>
         </Card>
 
@@ -450,6 +496,9 @@ export default function ManagementChangeOrders() {
                           </Badge>
                           <Badge
                             className={
+                              record.deletedAt
+                                ? "rounded-full bg-slate-500/10 text-slate-700 dark:text-slate-300"
+                                :
                               record.status === "Approved" || record.status === "Implemented"
                                 ? "rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
                                 : record.status === "Rejected"
@@ -457,7 +506,7 @@ export default function ManagementChangeOrders() {
                                   : "rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300"
                             }
                           >
-                            {record.status}
+                            {record.deletedAt ? "Archived" : record.status}
                           </Badge>
                         </div>
                         {snapshot ? <ProjectSignalBadgeCluster snapshot={snapshot} /> : null}
@@ -510,6 +559,11 @@ export default function ManagementChangeOrders() {
                             <p className="mt-1 text-xs text-muted-foreground">
                               Last changed {formatAuditDateTime(record.updatedAt)}
                             </p>
+                            {record.deletedAt ? (
+                              <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
+                                Archived {formatAuditDateTime(record.deletedAt)} | {record.deletionReason || "Reason not recorded"}
+                              </p>
+                            ) : null}
                           </div>
                           <div className="dashboard-item p-3">
                             <p className="text-sm font-medium text-foreground">Revenue control</p>
@@ -539,22 +593,48 @@ export default function ManagementChangeOrders() {
                       </div>
 
                       <div className="flex flex-wrap gap-2">
-                        <Button
-                          variant="outline"
-                          className="rounded-full"
-                          onClick={() => openForm(record)}
-                        >
-                          <Pencil className="mr-2 h-4 w-4" />
-                          Edit
-                        </Button>
-                        <Button
-                          variant="outline"
-                          className="rounded-full text-rose-600 hover:text-rose-700"
-                          onClick={() => setDeleteTarget(record)}
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Remove
-                        </Button>
+                        {!record.deletedAt ? (
+                          <>
+                            <Button
+                              variant="outline"
+                              className="rounded-full"
+                              onClick={() => openForm(record)}
+                            >
+                              <Pencil className="mr-2 h-4 w-4" />
+                              Edit
+                            </Button>
+                            <Button
+                              variant="outline"
+                              className="rounded-full text-rose-600 hover:text-rose-700"
+                              onClick={() => {
+                                setDeleteTarget(record);
+                                setDeleteReason("");
+                              }}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Archive
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button
+                              variant="outline"
+                              className="rounded-full"
+                              onClick={() => void handleRestore(record)}
+                            >
+                              <RotateCcw className="mr-2 h-4 w-4" />
+                              Restore
+                            </Button>
+                            <Button
+                              variant="outline"
+                              className="rounded-full text-rose-600 hover:text-rose-700"
+                              onClick={() => void handlePurge(record)}
+                            >
+                              <Trash className="mr-2 h-4 w-4" />
+                              Purge
+                            </Button>
+                          </>
+                        )}
                       </div>
                     </div>
                   </CardContent>
@@ -874,15 +954,30 @@ export default function ManagementChangeOrders() {
       <AlertDialog open={Boolean(deleteTarget)} onOpenChange={() => setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Remove change order</AlertDialogTitle>
+            <AlertDialogTitle>Archive change order</AlertDialogTitle>
             <AlertDialogDescription>
-              Remove "{deleteTarget?.title}" from the project record?
+              Archive "{deleteTarget?.title}" from the active project register. Add a reason for audit visibility.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="change-order-delete-reason">Reason for archive *</Label>
+            <Textarea
+              id="change-order-delete-reason"
+              rows={3}
+              value={deleteReason}
+              onChange={(event) => setDeleteReason(event.target.value)}
+              placeholder="Example: superseded by approved CO-14"
+            />
+          </div>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction className="bg-rose-600 hover:bg-rose-700" onClick={() => void handleDelete()}>
-              Remove
+            <AlertDialogAction
+              className="bg-rose-600 hover:bg-rose-700"
+              disabled={!deleteReason.trim()}
+              onClick={() => void handleDelete()}
+            >
+              <ShieldAlert className="mr-2 h-4 w-4" />
+              Archive
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

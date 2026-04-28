@@ -15,6 +15,7 @@ import BuilderCredentials from "@/components/BuilderCredentials";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import PublicPageBackLink from "@/components/PublicPageBackLink";
+import Seo from "@/components/Seo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -50,16 +51,16 @@ const materialGroups = [
     title: "What this profile can support",
     items: [
       "A clearer explanation of Estate Nest Capital's operating approach",
-      "An overview of the types of materials that should be prepared for diligence",
-      "A more grounded discussion of planning, documentation, and accountability",
+      "An overview of the materials that may support qualified diligence review",
+      "A grounded discussion of planning, documentation, delivery controls, and accountability",
     ],
   },
   {
-    title: "What still requires business-supplied facts",
+    title: "Private diligence and disclosure basis",
     items: [
-      "Named completed or active projects that can be publicly disclosed",
-      "Verified licensing, insurance, warranty, and certification details",
-      "Team biographies, lender-ready case studies, and earned metrics",
+      "Detailed project references, permit records, and lender-facing materials are available only to qualified parties under an appropriate context",
+      "Verified licensing, insurance, warranty, and certification details should be matched to the relevant project or business file",
+      "Disclosure can be staged according to confidentiality, deal sensitivity, and review need",
     ],
   },
 ];
@@ -67,6 +68,11 @@ const materialGroups = [
 export default function BuilderProfile() {
   return (
     <div className="min-h-screen bg-background">
+      <Seo
+        title="Builder Profile | Estate Nest Capital Inc."
+        description="Builder profile for Estate Nest Capital Inc., covering operating capability, project readiness, documentation discipline, and qualified diligence pathways."
+        path="/builder-profile"
+      />
       <Header />
 
       <main id="main-content" className="pt-28">
@@ -89,10 +95,13 @@ export default function BuilderProfile() {
                     Builder profile
                   </p>
                   <h1 className="mt-3 text-4xl font-bold md:text-5xl">
-                    A more reviewable picture of how projects are organized
+                    Real construction coordination, cleaner diligence, and reviewable project controls
                   </h1>
                   <p className="mt-4 max-w-3xl text-lg leading-8 text-white/85">
-                    This page is designed to describe how Estate Nest Capital is approaching project readiness, documentation, and stakeholder communication without inventing proof that has not been supplied.
+                    Estate Nest Capital presents builder information around real
+                    operating capability, real project execution discipline,
+                    Edmonton construction experience, and lender-facing
+                    documentation readiness.
                   </p>
                 </div>
               </div>
@@ -101,15 +110,21 @@ export default function BuilderProfile() {
                 <Card className="card-hover border-0 shadow-xl">
                   <CardHeader>
                     <CardTitle className="text-2xl text-enc-text-primary">
-                      Why this page was rebuilt
+                      Operating focus
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4 text-lg leading-8 text-enc-text-secondary">
                     <p>
-                      Earlier versions of this profile relied on generic superlatives, precise-looking metrics, and compliance-style statements that were not backed by evidence inside the repo.
+                      Estate Nest Capital organizes construction work around
+                      planning discipline, permit readiness, cost visibility,
+                      communication records, and lender or client review that
+                      can stand up to real project pressure.
                     </p>
                     <p>
-                      The current version is intentionally more grounded. It explains what Estate Nest Capital is trying to build operationally and where real business content still needs to be supplied.
+                      This profile is meant to show how projects are approached
+                      operationally, what kinds of diligence materials can be
+                      prepared, and where private disclosure remains the more
+                      appropriate channel.
                     </p>
                   </CardContent>
                 </Card>
@@ -117,12 +132,15 @@ export default function BuilderProfile() {
                 <Card className="card-hover border-0 shadow-xl">
                   <CardHeader>
                     <CardTitle className="text-2xl text-enc-text-primary">
-                      Next diligence step
+                      Qualified review path
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4 text-sm leading-7 text-enc-text-secondary">
                     <p>
-                      When real project sheets, permit references, team biographies, and business credentials are ready for disclosure, they should be added here as verified material rather than inferred marketing copy.
+                      Detailed project references, permit records, and
+                      diligence materials are shared selectively with qualified
+                      clients, lenders, and partners where disclosure is
+                      appropriate.
                     </p>
                     <Button asChild className="w-full bg-gradient-warm text-white hover:shadow-glow">
                       <Link to="/#appointment">
@@ -196,10 +214,15 @@ export default function BuilderProfile() {
                     <div className="text-center">
                       <h2 className="text-3xl font-bold md:text-4xl">
                         <span className="gradient-text">Ready to Build</span>
-                        <span className="text-enc-text-primary"> Edmonton&apos;s Future</span>
+                        <span className="text-enc-text-primary">
+                          {" "}
+                          Edmonton&apos;s Future
+                        </span>
                       </h2>
                       <p className="mx-auto mt-5 max-w-3xl text-lg leading-8 text-enc-text-secondary">
-                        If you want to review Estate Nest Capital&apos;s builder approach, discuss diligence expectations, or start a project conversation, use the contact paths below.
+                        If you want to review Estate Nest Capital&apos;s builder
+                        approach, discuss diligence expectations, or start a
+                        project conversation, use the contact paths below.
                       </p>
                     </div>
 

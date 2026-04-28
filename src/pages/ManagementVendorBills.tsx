@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Download, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { Download, Pencil, Plus, RotateCcw, Search, Trash, Trash2 } from "lucide-react";
 import FormSaveStateNotice from "@/components/forms/FormSaveStateNotice";
 import ManagementLayout from "@/components/management/ManagementLayout";
 import {
@@ -33,6 +33,8 @@ import {
   deleteVendorBill,
   loadMasterDatabaseRecords,
   loadVendorBills,
+  purgeVendorBill,
+  restoreVendorBill,
   saveVendorBill,
   type BuildOsVendorBill,
 } from "@/lib/buildosShared";
@@ -83,9 +85,11 @@ export default function ManagementVendorBills() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [showArchived, setShowArchived] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingRecord, setEditingRecord] = useState<BuildOsVendorBill | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<BuildOsVendorBill | null>(null);
+  const [deleteReason, setDeleteReason] = useState("");
   const [form, setForm] = useState<BillFormState>(initialForm());
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -101,8 +105,8 @@ export default function ManagementVendorBills() {
     queryFn: async () => loadMasterDatabaseRecords(),
   });
   const { data: bills = [] } = useQuery({
-    queryKey: ["buildos-vendor-bills"],
-    queryFn: async () => loadVendorBills(),
+    queryKey: ["buildos-vendor-bills", showArchived],
+    queryFn: async () => loadVendorBills({ includeDeleted: showArchived }),
   });
 
   const vendors = useMemo(
@@ -226,14 +230,44 @@ export default function ManagementVendorBills() {
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
-    await deleteVendorBill(deleteTarget.id);
+    await deleteVendorBill(deleteTarget.id, {
+      actor: deleteTarget.updatedBy || "ENCI BuildOS",
+      reason: deleteReason,
+    });
     setDeleteTarget(null);
+    setDeleteReason("");
     await queryClient.invalidateQueries({
       predicate: (query) =>
         Array.isArray(query.queryKey) &&
         typeof query.queryKey[0] === "string" &&
         (query.queryKey[0].startsWith("buildos") || query.queryKey[0].startsWith("management")),
     });
+    toast.success("Vendor bill archived.");
+  };
+
+  const handleRestore = async (bill: BuildOsVendorBill) => {
+    await restoreVendorBill(bill.id, {
+      actor: bill.updatedBy || "ENCI BuildOS",
+      reason: "Vendor bill restored for active review.",
+    });
+    await queryClient.invalidateQueries({
+      predicate: (query) =>
+        Array.isArray(query.queryKey) &&
+        typeof query.queryKey[0] === "string" &&
+        (query.queryKey[0].startsWith("buildos") || query.queryKey[0].startsWith("management")),
+    });
+    toast.success("Vendor bill restored.");
+  };
+
+  const handlePurge = async (bill: BuildOsVendorBill) => {
+    await purgeVendorBill(bill.id);
+    await queryClient.invalidateQueries({
+      predicate: (query) =>
+        Array.isArray(query.queryKey) &&
+        typeof query.queryKey[0] === "string" &&
+        (query.queryKey[0].startsWith("buildos") || query.queryKey[0].startsWith("management")),
+    });
+    toast.success("Archived vendor bill purged.");
   };
 
   return (
@@ -266,7 +300,7 @@ export default function ManagementVendorBills() {
           <CardHeader>
             <CardTitle className="text-xl text-foreground">Filter vendor bills</CardTitle>
           </CardHeader>
-          <CardContent className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px]">
+          <CardContent className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px_auto]">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input value={search} onChange={(event) => setSearch(event.target.value)} className="pl-10" placeholder="Search invoice number, project, or vendor" />
@@ -278,6 +312,13 @@ export default function ManagementVendorBills() {
               <option value="Paid">Paid</option>
               <option value="Overdue">Overdue</option>
             </select>
+            <Button
+              variant="outline"
+              className="rounded-full"
+              onClick={() => setShowArchived((current) => !current)}
+            >
+              {showArchived ? "Hide archived" : "Show archived"}
+            </Button>
           </CardContent>
         </Card>
 
@@ -294,7 +335,9 @@ export default function ManagementVendorBills() {
                         <div className="flex flex-wrap items-center gap-2">
                           <h2 className="text-xl font-semibold text-foreground">{bill.invoiceNumber}</h2>
                           <Badge className="rounded-full bg-muted text-muted-foreground">{projectMap.get(bill.projectId) || "Unlinked project"}</Badge>
-                          <Badge className="rounded-full bg-enc-orange/10 text-enc-orange">{bill.status}</Badge>
+                          <Badge className="rounded-full bg-enc-orange/10 text-enc-orange">
+                            {bill.deletedAt ? "Archived" : bill.status}
+                          </Badge>
                           {vendorInsight ? (
                             <Badge
                               className={
@@ -349,6 +392,11 @@ export default function ManagementVendorBills() {
                           <p className="mt-1 text-xs text-muted-foreground">
                             Last changed {bill.updatedAt}
                           </p>
+                          {bill.deletedAt ? (
+                            <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
+                              Archived {bill.deletedAt} | {bill.deletionReason || "Reason not recorded"}
+                            </p>
+                          ) : null}
                         </div>
                         {bill.notes ? (
                           <div className="dashboard-item p-3">
@@ -358,14 +406,44 @@ export default function ManagementVendorBills() {
                         ) : null}
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        <Button variant="outline" className="rounded-full" onClick={() => openForm(bill)}>
-                          <Pencil className="mr-2 h-4 w-4" />
-                          Edit
-                        </Button>
-                        <Button variant="outline" className="rounded-full text-rose-600 hover:text-rose-700" onClick={() => setDeleteTarget(bill)}>
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Remove
-                        </Button>
+                        {!bill.deletedAt ? (
+                          <>
+                            <Button variant="outline" className="rounded-full" onClick={() => openForm(bill)}>
+                              <Pencil className="mr-2 h-4 w-4" />
+                              Edit
+                            </Button>
+                            <Button
+                              variant="outline"
+                              className="rounded-full text-rose-600 hover:text-rose-700"
+                              onClick={() => {
+                                setDeleteTarget(bill);
+                                setDeleteReason("");
+                              }}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Archive
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button
+                              variant="outline"
+                              className="rounded-full"
+                              onClick={() => void handleRestore(bill)}
+                            >
+                              <RotateCcw className="mr-2 h-4 w-4" />
+                              Restore
+                            </Button>
+                            <Button
+                              variant="outline"
+                              className="rounded-full text-rose-600 hover:text-rose-700"
+                              onClick={() => void handlePurge(bill)}
+                            >
+                              <Trash className="mr-2 h-4 w-4" />
+                              Purge
+                            </Button>
+                          </>
+                        )}
                       </div>
                     </div>
                   </CardContent>
@@ -522,15 +600,29 @@ export default function ManagementVendorBills() {
       <AlertDialog open={Boolean(deleteTarget)} onOpenChange={() => setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Remove vendor bill</AlertDialogTitle>
+            <AlertDialogTitle>Archive vendor bill</AlertDialogTitle>
             <AlertDialogDescription>
-              Remove "{deleteTarget?.invoiceNumber}" from Vendor Bills?
+              Archive "{deleteTarget?.invoiceNumber}" and keep an audit reason.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="vendor-bill-delete-reason">Reason for archive *</Label>
+            <Textarea
+              id="vendor-bill-delete-reason"
+              rows={3}
+              value={deleteReason}
+              onChange={(event) => setDeleteReason(event.target.value)}
+              placeholder="Example: duplicate invoice entry"
+            />
+          </div>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction className="bg-rose-600 hover:bg-rose-700" onClick={() => void handleDelete()}>
-              Remove
+            <AlertDialogAction
+              className="bg-rose-600 hover:bg-rose-700"
+              disabled={!deleteReason.trim()}
+              onClick={() => void handleDelete()}
+            >
+              Archive
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

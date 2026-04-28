@@ -13,6 +13,9 @@ const BuilderProfile = lazy(() => import("./pages/BuilderProfile"));
 const InvestorRelations = lazy(() => import("./pages/InvestorRelations"));
 const Careers = lazy(() => import("./pages/Careers"));
 const Accessibility = lazy(() => import("./pages/Accessibility"));
+const TermsAndConditions = lazy(() => import("./pages/TermsAndConditions"));
+const Privacy = lazy(() => import("./pages/Privacy"));
+const Cookies = lazy(() => import("./pages/Cookies"));
 const ThankYou = lazy(() => import("./pages/ThankYou"));
 const ManagementLogin = lazy(() => import("./pages/ManagementLogin"));
 const ManagementDashboard = lazy(() => import("./pages/ManagementDashboard"));
@@ -26,6 +29,9 @@ const ManagementBudgetCosts = lazy(() => import("./pages/ManagementBudgetCosts")
 const ManagementChangeOrders = lazy(() => import("./pages/ManagementChangeOrders"));
 const ManagementClientInvoices = lazy(() => import("./pages/ManagementClientInvoices"));
 const ManagementDocuments = lazy(() => import("./pages/ManagementDocuments"));
+const ManagementPresentations = lazy(() => import("./pages/ManagementPresentations"));
+const ManagementVideos = lazy(() => import("./pages/ManagementVideos"));
+const ManagementClientReports = lazy(() => import("./pages/ManagementClientReports"));
 const ManagementCompliance = lazy(() => import("./pages/ManagementCompliance"));
 const ManagementDailyLog = lazy(() => import("./pages/ManagementDailyLog"));
 const ManagementDeficiencyPunchList = lazy(
@@ -77,6 +83,9 @@ export default function App() {
             <Route path="/investor-relations" element={<InvestorRelations />} />
             <Route path="/careers" element={<Careers />} />
             <Route path="/accessibility" element={<Accessibility />} />
+            <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/cookies" element={<Cookies />} />
             <Route path="/thank-you" element={<ThankYou />} />
             <Route path="/management" element={<Navigate to="/management/login" replace />} />
 
@@ -142,6 +151,30 @@ export default function App() {
               element={
                 <RequireManagementAuth>
                   <ManagementReports />
+                </RequireManagementAuth>
+              }
+            />
+            <Route
+              path="/management/presentations"
+              element={
+                <RequireManagementAuth>
+                  <ManagementPresentations />
+                </RequireManagementAuth>
+              }
+            />
+            <Route
+              path="/management/videos"
+              element={
+                <RequireManagementAuth>
+                  <ManagementVideos />
+                </RequireManagementAuth>
+              }
+            />
+            <Route
+              path="/management/client-reports"
+              element={
+                <RequireManagementAuth>
+                  <ManagementClientReports />
                 </RequireManagementAuth>
               }
             />

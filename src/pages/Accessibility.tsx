@@ -1,6 +1,7 @@
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import PublicPageBackLink from "@/components/PublicPageBackLink";
+import Seo from "@/components/Seo";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const features = [
@@ -29,6 +30,11 @@ const features = [
 export default function Accessibility() {
   return (
     <div className="min-h-screen bg-background">
+      <Seo
+        title="Accessibility | Estate Nest Capital Inc."
+        description="Accessibility statement for Estate Nest Capital Inc., including WCAG 2.1 AA alignment goals and ongoing review areas."
+        path="/accessibility"
+      />
       <Header />
 
       <main id="main-content" className="pt-28">
@@ -42,7 +48,9 @@ export default function Accessibility() {
                 <span className="gradient-text">Accessibility</span>
               </h1>
               <p className="mx-auto mt-6 max-w-3xl text-xl leading-8 text-enc-text-secondary">
-                Estate Nest Capital Inc. is working to support WCAG 2.1 AA expectations across core website flows, with ongoing review as content and functionality evolve.
+                Estate Nest Capital Inc. is working toward alignment with WCAG
+                2.1 AA accessibility principles across core website flows, with
+                ongoing review as content and functionality evolve.
               </p>
             </div>
 
@@ -54,10 +62,15 @@ export default function Accessibility() {
               </CardHeader>
               <CardContent className="space-y-4 text-lg leading-8 text-enc-text-secondary">
                 <p>
-                  Use the floating Accessibility button on the site to turn accessible colors on or off. The enhanced mode reduces reliance on decorative gradients and strengthens contrast and focus visibility.
+                  Use the floating Accessibility button on the site to turn
+                  accessible colors on or off. The enhanced mode reduces
+                  reliance on decorative gradients and strengthens contrast and
+                  focus visibility.
                 </p>
                 <p>
-                  Because the site continues to evolve, accessibility is treated as an active operating requirement rather than a one-time claim.
+                  Because the site continues to evolve, accessibility is treated
+                  as an active operating requirement rather than a one-time
+                  claim.
                 </p>
               </CardContent>
             </Card>
@@ -82,6 +95,39 @@ export default function Accessibility() {
             <Card className="mt-10 card-hover border-0 shadow-xl">
               <CardHeader>
                 <CardTitle className="text-2xl text-enc-text-primary">
+                  Current accessibility review areas
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4 text-enc-text-secondary">
+                <p>
+                  Estate Nest Capital Inc. is working toward alignment with WCAG
+                  2.1 AA accessibility principles across core website flows.
+                  Accessibility review is ongoing as content, forms, and
+                  dashboard functionality evolve.
+                </p>
+                <ul className="space-y-3 text-sm leading-7">
+                  <li>
+                    Forms are being updated to use explicit labels, clearer
+                    instructions, and more reliable error messaging for
+                    assistive technology.
+                  </li>
+                  <li>
+                    Color contrast across gradients, hero text, badges, toasts,
+                    and disabled states requires live browser-based
+                    verification rather than code inspection alone.
+                  </li>
+                  <li>
+                    Error states and form feedback are being strengthened so
+                    screen readers receive clearer announcements where action is
+                    required.
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card className="mt-10 card-hover border-0 shadow-xl">
+              <CardHeader>
+                <CardTitle className="text-2xl text-enc-text-primary">
                   Contact for accessibility support
                 </CardTitle>
               </CardHeader>
@@ -93,10 +139,13 @@ export default function Accessibility() {
                   <strong>Phone:</strong> 780-860-3191
                 </p>
                 <p>
-                  <strong>Response target:</strong> within 5 business days for accessibility-related inquiries
+                  <strong>Response target:</strong> within 5 business days for
+                  accessibility-related inquiries
                 </p>
                 <p className="pt-2 text-sm leading-7">
-                  Last updated: April 16, 2026. Estate Nest Capital reviews accessibility alongside design, content, and deployment changes.
+                  Last updated: April 27, 2026. Estate Nest Capital reviews
+                  accessibility alongside design, content, and deployment
+                  changes.
                 </p>
               </CardContent>
             </Card>

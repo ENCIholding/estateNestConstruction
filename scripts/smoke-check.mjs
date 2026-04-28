@@ -18,10 +18,9 @@ const navOrderChecks = [
   '{ label: "Home", path: "/" }',
   '{ label: "About Us", path: "/#about" }',
   '{ label: "Builder Profile", path: "/builder-profile" }',
-  '{ label: "Projects", path: "/#projects" }',
+  '{ label: "Capabilities", path: "/#projects" }',
   '{ label: "Investor Relations", path: "/investor-relations" }',
   '{ label: "Contact", path: "/#appointment", isContact: true }',
-  '{ label: "Management", path: "/management/login" }',
 ];
 
 const expectations = [
@@ -40,6 +39,18 @@ const expectations = [
   {
     name: "careers route in sitemap",
     ok: sitemap.includes("https://www.estatenest.capital/careers"),
+  },
+  {
+    name: "terms route in sitemap",
+    ok: sitemap.includes("https://www.estatenest.capital/terms-and-conditions"),
+  },
+  {
+    name: "privacy route in sitemap",
+    ok: sitemap.includes("https://www.estatenest.capital/privacy"),
+  },
+  {
+    name: "cookies route in sitemap",
+    ok: sitemap.includes("https://www.estatenest.capital/cookies"),
   },
   {
     name: "thank-you route excluded from indexing",
@@ -90,6 +101,18 @@ const expectations = [
     ok: app.includes('path="/management/reports"'),
   },
   {
+    name: "presentations route exists in app",
+    ok: app.includes('path="/management/presentations"'),
+  },
+  {
+    name: "videos route exists in app",
+    ok: app.includes('path="/management/videos"'),
+  },
+  {
+    name: "client reports route exists in app",
+    ok: app.includes('path="/management/client-reports"'),
+  },
+  {
     name: "analytics route exists in app",
     ok: app.includes('path="/management/analytics"'),
   },
@@ -138,6 +161,18 @@ const expectations = [
     ok: management.includes('{ name: "Reports", page: "reports", enabled: true }'),
   },
   {
+    name: "presentations are enabled in management navigation",
+    ok: management.includes('{ name: "Presentations", page: "presentations", enabled: true }'),
+  },
+  {
+    name: "videos are enabled in management navigation",
+    ok: management.includes('{ name: "Video Library", page: "videos", enabled: true }'),
+  },
+  {
+    name: "client reports are enabled in management navigation",
+    ok: management.includes('{ name: "Client Reports", page: "client-reports", enabled: true }'),
+  },
+  {
     name: "automation is enabled in management navigation",
     ok: management.includes('{ name: "Automation", page: "automation", enabled: true }'),
   },
@@ -154,8 +189,8 @@ const expectations = [
     ok: management.includes('{ name: "Warranty Reminder", page: "warranty-reminder", enabled: true }'),
   },
   {
-    name: "projects navigation exists in public header",
-    ok: header.includes('{ label: "Projects", path: "/#projects" }'),
+    name: "capabilities navigation exists in public header",
+    ok: header.includes('{ label: "Capabilities", path: "/#projects" }'),
   },
   {
     name: "public header navigation order matches requested order",

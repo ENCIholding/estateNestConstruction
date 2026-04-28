@@ -16,6 +16,7 @@ export default function AppointmentSection() {
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [selectedTime, setSelectedTime] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formAlert, setFormAlert] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -43,6 +44,7 @@ export default function AppointmentSection() {
       !selectedDate ||
       !selectedTime
     ) {
+      setFormAlert("Please fill in all required fields and select a date and time.");
       toast({
         title: "Missing information",
         description: "Please fill in all required fields and select a date and time.",
@@ -52,6 +54,7 @@ export default function AppointmentSection() {
     }
 
     setIsSubmitting(true);
+    setFormAlert("");
 
     try {
       const payload = {
@@ -81,6 +84,9 @@ export default function AppointmentSection() {
         title: "Appointment request sent",
         description: "Your request has been submitted successfully. We'll follow up by email or phone.",
       });
+      setFormAlert(
+        "Appointment request sent successfully. We will follow up by email or phone."
+      );
 
       setFormData({
         name: "",
@@ -91,6 +97,7 @@ export default function AppointmentSection() {
       setSelectedDate(undefined);
       setSelectedTime("");
     } catch {
+      setFormAlert("Something went wrong while sending your request. Please try again.");
       toast({
         title: "Submission failed",
         description: "Something went wrong while sending your request. Please try again.",
@@ -120,7 +127,8 @@ export default function AppointmentSection() {
             <span className="text-enc-text-primary"> a consultation</span>
           </h2>
           <p className="mx-auto mt-6 max-w-3xl text-xl leading-8 text-enc-text-secondary">
-            Use this form to start a conversation about a project, diligence package, or construction requirement.
+            Use this form to start a conversation about a project, diligence
+            package, or construction requirement.
           </p>
         </div>
 
@@ -187,6 +195,18 @@ export default function AppointmentSection() {
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-6">
+                  <div
+                    aria-live="assertive"
+                    role="alert"
+                    className={
+                      formAlert
+                        ? "rounded-xl border border-border bg-muted/40 px-4 py-3 text-sm text-enc-text-secondary"
+                        : "sr-only"
+                    }
+                  >
+                    {formAlert || "Form status messages appear here."}
+                  </div>
+
                   <div className="grid gap-4 md:grid-cols-2">
                     <div>
                       <Label htmlFor="name">Full name *</Label>
@@ -291,11 +311,23 @@ export default function AppointmentSection() {
                   </Button>
 
                   <p className="text-center text-xs text-enc-text-secondary">
-                    * Required fields. We'll review your request and confirm the next step by email or phone.
+                    * Required fields. We&apos;ll review your request and confirm
+                    the next step by email or phone.
                   </p>
                 </form>
               </CardContent>
             </Card>
+          </div>
+
+          <div className="mt-8 rounded-[1.75rem] border border-border bg-card p-6 text-center shadow-lg">
+            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-enc-orange">
+              Edmonton-based coordination
+            </p>
+            <p className="mt-3 text-lg leading-8 text-enc-text-secondary">
+              Edmonton-based construction and development coordination for
+              infill, multi-unit, commercial leasehold, and lender-ready
+              project documentation.
+            </p>
           </div>
         </div>
       </div>

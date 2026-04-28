@@ -15,17 +15,23 @@ export type BuildOsModuleName =
   | "documents"
   | "project-participants"
   | "tasks"
+  | "presentations"
+  | "videos"
+  | "client-reports"
   | "tenant-profile"
   | "automation-settings";
 
 export type ManagementPermission =
+  | "buildos:audit:read"
   | "buildos:restricted-notes:read"
   | "buildos:tenant-profile:write"
   | "buildos:automation-settings:write"
   | `buildos:${BuildOsModuleName}:read`
-  | `buildos:${BuildOsModuleName}:write`;
+  | `buildos:${BuildOsModuleName}:write`
+  | `buildos:${BuildOsModuleName}:export`;
 
 export type ManagementUserRecord = {
+  allowedProjectIds?: string[];
   displayName?: string;
   password: string;
   role: ManagementRole;
@@ -34,6 +40,7 @@ export type ManagementUserRecord = {
 
 export type ManagementSessionUser = {
   displayName?: string;
+  allowedProjectIds?: string[];
   permissions: ManagementPermission[];
   role: ManagementRole;
   username: string;
@@ -49,6 +56,9 @@ const ALL_BUILDOS_MODULES: BuildOsModuleName[] = [
   "documents",
   "project-participants",
   "tasks",
+  "presentations",
+  "videos",
+  "client-reports",
   "tenant-profile",
   "automation-settings",
 ];
@@ -63,6 +73,9 @@ const ROLE_WRITE_ACCESS: Record<ManagementRole, BuildOsModuleName[]> = {
     "documents",
     "project-participants",
     "tasks",
+    "presentations",
+    "videos",
+    "client-reports",
     "automation-settings",
   ],
   Accounting: [
@@ -71,8 +84,30 @@ const ROLE_WRITE_ACCESS: Record<ManagementRole, BuildOsModuleName[]> = {
     "client-invoices",
     "vendor-bills",
     "documents",
+    "client-reports",
   ],
   Staff: ["daily-logs", "deficiencies", "documents", "tasks"],
+  "Read Only": [],
+};
+
+const ROLE_EXPORT_ACCESS: Record<ManagementRole, BuildOsModuleName[]> = {
+  Admin: [...ALL_BUILDOS_MODULES],
+  "Project Manager": [
+    "change-orders",
+    "client-invoices",
+    "documents",
+    "presentations",
+    "vendor-bills",
+    "videos",
+    "client-reports",
+  ],
+  Accounting: [
+    "client-invoices",
+    "documents",
+    "vendor-bills",
+    "client-reports",
+  ],
+  Staff: [],
   "Read Only": [],
 };
 
@@ -127,6 +162,17 @@ function parseUsersJson(
         }
 
         return {
+          allowedProjectIds: Array.isArray(candidate.allowedProjectIds)
+            ? candidate.allowedProjectIds
+                .filter((value): value is string => typeof value === "string")
+                .map((value) => value.trim())
+                .filter(Boolean)
+            : Array.isArray(candidate.projectIds)
+              ? candidate.projectIds
+                  .filter((value): value is string => typeof value === "string")
+                  .map((value) => value.trim())
+                  .filter(Boolean)
+              : undefined,
           displayName:
             typeof candidate.displayName === "string"
               ? candidate.displayName.trim() || undefined
@@ -182,8 +228,13 @@ export function getPermissionsForRole(
     permissions.add(`buildos:${module}:write`);
   });
 
+  ROLE_EXPORT_ACCESS[role].forEach((module) => {
+    permissions.add(`buildos:${module}:export`);
+  });
+
   if (role === "Admin") {
     permissions.add("buildos:restricted-notes:read");
+    permissions.add("buildos:audit:read");
   }
 
   if (role === "Admin") {
@@ -199,9 +250,13 @@ export function getPermissionsForRole(
 }
 
 export function toSessionUser(
-  user: Pick<ManagementUserRecord, "displayName" | "role" | "username">
+  user: Pick<ManagementUserRecord, "allowedProjectIds" | "displayName" | "role" | "username">
 ): ManagementSessionUser {
   return {
+    allowedProjectIds:
+      Array.isArray(user.allowedProjectIds) && user.allowedProjectIds.length
+        ? [...new Set(user.allowedProjectIds.map((value) => value.trim()).filter(Boolean))]
+        : undefined,
     displayName: user.displayName,
     permissions: getPermissionsForRole(user.role),
     role: user.role,
@@ -245,7 +300,54 @@ export function hasManagementPermission(
 export function canAccessBuildOsModule(
   user: Pick<ManagementSessionUser, "permissions"> | null | undefined,
   module: BuildOsModuleName,
-  action: "read" | "write"
+  action: "read" | "write" | "export"
 ) {
   return hasManagementPermission(user, `buildos:${module}:${action}`);
+}
+
+export function canAccessProject(
+  user: Pick<ManagementSessionUser, "allowedProjectIds" | "role"> | null | undefined,
+  projectId: string | null | undefined
+) {
+  if (!projectId?.trim()) {
+    return true;
+  }
+
+  if (!user) {
+    return false;
+  }
+
+  if (user.role === "Admin") {
+    return true;
+  }
+
+  if (!Array.isArray(user.allowedProjectIds) || user.allowedProjectIds.length === 0) {
+    return true;
+  }
+
+  return user.allowedProjectIds.includes(projectId.trim());
+}
+
+export function canAccessAnyLinkedProject(
+  user: Pick<ManagementSessionUser, "allowedProjectIds" | "role"> | null | undefined,
+  projectIds: string[]
+) {
+  const normalized = projectIds.map((value) => value.trim()).filter(Boolean);
+  if (!normalized.length) {
+    return true;
+  }
+
+  if (!user) {
+    return false;
+  }
+
+  if (user.role === "Admin") {
+    return true;
+  }
+
+  if (!Array.isArray(user.allowedProjectIds) || user.allowedProjectIds.length === 0) {
+    return true;
+  }
+
+  return normalized.some((projectId) => user.allowedProjectIds?.includes(projectId));
 }

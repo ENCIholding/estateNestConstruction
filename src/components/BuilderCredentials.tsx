@@ -5,13 +5,13 @@ const credentials = [
     icon: FileCheck,
     title: "Documentation readiness",
     description:
-      "Estate Nest Capital is structuring builder information around permits, scopes, schedules, and project records that can be reviewed when diligence requires them.",
+      "Estate Nest Capital is organizing builder information around permits, scopes, schedules, cost assumptions, and project records that can be reviewed when diligence requires them.",
   },
   {
     icon: Shield,
-    title: "Compliance-first posture",
+    title: "Private diligence available",
     description:
-      "Licensing, warranty, insurance, and regulatory items should be confirmed against the live project and business file rather than implied through generic website claims.",
+      "Detailed project references, permit records, and diligence materials are shared selectively with qualified clients, lenders, and partners where disclosure is appropriate.",
   },
   {
     icon: Award,
@@ -21,9 +21,9 @@ const credentials = [
   },
   {
     icon: TrendingUp,
-    title: "Operational improvement",
+    title: "Sanitized operating exposure",
     description:
-      "The site and dashboard are being upgraded to show real records, honest empty states, and safer release practices instead of polished placeholders.",
+      "Public-facing materials are structured to show real operating capability, real execution discipline, and a reviewable project posture without exposing sensitive internal records unnecessarily.",
   },
 ];
 
@@ -37,7 +37,9 @@ export default function BuilderCredentials() {
             <span className="text-enc-text-primary"> priorities</span>
           </h2>
           <p className="mx-auto mt-6 max-w-3xl text-center text-lg leading-8 text-muted-foreground">
-            This section is intended to explain how Estate Nest Capital is organizing its builder profile and diligence materials, not to make blanket claims that cannot be verified from the website alone.
+            This section explains how Estate Nest Capital is organizing its
+            builder profile, diligence materials, and project communication
+            basis for qualified review.
           </p>
 
           <div className="mt-12 grid gap-8 md:grid-cols-2">

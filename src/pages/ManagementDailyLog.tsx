@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, CheckCircle2, ClipboardList, Info, Loader2, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, ClipboardList, Info, Loader2, Pencil, Plus, RotateCcw, Search, Trash, Trash2 } from "lucide-react";
 import ManagementLayout from "@/components/management/ManagementLayout";
 import {
   AlertDialog,
@@ -28,7 +28,14 @@ import Input from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { fetchManagementProjects } from "@/lib/managementData";
-import { deleteDailyLog, loadDailyLogs, saveDailyLog, type BuildOsDailyLog } from "@/lib/buildosShared";
+import {
+  deleteDailyLog,
+  loadDailyLogs,
+  purgeDailyLog,
+  restoreDailyLog,
+  saveDailyLog,
+  type BuildOsDailyLog,
+} from "@/lib/buildosShared";
 import { toast } from "@/components/ui/sonner";
 
 type DailyLogFormState = {
@@ -67,9 +74,11 @@ export default function ManagementDailyLog() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [projectFilter, setProjectFilter] = useState("all");
+  const [showArchived, setShowArchived] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingRecord, setEditingRecord] = useState<BuildOsDailyLog | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<BuildOsDailyLog | null>(null);
+  const [deleteReason, setDeleteReason] = useState("");
   const [form, setForm] = useState<DailyLogFormState>(initialForm());
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -81,8 +90,8 @@ export default function ManagementDailyLog() {
     queryFn: fetchManagementProjects,
   });
   const { data: logs = [] } = useQuery({
-    queryKey: ["buildos-daily-logs"],
-    queryFn: async () => loadDailyLogs(),
+    queryKey: ["buildos-daily-logs", showArchived],
+    queryFn: async () => loadDailyLogs({ includeDeleted: showArchived }),
   });
 
   const projectMap = useMemo(
@@ -202,14 +211,44 @@ export default function ManagementDailyLog() {
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
-    await deleteDailyLog(deleteTarget.id);
+    await deleteDailyLog(deleteTarget.id, {
+      actor: deleteTarget.createdBy || "ENCI BuildOS",
+      reason: deleteReason,
+    });
     setDeleteTarget(null);
+    setDeleteReason("");
     await queryClient.invalidateQueries({
       predicate: (query) =>
         Array.isArray(query.queryKey) &&
         typeof query.queryKey[0] === "string" &&
         (query.queryKey[0].startsWith("buildos") || query.queryKey[0].startsWith("management")),
     });
+    toast.success("Daily log archived.");
+  };
+
+  const handleRestore = async (log: BuildOsDailyLog) => {
+    await restoreDailyLog(log.id, {
+      actor: log.createdBy || "ENCI BuildOS",
+      reason: "Daily log restored for active recordkeeping.",
+    });
+    await queryClient.invalidateQueries({
+      predicate: (query) =>
+        Array.isArray(query.queryKey) &&
+        typeof query.queryKey[0] === "string" &&
+        (query.queryKey[0].startsWith("buildos") || query.queryKey[0].startsWith("management")),
+    });
+    toast.success("Daily log restored.");
+  };
+
+  const handlePurge = async (log: BuildOsDailyLog) => {
+    await purgeDailyLog(log.id);
+    await queryClient.invalidateQueries({
+      predicate: (query) =>
+        Array.isArray(query.queryKey) &&
+        typeof query.queryKey[0] === "string" &&
+        (query.queryKey[0].startsWith("buildos") || query.queryKey[0].startsWith("management")),
+    });
+    toast.success("Archived daily log purged.");
   };
 
   return (
@@ -239,7 +278,7 @@ export default function ManagementDailyLog() {
           <CardHeader>
             <CardTitle className="text-xl text-foreground">Filter field logs</CardTitle>
           </CardHeader>
-          <CardContent className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_260px]">
+          <CardContent className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_260px_auto]">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -259,8 +298,15 @@ export default function ManagementDailyLog() {
                 <option key={project.id} value={project.id}>
                   {project.project_name}
                 </option>
-              ))}
-            </select>
+                ))}
+              </select>
+              <Button
+                variant="outline"
+                className="rounded-full"
+                onClick={() => setShowArchived((current) => !current)}
+              >
+                {showArchived ? "Hide archived" : "Show archived"}
+              </Button>
           </CardContent>
         </Card>
 
@@ -276,6 +322,11 @@ export default function ManagementDailyLog() {
                           {projectMap.get(log.projectId) || "Unlinked project"}
                         </h2>
                         <Badge className="rounded-full bg-muted text-muted-foreground">{log.date}</Badge>
+                        {log.deletedAt ? (
+                          <Badge className="rounded-full bg-slate-500/10 text-slate-700 dark:text-slate-300">
+                            Archived
+                          </Badge>
+                        ) : null}
                       </div>
 
                       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -296,6 +347,11 @@ export default function ManagementDailyLog() {
                         <div className="dashboard-item p-3">
                           <p className="text-sm font-medium text-foreground">Created by</p>
                           <p className="mt-2 text-sm text-muted-foreground">{log.createdBy || "Not recorded"}</p>
+                          {log.deletedAt ? (
+                            <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
+                              Archived {log.deletedAt} | {log.deletionReason || "Reason not recorded"}
+                            </p>
+                          ) : null}
                         </div>
                       </div>
 
@@ -316,18 +372,44 @@ export default function ManagementDailyLog() {
                     </div>
 
                     <div className="flex flex-wrap gap-2">
-                      <Button variant="outline" className="rounded-full" onClick={() => openForm(log)}>
-                        <Pencil className="mr-2 h-4 w-4" />
-                        Edit
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="rounded-full text-rose-600 hover:text-rose-700"
-                        onClick={() => setDeleteTarget(log)}
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Remove
-                      </Button>
+                      {!log.deletedAt ? (
+                        <>
+                          <Button variant="outline" className="rounded-full" onClick={() => openForm(log)}>
+                            <Pencil className="mr-2 h-4 w-4" />
+                            Edit
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="rounded-full text-rose-600 hover:text-rose-700"
+                            onClick={() => {
+                              setDeleteTarget(log);
+                              setDeleteReason("");
+                            }}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Archive
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button
+                            variant="outline"
+                            className="rounded-full"
+                            onClick={() => void handleRestore(log)}
+                          >
+                            <RotateCcw className="mr-2 h-4 w-4" />
+                            Restore
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="rounded-full text-rose-600 hover:text-rose-700"
+                            onClick={() => void handlePurge(log)}
+                          >
+                            <Trash className="mr-2 h-4 w-4" />
+                            Purge
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -478,15 +560,24 @@ export default function ManagementDailyLog() {
       <AlertDialog open={Boolean(deleteTarget)} onOpenChange={() => setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Remove daily log</AlertDialogTitle>
+            <AlertDialogTitle>Archive daily log</AlertDialogTitle>
             <AlertDialogDescription>
-              Remove this daily log entry from the project record?
+              Archive this daily log entry and keep the reason in audit history.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <Input
+            value={deleteReason}
+            onChange={(event) => setDeleteReason(event.target.value)}
+            placeholder="Reason for archive (required)"
+          />
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction className="bg-rose-600 hover:bg-rose-700" onClick={() => void handleDelete()}>
-              Remove
+            <AlertDialogAction
+              className="bg-rose-600 hover:bg-rose-700"
+              disabled={!deleteReason.trim()}
+              onClick={() => void handleDelete()}
+            >
+              Archive
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

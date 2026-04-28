@@ -55,6 +55,10 @@ export type BuildOsMasterRecord = {
   workAgain?: WorkAgainDecision;
   recommended?: boolean;
   dealSide?: DealSide;
+  auditLog?: BuildOsRecordAuditEntry[];
+  deletedAt?: string;
+  deletedBy?: string;
+  deletionReason?: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -82,6 +86,10 @@ export type BuildOsChangeOrder = {
   clientSummary?: string;
   vendorSummary?: string;
   attachmentUrl?: string;
+  auditLog?: BuildOsRecordAuditEntry[];
+  deletedAt?: string;
+  deletedBy?: string;
+  deletionReason?: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -100,6 +108,10 @@ export type BuildOsDailyLog = {
   comments?: string;
   photoUrl?: string;
   createdBy?: string;
+  auditLog?: BuildOsRecordAuditEntry[];
+  deletedAt?: string;
+  deletedBy?: string;
+  deletionReason?: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -122,6 +134,10 @@ export type BuildOsDeficiency = {
   notes?: string;
   closeoutConfirmation?: string;
   warrantyLinked: boolean;
+  auditLog?: BuildOsRecordAuditEntry[];
+  deletedAt?: string;
+  deletedBy?: string;
+  deletionReason?: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -141,6 +157,10 @@ export type BuildOsClientInvoice = {
   updatedBy?: string;
   notes?: string;
   drawReference?: string;
+  auditLog?: BuildOsRecordAuditEntry[];
+  deletedAt?: string;
+  deletedBy?: string;
+  deletionReason?: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -157,6 +177,10 @@ export type BuildOsVendorBill = {
   updatedBy?: string;
   notes?: string;
   attachmentUrl?: string;
+  auditLog?: BuildOsRecordAuditEntry[];
+  deletedAt?: string;
+  deletedBy?: string;
+  deletionReason?: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -190,6 +214,10 @@ export type BuildOsDocumentRecord = {
   requiredForProject: boolean;
   url?: string;
   notes?: string;
+  auditLog?: BuildOsRecordAuditEntry[];
+  deletedAt?: string;
+  deletedBy?: string;
+  deletionReason?: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -249,6 +277,147 @@ export type BuildOsTask = {
   percentComplete: number;
   mobileNote?: string;
   lastUpdatedBy?: string;
+  auditLog?: BuildOsRecordAuditEntry[];
+  deletedAt?: string;
+  deletedBy?: string;
+  deletionReason?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type BuildOsRecordAuditAction =
+  | "created"
+  | "updated"
+  | "deleted"
+  | "restored"
+  | "generated"
+  | "reviewed"
+  | "approved"
+  | "exported";
+
+export type BuildOsRecordAuditEntry = {
+  action: BuildOsRecordAuditAction;
+  actor: string;
+  detail: string;
+  id: string;
+  occurredAt: string;
+};
+
+export type BuildOsWorkflowStatus =
+  | "Draft"
+  | "Review"
+  | "Approved"
+  | "Exported";
+
+export type BuildOsVisibilityLevel =
+  | "Internal"
+  | "Client"
+  | "Lender"
+  | "Investor"
+  | "Public";
+
+export type BuildOsPresentationType =
+  | "Client Meeting"
+  | "Lender Package"
+  | "Investor Review"
+  | "Internal Deck"
+  | "Permit/Diligence Review";
+
+export type BuildOsPresentationRecord = {
+  id: string;
+  projectId: string;
+  title: string;
+  preparedFor: string;
+  presentationType: BuildOsPresentationType;
+  visibility: BuildOsVisibilityLevel;
+  status: BuildOsWorkflowStatus;
+  summary?: string;
+  scopeSummary?: string;
+  permitStatus?: string;
+  budgetSnapshot?: string;
+  scheduleMilestones?: string;
+  riskRegister?: string;
+  nextSteps?: string;
+  deckUrl?: string;
+  imageUrl?: string;
+  safeForExternal: boolean;
+  internalReviewNotes?: string;
+  createdBy?: string;
+  updatedBy?: string;
+  approvedBy?: string;
+  approvedAt?: string;
+  exportedAt?: string;
+  exportedBy?: string;
+  auditLog?: BuildOsRecordAuditEntry[];
+  deletedAt?: string;
+  deletedBy?: string;
+  deletionReason?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type BuildOsVideoCategory =
+  | "Project Walkthrough"
+  | "Before/After"
+  | "Site Progress"
+  | "Explainer"
+  | "Construction Method"
+  | "Client Meeting"
+  | "Permit/Diligence";
+
+export type BuildOsVideoRecord = {
+  id: string;
+  projectId: string;
+  title: string;
+  category: BuildOsVideoCategory;
+  description?: string;
+  sourceUrl: string;
+  date: string;
+  visibility: BuildOsVisibilityLevel;
+  accessLevel: BuildOsVisibilityLevel;
+  thumbnailUrl?: string;
+  createdBy?: string;
+  updatedBy?: string;
+  auditLog?: BuildOsRecordAuditEntry[];
+  deletedAt?: string;
+  deletedBy?: string;
+  deletionReason?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type BuildOsClientReportSection = {
+  body: string[];
+  heading: string;
+  safe: boolean;
+};
+
+export type BuildOsClientReportRecord = {
+  id: string;
+  projectId: string;
+  title: string;
+  preparedFor: string;
+  reportDate: string;
+  visibility: BuildOsVisibilityLevel;
+  audience: "Client" | "Lender" | "Investor" | "Internal";
+  status: BuildOsWorkflowStatus;
+  summary?: string;
+  safeContextNotes?: string;
+  internalReviewNotes?: string;
+  sectionOrder: string[];
+  sections: BuildOsClientReportSection[];
+  lastGeneratedAt?: string;
+  generatedBy?: string;
+  approvedAt?: string;
+  approvedBy?: string;
+  exportedAt?: string;
+  exportedBy?: string;
+  exportCount?: number;
+  lastExportFormat?: "PDF";
+  auditLog?: BuildOsRecordAuditEntry[];
+  deletedAt?: string;
+  deletedBy?: string;
+  deletionReason?: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -275,6 +444,9 @@ export type BuildOsFeatureFlags = {
   clientInvoicesLive: boolean;
   vendorBillsLive: boolean;
   licenseCenterLive: boolean;
+  presentationsLive: boolean;
+  videosLive: boolean;
+  clientReportsLive: boolean;
   ganttBeta: boolean;
   automationBeta: boolean;
   mobileTasksBeta: boolean;
@@ -332,6 +504,9 @@ const VENDOR_BILLS_KEY = "enci-buildos-vendor-bills";
 const DOCUMENTS_KEY = "enci-buildos-documents";
 const PARTICIPANT_ASSIGNMENTS_KEY = "enci-buildos-project-participants";
 const TASKS_KEY = "enci-buildos-tasks";
+const PRESENTATIONS_KEY = "enci-buildos-presentations";
+const VIDEOS_KEY = "enci-buildos-videos";
+const CLIENT_REPORTS_KEY = "enci-buildos-client-reports";
 const PREFERENCES_KEY = "enci-buildos-preferences";
 const FEATURE_FLAGS_KEY = "enci-buildos-feature-flags";
 const TENANT_PROFILE_KEY = "enci-buildos-tenant-profile";
@@ -424,6 +599,39 @@ export const BUILDOS_TASK_PRIORITIES: BuildOsTaskPriority[] = [
   "Medium",
   "High",
   "Critical",
+];
+
+export const BUILDOS_WORKFLOW_STATUSES: BuildOsWorkflowStatus[] = [
+  "Draft",
+  "Review",
+  "Approved",
+  "Exported",
+];
+
+export const BUILDOS_VISIBILITY_LEVELS: BuildOsVisibilityLevel[] = [
+  "Internal",
+  "Client",
+  "Lender",
+  "Investor",
+  "Public",
+];
+
+export const BUILDOS_PRESENTATION_TYPES: BuildOsPresentationType[] = [
+  "Client Meeting",
+  "Lender Package",
+  "Investor Review",
+  "Internal Deck",
+  "Permit/Diligence Review",
+];
+
+export const BUILDOS_VIDEO_CATEGORIES: BuildOsVideoCategory[] = [
+  "Project Walkthrough",
+  "Before/After",
+  "Site Progress",
+  "Explainer",
+  "Construction Method",
+  "Client Meeting",
+  "Permit/Diligence",
 ];
 
 function canUseStorage() {
@@ -574,10 +782,10 @@ function ensureMasterDatabaseMigration() {
   window.localStorage.setItem(MASTER_DATABASE_MIGRATION_KEY, "true");
 }
 
-export function loadMasterDatabaseRecords() {
+export function loadMasterDatabaseRecords(options?: { includeDeleted?: boolean }) {
   ensureMasterDatabaseMigration();
   return sortByUpdatedAt(
-    readJson<BuildOsMasterRecord[]>(MASTER_DATABASE_KEY, []).map((record) => ({
+    loadLifecycleCollection<BuildOsMasterRecord>(MASTER_DATABASE_KEY, options).map((record) => ({
       ...record,
       personName: cleanString(record.personName) || cleanString(record.companyName) || "Unnamed Record",
       tags: cleanStringArray(record.tags),
@@ -591,7 +799,7 @@ export function loadMasterDatabaseRecords() {
 }
 
 export function saveMasterDatabaseRecord(record: Partial<BuildOsMasterRecord>) {
-  const current = loadMasterDatabaseRecords();
+  const current = loadMasterDatabaseRecords({ includeDeleted: true });
   const timestamp = nowIso();
   const existing = current.find((item) => item.id === record.id);
 
@@ -642,55 +850,271 @@ export function saveMasterDatabaseRecord(record: Partial<BuildOsMasterRecord>) {
     updatedAt: timestamp,
   };
 
-  writeJson(
-    MASTER_DATABASE_KEY,
-    sortByUpdatedAt([
-      ...current.filter((item) => item.id !== normalized.id),
-      normalized,
-    ])
-  );
-
-  return normalized;
+  return saveLifecycleCollection(MASTER_DATABASE_KEY, normalized, {
+    actor: "ENCI BuildOS",
+  });
 }
 
-export function deleteMasterDatabaseRecord(recordId: string) {
-  writeJson(
-    MASTER_DATABASE_KEY,
-    loadMasterDatabaseRecords().filter((record) => record.id !== recordId)
-  );
+export function deleteMasterDatabaseRecord(
+  recordId: string,
+  options?: { actor?: string; reason?: string }
+) {
+  return softDeleteLifecycleCollection(MASTER_DATABASE_KEY, recordId, options);
+}
+
+export function restoreMasterDatabaseRecord(
+  recordId: string,
+  options?: { actor?: string; reason?: string }
+) {
+  return restoreLifecycleCollection(MASTER_DATABASE_KEY, recordId, options);
+}
+
+export function purgeMasterDatabaseRecord(recordId: string) {
+  return purgeLifecycleCollection(MASTER_DATABASE_KEY, recordId);
 }
 
 function loadCollection<T>(key: string) {
   return readJson<T[]>(key, []);
 }
 
-function saveCollection<T extends { id: string; updatedAt?: string; createdAt?: string }>(
+type BuildOsLifecycleRecord = {
+  auditLog?: BuildOsRecordAuditEntry[];
+  createdAt?: string;
+  createdBy?: string;
+  deletedAt?: string;
+  deletedBy?: string;
+  deletionReason?: string;
+  exportCount?: number;
+  exportedAt?: string;
+  exportedBy?: string;
+  id: string;
+  updatedAt?: string;
+  updatedBy?: string;
+};
+
+type BuildOsLifecycleSaveOptions = {
+  action?: BuildOsRecordAuditAction;
+  actor?: string;
+  detail?: string;
+};
+
+function resolveLifecycleActor(record: Record<string, unknown>, fallback = "ENCI BuildOS") {
+  const candidates = [
+    record.updatedBy,
+    record.createdBy,
+    record.lastUpdatedBy,
+    record.generatedBy,
+    record.approvedBy,
+    record.exportedBy,
+    record.uploader,
+  ];
+
+  const match = candidates.find(
+    (value) => typeof value === "string" && value.trim().length > 0
+  );
+
+  return typeof match === "string" ? match.trim() : fallback;
+}
+
+export function buildBuildOsAuditEntry(
+  action: BuildOsRecordAuditAction,
+  actor: string,
+  detail: string
+): BuildOsRecordAuditEntry {
+  return {
+    action,
+    actor,
+    detail,
+    id: createId("audit"),
+    occurredAt: nowIso(),
+  };
+}
+
+export function appendBuildOsAuditEntry<T extends { auditLog?: BuildOsRecordAuditEntry[] }>(
+  record: T,
+  action: BuildOsRecordAuditAction,
+  actor: string,
+  detail: string
+) {
+  return {
+    ...record,
+    auditLog: [...(record.auditLog || []), buildBuildOsAuditEntry(action, actor, detail)],
+  };
+}
+
+function normalizeLifecycleCollectionItem<T extends BuildOsLifecycleRecord>(record: T) {
+  return {
+    ...record,
+    auditLog: Array.isArray(record.auditLog) ? record.auditLog : [],
+  };
+}
+
+function loadLifecycleCollection<T extends BuildOsLifecycleRecord>(
   key: string,
-  record: T
+  options?: { includeDeleted?: boolean }
+) {
+  const records = loadCollection<T>(key).map(normalizeLifecycleCollectionItem);
+  return options?.includeDeleted
+    ? records
+    : records.filter((record) => !record.deletedAt);
+}
+
+function saveLifecycleCollection<T extends BuildOsLifecycleRecord>(
+  key: string,
+  record: T,
+  options?: BuildOsLifecycleSaveOptions
 ) {
   const current = loadCollection<T>(key);
+  const existing = current.find((item) => item.id === record.id);
+  const action = options?.action || (existing ? "updated" : "created");
+  const actor =
+    options?.actor ||
+    resolveLifecycleActor(record as unknown as Record<string, unknown>);
+  const detail =
+    options?.detail ||
+    (action === "created"
+      ? "Record created in ENCI BuildOS."
+      : "Record updated in ENCI BuildOS.");
+  const normalized = appendBuildOsAuditEntry(
+    normalizeLifecycleCollectionItem({
+      ...existing,
+      ...record,
+    } as T),
+    action,
+    actor,
+    detail
+  );
+
   writeJson(
     key,
-    sortByUpdatedAt([...current.filter((item) => item.id !== record.id), record])
+    sortByUpdatedAt([...current.filter((item) => item.id !== normalized.id), normalized])
   );
-  return record;
+
+  return normalized;
 }
 
-function deleteFromCollection(key: string, recordId: string) {
+function softDeleteLifecycleCollection(
+  key: string,
+  recordId: string,
+  options?: { actor?: string; reason?: string }
+) {
+  const current = loadCollection<BuildOsLifecycleRecord>(key);
+  const existing = current.find((item) => item.id === recordId);
+
+  if (!existing) {
+    return null;
+  }
+
+  const actor = options?.actor?.trim() || "ENCI BuildOS";
+  const reason = options?.reason?.trim() || "No reason recorded.";
+  const normalized = appendBuildOsAuditEntry(
+    {
+      ...normalizeLifecycleCollectionItem(existing),
+      deletedAt: nowIso(),
+      deletedBy: actor,
+      deletionReason: reason,
+      updatedAt: nowIso(),
+    },
+    "deleted",
+    actor,
+    `Record archived. Reason: ${reason}`
+  );
+
   writeJson(
     key,
-    loadCollection<{ id: string }>(key).filter((record) => record.id !== recordId)
+    sortByUpdatedAt([...current.filter((item) => item.id !== recordId), normalized])
   );
+
+  return normalized;
 }
 
-export function loadChangeOrders() {
-  return loadCollection<BuildOsChangeOrder>(CHANGE_ORDERS_KEY);
+function restoreLifecycleCollection(
+  key: string,
+  recordId: string,
+  options?: { actor?: string; reason?: string }
+) {
+  const current = loadCollection<BuildOsLifecycleRecord>(key);
+  const existing = current.find((item) => item.id === recordId);
+
+  if (!existing) {
+    return null;
+  }
+
+  const actor = options?.actor?.trim() || "ENCI BuildOS";
+  const detail =
+    options?.reason?.trim() || "Record restored for further internal review.";
+  const baseRecord = { ...existing };
+  delete baseRecord.deletedAt;
+  delete baseRecord.deletedBy;
+  delete baseRecord.deletionReason;
+  const normalized = appendBuildOsAuditEntry(
+    {
+      ...normalizeLifecycleCollectionItem(baseRecord),
+      updatedAt: nowIso(),
+    },
+    "restored",
+    actor,
+    detail
+  );
+
+  writeJson(
+    key,
+    sortByUpdatedAt([...current.filter((item) => item.id !== recordId), normalized])
+  );
+
+  return normalized;
+}
+
+function purgeLifecycleCollection(key: string, recordId: string) {
+  const current = loadCollection<BuildOsLifecycleRecord>(key);
+  const existing = current.find((item) => item.id === recordId);
+
+  if (!existing) {
+    return false;
+  }
+
+  writeJson(
+    key,
+    current.filter((record) => record.id !== recordId)
+  );
+
+  return true;
+}
+
+export function loadChangeOrders(options?: { includeDeleted?: boolean }) {
+  return sortByUpdatedAt(
+    loadLifecycleCollection<BuildOsChangeOrder>(CHANGE_ORDERS_KEY, options).map((record) => ({
+      ...record,
+      projectId: cleanString(record.projectId) || "",
+      title: cleanString(record.title) || "Untitled Change Order",
+      vendorRecordId: cleanString(record.vendorRecordId),
+      costCategory: cleanString(record.costCategory),
+      scopeSummary: cleanString(record.scopeSummary) || "Scope summary not provided.",
+      reason: cleanString(record.reason) || "Reason not provided.",
+      budgetImpact:
+        typeof record.budgetImpact === "number" && Number.isFinite(record.budgetImpact)
+          ? record.budgetImpact
+          : 0,
+      timeImpactDays:
+        typeof record.timeImpactDays === "number" && Number.isFinite(record.timeImpactDays)
+          ? Math.round(record.timeImpactDays)
+          : 0,
+      status: record.status || "Draft",
+      updatedBy: cleanString(record.updatedBy),
+      internalNotes: cleanString(record.internalNotes),
+      clientSummary: cleanString(record.clientSummary),
+      vendorSummary: cleanString(record.vendorSummary),
+      attachmentUrl: cleanString(record.attachmentUrl),
+      createdAt: record.createdAt || nowIso(),
+      updatedAt: record.updatedAt || record.createdAt || nowIso(),
+    }))
+  );
 }
 
 export const loadBuildOsChangeOrders = loadChangeOrders;
 
 export function saveChangeOrder(record: Partial<BuildOsChangeOrder>) {
-  const current = loadChangeOrders();
+  const current = loadChangeOrders({ includeDeleted: true });
   const existing = current.find((item) => item.id === record.id);
   const timestamp = nowIso();
   const normalized: BuildOsChangeOrder = {
@@ -719,21 +1143,58 @@ export function saveChangeOrder(record: Partial<BuildOsChangeOrder>) {
     updatedAt: timestamp,
   };
 
-  return saveCollection(CHANGE_ORDERS_KEY, normalized);
+  return saveLifecycleCollection(CHANGE_ORDERS_KEY, normalized, {
+    actor: normalized.updatedBy || "ENCI BuildOS",
+  });
 }
 
-export function deleteChangeOrder(recordId: string) {
-  deleteFromCollection(CHANGE_ORDERS_KEY, recordId);
+export function deleteChangeOrder(
+  recordId: string,
+  options?: { actor?: string; reason?: string }
+) {
+  return softDeleteLifecycleCollection(CHANGE_ORDERS_KEY, recordId, options);
 }
 
-export function loadDailyLogs() {
-  return loadCollection<BuildOsDailyLog>(DAILY_LOGS_KEY);
+export function restoreChangeOrder(
+  recordId: string,
+  options?: { actor?: string; reason?: string }
+) {
+  return restoreLifecycleCollection(CHANGE_ORDERS_KEY, recordId, options);
+}
+
+export function purgeChangeOrder(recordId: string) {
+  return purgeLifecycleCollection(CHANGE_ORDERS_KEY, recordId);
+}
+
+export function loadDailyLogs(options?: { includeDeleted?: boolean }) {
+  return sortByUpdatedAt(
+    loadLifecycleCollection<BuildOsDailyLog>(DAILY_LOGS_KEY, options).map((record) => ({
+      ...record,
+      projectId: cleanString(record.projectId) || "",
+      date: cleanString(record.date) || new Date().toISOString().slice(0, 10),
+      weather: cleanString(record.weather),
+      crewCount:
+        typeof record.crewCount === "number" && Number.isFinite(record.crewCount)
+          ? Math.max(0, Math.round(record.crewCount))
+          : undefined,
+      tradesOnsite: cleanStringArray(record.tradesOnsite),
+      materialsDelivered: cleanString(record.materialsDelivered),
+      inspections: cleanString(record.inspections),
+      delaysBlockers: cleanString(record.delaysBlockers),
+      safetyNotes: cleanString(record.safetyNotes),
+      comments: cleanString(record.comments),
+      photoUrl: cleanString(record.photoUrl),
+      createdBy: cleanString(record.createdBy),
+      createdAt: record.createdAt || nowIso(),
+      updatedAt: record.updatedAt || record.createdAt || nowIso(),
+    }))
+  );
 }
 
 export const loadBuildOsDailyLogs = loadDailyLogs;
 
 export function saveDailyLog(record: Partial<BuildOsDailyLog>) {
-  const current = loadDailyLogs();
+  const current = loadDailyLogs({ includeDeleted: true });
   const existing = current.find((item) => item.id === record.id);
   const timestamp = nowIso();
   const normalized: BuildOsDailyLog = {
@@ -757,21 +1218,56 @@ export function saveDailyLog(record: Partial<BuildOsDailyLog>) {
     updatedAt: timestamp,
   };
 
-  return saveCollection(DAILY_LOGS_KEY, normalized);
+  return saveLifecycleCollection(DAILY_LOGS_KEY, normalized, {
+    actor: normalized.createdBy || "ENCI BuildOS",
+  });
 }
 
-export function deleteDailyLog(recordId: string) {
-  deleteFromCollection(DAILY_LOGS_KEY, recordId);
+export function deleteDailyLog(
+  recordId: string,
+  options?: { actor?: string; reason?: string }
+) {
+  return softDeleteLifecycleCollection(DAILY_LOGS_KEY, recordId, options);
 }
 
-export function loadDeficiencies() {
-  return loadCollection<BuildOsDeficiency>(DEFICIENCIES_KEY);
+export function restoreDailyLog(
+  recordId: string,
+  options?: { actor?: string; reason?: string }
+) {
+  return restoreLifecycleCollection(DAILY_LOGS_KEY, recordId, options);
+}
+
+export function purgeDailyLog(recordId: string) {
+  return purgeLifecycleCollection(DAILY_LOGS_KEY, recordId);
+}
+
+export function loadDeficiencies(options?: { includeDeleted?: boolean }) {
+  return sortByUpdatedAt(
+    loadLifecycleCollection<BuildOsDeficiency>(DEFICIENCIES_KEY, options).map((record) => ({
+      ...record,
+      projectId: cleanString(record.projectId) || "",
+      title: cleanString(record.title) || "Untitled Deficiency",
+      description: cleanString(record.description) || "No description provided.",
+      location: cleanString(record.location),
+      severity: record.severity || "Medium",
+      assignedRecordId: cleanString(record.assignedRecordId),
+      dueDate: cleanString(record.dueDate),
+      status: record.status || "Open",
+      beforePhotoUrl: cleanString(record.beforePhotoUrl),
+      completionPhotoUrl: cleanString(record.completionPhotoUrl),
+      notes: cleanString(record.notes),
+      closeoutConfirmation: cleanString(record.closeoutConfirmation),
+      warrantyLinked: Boolean(record.warrantyLinked),
+      createdAt: record.createdAt || nowIso(),
+      updatedAt: record.updatedAt || record.createdAt || nowIso(),
+    }))
+  );
 }
 
 export const loadBuildOsDeficiencies = loadDeficiencies;
 
 export function saveDeficiency(record: Partial<BuildOsDeficiency>) {
-  const current = loadDeficiencies();
+  const current = loadDeficiencies({ includeDeleted: true });
   const existing = current.find((item) => item.id === record.id);
   const timestamp = nowIso();
   const normalized: BuildOsDeficiency = {
@@ -793,21 +1289,56 @@ export function saveDeficiency(record: Partial<BuildOsDeficiency>) {
     updatedAt: timestamp,
   };
 
-  return saveCollection(DEFICIENCIES_KEY, normalized);
+  return saveLifecycleCollection(DEFICIENCIES_KEY, normalized, {
+    actor: "ENCI BuildOS",
+  });
 }
 
-export function deleteDeficiency(recordId: string) {
-  deleteFromCollection(DEFICIENCIES_KEY, recordId);
+export function deleteDeficiency(
+  recordId: string,
+  options?: { actor?: string; reason?: string }
+) {
+  return softDeleteLifecycleCollection(DEFICIENCIES_KEY, recordId, options);
 }
 
-export function loadClientInvoices() {
-  return loadCollection<BuildOsClientInvoice>(CLIENT_INVOICES_KEY);
+export function restoreDeficiency(
+  recordId: string,
+  options?: { actor?: string; reason?: string }
+) {
+  return restoreLifecycleCollection(DEFICIENCIES_KEY, recordId, options);
+}
+
+export function purgeDeficiency(recordId: string) {
+  return purgeLifecycleCollection(DEFICIENCIES_KEY, recordId);
+}
+
+export function loadClientInvoices(options?: { includeDeleted?: boolean }) {
+  return sortByUpdatedAt(
+    loadLifecycleCollection<BuildOsClientInvoice>(CLIENT_INVOICES_KEY, options).map((record) => ({
+      ...record,
+      projectId: cleanString(record.projectId) || "",
+      stakeholderRecordId: cleanString(record.stakeholderRecordId),
+      invoiceNumber: cleanString(record.invoiceNumber) || `INV-${Date.now()}`,
+      invoiceDate: cleanString(record.invoiceDate) || new Date().toISOString().slice(0, 10),
+      dueDate: cleanString(record.dueDate) || new Date().toISOString().slice(0, 10),
+      amount:
+        typeof record.amount === "number" && Number.isFinite(record.amount)
+          ? record.amount
+          : 0,
+      status: record.status || "Draft",
+      updatedBy: cleanString(record.updatedBy),
+      notes: cleanString(record.notes),
+      drawReference: cleanString(record.drawReference),
+      createdAt: record.createdAt || nowIso(),
+      updatedAt: record.updatedAt || record.createdAt || nowIso(),
+    }))
+  );
 }
 
 export const loadBuildOsClientInvoices = loadClientInvoices;
 
 export function saveClientInvoice(record: Partial<BuildOsClientInvoice>) {
-  const current = loadClientInvoices();
+  const current = loadClientInvoices({ includeDeleted: true });
   const existing = current.find((item) => item.id === record.id);
   const timestamp = nowIso();
   const normalized: BuildOsClientInvoice = {
@@ -827,35 +1358,82 @@ export function saveClientInvoice(record: Partial<BuildOsClientInvoice>) {
     updatedAt: timestamp,
   };
 
-  return saveCollection(CLIENT_INVOICES_KEY, normalized);
+  return saveLifecycleCollection(CLIENT_INVOICES_KEY, normalized, {
+    actor: normalized.updatedBy || "ENCI BuildOS",
+  });
 }
 
-export function deleteClientInvoice(recordId: string) {
-  deleteFromCollection(CLIENT_INVOICES_KEY, recordId);
+export function deleteClientInvoice(
+  recordId: string,
+  options?: { actor?: string; reason?: string }
+) {
+  return softDeleteLifecycleCollection(CLIENT_INVOICES_KEY, recordId, options);
 }
 
-export function loadVendorBills() {
-  return loadCollection<BuildOsVendorBill>(VENDOR_BILLS_KEY);
+export function restoreClientInvoice(
+  recordId: string,
+  options?: { actor?: string; reason?: string }
+) {
+  return restoreLifecycleCollection(CLIENT_INVOICES_KEY, recordId, options);
+}
+
+export function purgeClientInvoice(recordId: string) {
+  return purgeLifecycleCollection(CLIENT_INVOICES_KEY, recordId);
+}
+
+export function loadVendorBills(options?: { includeDeleted?: boolean }) {
+  return sortByUpdatedAt(
+    loadLifecycleCollection<BuildOsVendorBill>(VENDOR_BILLS_KEY, options).map((record) => ({
+      ...record,
+      projectId: cleanString(record.projectId) || "",
+      vendorRecordId: cleanString(record.vendorRecordId),
+      invoiceNumber: cleanString(record.invoiceNumber) || `BILL-${Date.now()}`,
+      invoiceDate: cleanString(record.invoiceDate) || new Date().toISOString().slice(0, 10),
+      dueDate: cleanString(record.dueDate) || new Date().toISOString().slice(0, 10),
+      amount:
+        typeof record.amount === "number" && Number.isFinite(record.amount)
+          ? record.amount
+          : 0,
+      status: record.status || "Received",
+      updatedBy: cleanString(record.updatedBy),
+      notes: cleanString(record.notes),
+      attachmentUrl: cleanString(record.attachmentUrl),
+      createdAt: record.createdAt || nowIso(),
+      updatedAt: record.updatedAt || record.createdAt || nowIso(),
+    }))
+  );
 }
 
 export const loadBuildOsVendorBills = loadVendorBills;
 
-export function loadDocuments() {
-  return loadCollection<BuildOsDocumentRecord>(DOCUMENTS_KEY).map((record) => ({
-    ...record,
-    tags: cleanStringArray(record.tags),
-    uploadDate: cleanString(record.uploadDate) || new Date().toISOString().slice(0, 10),
-    updatedBy: cleanString(record.updatedBy),
-    createdAt: record.createdAt || nowIso(),
-    updatedAt: record.updatedAt || record.createdAt || nowIso(),
-    requiredForProject: Boolean(record.requiredForProject),
-  }));
+export function loadDocuments(options?: { includeDeleted?: boolean }) {
+  return sortByUpdatedAt(
+    loadLifecycleCollection<BuildOsDocumentRecord>(DOCUMENTS_KEY, options).map((record) => ({
+      ...record,
+      title: cleanString(record.title) || "Untitled Document",
+      projectId: cleanString(record.projectId),
+      linkedRecordId: cleanString(record.linkedRecordId),
+      documentType: record.documentType || "Other",
+      tags: cleanStringArray(record.tags),
+      uploader: cleanString(record.uploader),
+      updatedBy: cleanString(record.updatedBy),
+      uploadDate: cleanString(record.uploadDate) || new Date().toISOString().slice(0, 10),
+      versionLabel: cleanString(record.versionLabel),
+      versionGroup: cleanString(record.versionGroup),
+      expiryDate: cleanString(record.expiryDate),
+      requiredForProject: Boolean(record.requiredForProject),
+      url: cleanString(record.url),
+      notes: cleanString(record.notes),
+      createdAt: record.createdAt || nowIso(),
+      updatedAt: record.updatedAt || record.createdAt || nowIso(),
+    }))
+  );
 }
 
 export const loadBuildOsDocuments = loadDocuments;
 
 export function saveDocument(record: Partial<BuildOsDocumentRecord>) {
-  const current = loadDocuments();
+  const current = loadDocuments({ includeDeleted: true });
   const existing = current.find((item) => item.id === record.id);
   const timestamp = nowIso();
   const normalized: BuildOsDocumentRecord = {
@@ -878,11 +1456,27 @@ export function saveDocument(record: Partial<BuildOsDocumentRecord>) {
     updatedAt: timestamp,
   };
 
-  return saveCollection(DOCUMENTS_KEY, normalized);
+  return saveLifecycleCollection(DOCUMENTS_KEY, normalized, {
+    actor: normalized.updatedBy || normalized.uploader || "ENCI BuildOS",
+  });
 }
 
-export function deleteDocument(recordId: string) {
-  deleteFromCollection(DOCUMENTS_KEY, recordId);
+export function deleteDocument(
+  recordId: string,
+  options?: { actor?: string; reason?: string }
+) {
+  return softDeleteLifecycleCollection(DOCUMENTS_KEY, recordId, options);
+}
+
+export function restoreDocument(
+  recordId: string,
+  options?: { actor?: string; reason?: string }
+) {
+  return restoreLifecycleCollection(DOCUMENTS_KEY, recordId, options);
+}
+
+export function purgeDocument(recordId: string) {
+  return purgeLifecycleCollection(DOCUMENTS_KEY, recordId);
 }
 
 export function loadProjectParticipantAssignments() {
@@ -940,31 +1534,33 @@ export function saveProjectParticipantAssignment(
   return normalized;
 }
 
-export function loadTasks() {
-  return loadCollection<BuildOsTask>(TASKS_KEY).map((record) => ({
-    ...record,
-    title: cleanString(record.title) || "Untitled Task",
-    description: cleanString(record.description),
-    location: cleanString(record.location),
-    phase: record.phase || "Other",
-    status: record.status || "Not Started",
-    priority: record.priority || "Medium",
-    assignedRecordId: cleanString(record.assignedRecordId),
-    assignedLabel: cleanString(record.assignedLabel),
-    startDate: cleanString(record.startDate),
-    dueDate: cleanString(record.dueDate),
-    milestone: Boolean(record.milestone),
-    predecessorIds: cleanStringArray(record.predecessorIds),
-    inspectionDate: cleanString(record.inspectionDate),
-    percentComplete:
-      typeof record.percentComplete === "number" && Number.isFinite(record.percentComplete)
-        ? Math.min(100, Math.max(0, Math.round(record.percentComplete)))
-        : 0,
-    mobileNote: cleanString(record.mobileNote),
-    lastUpdatedBy: cleanString(record.lastUpdatedBy),
-    createdAt: record.createdAt || nowIso(),
-    updatedAt: record.updatedAt || record.createdAt || nowIso(),
-  }));
+export function loadTasks(options?: { includeDeleted?: boolean }) {
+  return sortByUpdatedAt(
+    loadLifecycleCollection<BuildOsTask>(TASKS_KEY, options).map((record) => ({
+      ...record,
+      title: cleanString(record.title) || "Untitled Task",
+      description: cleanString(record.description),
+      location: cleanString(record.location),
+      phase: record.phase || "Other",
+      status: record.status || "Not Started",
+      priority: record.priority || "Medium",
+      assignedRecordId: cleanString(record.assignedRecordId),
+      assignedLabel: cleanString(record.assignedLabel),
+      startDate: cleanString(record.startDate),
+      dueDate: cleanString(record.dueDate),
+      milestone: Boolean(record.milestone),
+      predecessorIds: cleanStringArray(record.predecessorIds),
+      inspectionDate: cleanString(record.inspectionDate),
+      percentComplete:
+        typeof record.percentComplete === "number" && Number.isFinite(record.percentComplete)
+          ? Math.min(100, Math.max(0, Math.round(record.percentComplete)))
+          : 0,
+      mobileNote: cleanString(record.mobileNote),
+      lastUpdatedBy: cleanString(record.lastUpdatedBy),
+      createdAt: record.createdAt || nowIso(),
+      updatedAt: record.updatedAt || record.createdAt || nowIso(),
+    }))
+  );
 }
 
 export const loadBuildOsTasks = loadTasks;
@@ -980,7 +1576,7 @@ function addDays(baseDate: string, days: number) {
 }
 
 export function saveTask(record: Partial<BuildOsTask>) {
-  const current = loadTasks();
+  const current = loadTasks({ includeDeleted: true });
   const existing = current.find((item) => item.id === record.id);
   const timestamp = nowIso();
   const normalizedStartDate =
@@ -1018,15 +1614,31 @@ export function saveTask(record: Partial<BuildOsTask>) {
     updatedAt: timestamp,
   };
 
-  return saveCollection(TASKS_KEY, normalized);
+  return saveLifecycleCollection(TASKS_KEY, normalized, {
+    actor: normalized.lastUpdatedBy || "ENCI BuildOS",
+  });
 }
 
-export function deleteTask(recordId: string) {
-  deleteFromCollection(TASKS_KEY, recordId);
+export function deleteTask(
+  recordId: string,
+  options?: { actor?: string; reason?: string }
+) {
+  return softDeleteLifecycleCollection(TASKS_KEY, recordId, options);
+}
+
+export function restoreTask(
+  recordId: string,
+  options?: { actor?: string; reason?: string }
+) {
+  return restoreLifecycleCollection(TASKS_KEY, recordId, options);
+}
+
+export function purgeTask(recordId: string) {
+  return purgeLifecycleCollection(TASKS_KEY, recordId);
 }
 
 export function saveVendorBill(record: Partial<BuildOsVendorBill>) {
-  const current = loadVendorBills();
+  const current = loadVendorBills({ includeDeleted: true });
   const existing = current.find((item) => item.id === record.id);
   const timestamp = nowIso();
   const normalized: BuildOsVendorBill = {
@@ -1046,11 +1658,286 @@ export function saveVendorBill(record: Partial<BuildOsVendorBill>) {
     updatedAt: timestamp,
   };
 
-  return saveCollection(VENDOR_BILLS_KEY, normalized);
+  return saveLifecycleCollection(VENDOR_BILLS_KEY, normalized, {
+    actor: normalized.updatedBy || "ENCI BuildOS",
+  });
 }
 
-export function deleteVendorBill(recordId: string) {
-  deleteFromCollection(VENDOR_BILLS_KEY, recordId);
+export function deleteVendorBill(
+  recordId: string,
+  options?: { actor?: string; reason?: string }
+) {
+  return softDeleteLifecycleCollection(VENDOR_BILLS_KEY, recordId, options);
+}
+
+export function restoreVendorBill(
+  recordId: string,
+  options?: { actor?: string; reason?: string }
+) {
+  return restoreLifecycleCollection(VENDOR_BILLS_KEY, recordId, options);
+}
+
+export function purgeVendorBill(recordId: string) {
+  return purgeLifecycleCollection(VENDOR_BILLS_KEY, recordId);
+}
+
+export function loadPresentations(options?: { includeDeleted?: boolean }) {
+  return sortByUpdatedAt(
+    loadLifecycleCollection<BuildOsPresentationRecord>(PRESENTATIONS_KEY, options).map(
+      (record) => ({
+        ...record,
+        preparedFor: cleanString(record.preparedFor) || "Internal review",
+        presentationType: record.presentationType || "Internal Deck",
+        visibility: record.visibility || "Internal",
+        status: record.status || "Draft",
+        summary: cleanString(record.summary),
+        scopeSummary: cleanString(record.scopeSummary),
+        permitStatus: cleanString(record.permitStatus),
+        budgetSnapshot: cleanString(record.budgetSnapshot),
+        scheduleMilestones: cleanString(record.scheduleMilestones),
+        riskRegister: cleanString(record.riskRegister),
+        nextSteps: cleanString(record.nextSteps),
+        deckUrl: cleanString(record.deckUrl),
+        imageUrl: cleanString(record.imageUrl),
+        safeForExternal: Boolean(record.safeForExternal),
+        internalReviewNotes: cleanString(record.internalReviewNotes),
+        createdAt: record.createdAt || nowIso(),
+        updatedAt: record.updatedAt || record.createdAt || nowIso(),
+      })
+    )
+  );
+}
+
+export function savePresentation(record: Partial<BuildOsPresentationRecord>) {
+  const current = loadPresentations({ includeDeleted: true });
+  const existing = current.find((item) => item.id === record.id);
+  const timestamp = nowIso();
+  const normalized: BuildOsPresentationRecord = {
+    id: record.id || createId("presentation"),
+    projectId: cleanString(record.projectId) || "",
+    title: cleanString(record.title) || "Untitled presentation",
+    preparedFor: cleanString(record.preparedFor) || "Internal review",
+    presentationType: record.presentationType || existing?.presentationType || "Internal Deck",
+    visibility: record.visibility || existing?.visibility || "Internal",
+    status: record.status || existing?.status || "Draft",
+    summary: cleanString(record.summary),
+    scopeSummary: cleanString(record.scopeSummary),
+    permitStatus: cleanString(record.permitStatus),
+    budgetSnapshot: cleanString(record.budgetSnapshot),
+    scheduleMilestones: cleanString(record.scheduleMilestones),
+    riskRegister: cleanString(record.riskRegister),
+    nextSteps: cleanString(record.nextSteps),
+    deckUrl: cleanString(record.deckUrl),
+    imageUrl: cleanString(record.imageUrl),
+    safeForExternal: record.safeForExternal ?? existing?.safeForExternal ?? false,
+    internalReviewNotes: cleanString(record.internalReviewNotes),
+    createdBy: cleanString(record.createdBy) || existing?.createdBy,
+    updatedBy: cleanString(record.updatedBy) || cleanString(record.createdBy) || existing?.updatedBy,
+    approvedBy: cleanString(record.approvedBy) || existing?.approvedBy,
+    approvedAt: cleanString(record.approvedAt) || existing?.approvedAt,
+    exportedAt: cleanString(record.exportedAt) || existing?.exportedAt,
+    exportedBy: cleanString(record.exportedBy) || existing?.exportedBy,
+    auditLog: Array.isArray(record.auditLog) ? record.auditLog : existing?.auditLog || [],
+    deletedAt: existing?.deletedAt,
+    deletedBy: existing?.deletedBy,
+    deletionReason: existing?.deletionReason,
+    createdAt: existing?.createdAt || timestamp,
+    updatedAt: timestamp,
+  };
+
+  return saveLifecycleCollection(PRESENTATIONS_KEY, normalized, {
+    actor: normalized.updatedBy || normalized.createdBy || "ENCI BuildOS",
+  });
+}
+
+export function deletePresentation(
+  recordId: string,
+  options?: { actor?: string; reason?: string }
+) {
+  return softDeleteLifecycleCollection(PRESENTATIONS_KEY, recordId, options);
+}
+
+export function restorePresentation(
+  recordId: string,
+  options?: { actor?: string; reason?: string }
+) {
+  return restoreLifecycleCollection(PRESENTATIONS_KEY, recordId, options);
+}
+
+export function purgePresentation(recordId: string) {
+  return purgeLifecycleCollection(PRESENTATIONS_KEY, recordId);
+}
+
+export function loadVideos(options?: { includeDeleted?: boolean }) {
+  return sortByUpdatedAt(
+    loadLifecycleCollection<BuildOsVideoRecord>(VIDEOS_KEY, options).map((record) => ({
+      ...record,
+      category: record.category || "Project Walkthrough",
+      description: cleanString(record.description),
+      sourceUrl: cleanString(record.sourceUrl) || "",
+      date: cleanString(record.date) || new Date().toISOString().slice(0, 10),
+      visibility: record.visibility || "Internal",
+      accessLevel: record.accessLevel || record.visibility || "Internal",
+      thumbnailUrl: cleanString(record.thumbnailUrl),
+      createdAt: record.createdAt || nowIso(),
+      updatedAt: record.updatedAt || record.createdAt || nowIso(),
+    }))
+  );
+}
+
+export function saveVideo(record: Partial<BuildOsVideoRecord>) {
+  const current = loadVideos({ includeDeleted: true });
+  const existing = current.find((item) => item.id === record.id);
+  const timestamp = nowIso();
+  const normalized: BuildOsVideoRecord = {
+    id: record.id || createId("video"),
+    projectId: cleanString(record.projectId) || "",
+    title: cleanString(record.title) || "Untitled video",
+    category: record.category || existing?.category || "Project Walkthrough",
+    description: cleanString(record.description),
+    sourceUrl: cleanString(record.sourceUrl) || "",
+    date: cleanString(record.date) || new Date().toISOString().slice(0, 10),
+    visibility: record.visibility || existing?.visibility || "Internal",
+    accessLevel: record.accessLevel || record.visibility || existing?.accessLevel || "Internal",
+    thumbnailUrl: cleanString(record.thumbnailUrl),
+    createdBy: cleanString(record.createdBy) || existing?.createdBy,
+    updatedBy: cleanString(record.updatedBy) || cleanString(record.createdBy) || existing?.updatedBy,
+    auditLog: Array.isArray(record.auditLog) ? record.auditLog : existing?.auditLog || [],
+    deletedAt: existing?.deletedAt,
+    deletedBy: existing?.deletedBy,
+    deletionReason: existing?.deletionReason,
+    createdAt: existing?.createdAt || timestamp,
+    updatedAt: timestamp,
+  };
+
+  return saveLifecycleCollection(VIDEOS_KEY, normalized, {
+    actor: normalized.updatedBy || normalized.createdBy || "ENCI BuildOS",
+  });
+}
+
+export function deleteVideo(
+  recordId: string,
+  options?: { actor?: string; reason?: string }
+) {
+  return softDeleteLifecycleCollection(VIDEOS_KEY, recordId, options);
+}
+
+export function restoreVideo(
+  recordId: string,
+  options?: { actor?: string; reason?: string }
+) {
+  return restoreLifecycleCollection(VIDEOS_KEY, recordId, options);
+}
+
+export function purgeVideo(recordId: string) {
+  return purgeLifecycleCollection(VIDEOS_KEY, recordId);
+}
+
+export function loadClientReports(options?: { includeDeleted?: boolean }) {
+  return sortByUpdatedAt(
+    loadLifecycleCollection<BuildOsClientReportRecord>(CLIENT_REPORTS_KEY, options).map(
+      (record) => ({
+        ...record,
+        preparedFor: cleanString(record.preparedFor) || "Internal review",
+        reportDate: cleanString(record.reportDate) || new Date().toISOString().slice(0, 10),
+        visibility: record.visibility || "Internal",
+        audience: record.audience || "Internal",
+        status: record.status || "Draft",
+        summary: cleanString(record.summary),
+        safeContextNotes: cleanString(record.safeContextNotes),
+        internalReviewNotes: cleanString(record.internalReviewNotes),
+        sectionOrder: cleanStringArray(record.sectionOrder),
+        sections: Array.isArray(record.sections)
+          ? record.sections
+              .filter((section) => section && typeof section === "object")
+              .map((section) => ({
+                body: Array.isArray(section.body)
+                  ? section.body
+                      .filter((entry): entry is string => typeof entry === "string")
+                      .map((entry) => entry.trim())
+                      .filter(Boolean)
+                  : [],
+                heading:
+                  typeof section.heading === "string" && section.heading.trim()
+                    ? section.heading.trim()
+                    : "Untitled section",
+                safe: Boolean(section.safe),
+              }))
+          : [],
+        exportCount:
+          typeof record.exportCount === "number" && Number.isFinite(record.exportCount)
+            ? Math.max(0, Math.round(record.exportCount))
+            : 0,
+        lastExportFormat: record.lastExportFormat || undefined,
+        createdAt: record.createdAt || nowIso(),
+        updatedAt: record.updatedAt || record.createdAt || nowIso(),
+      })
+    )
+  );
+}
+
+export function saveClientReport(record: Partial<BuildOsClientReportRecord>) {
+  const current = loadClientReports({ includeDeleted: true });
+  const existing = current.find((item) => item.id === record.id);
+  const timestamp = nowIso();
+  const normalized: BuildOsClientReportRecord = {
+    id: record.id || createId("report"),
+    projectId: cleanString(record.projectId) || "",
+    title: cleanString(record.title) || "Untitled client report",
+    preparedFor: cleanString(record.preparedFor) || "Internal review",
+    reportDate: cleanString(record.reportDate) || new Date().toISOString().slice(0, 10),
+    visibility: record.visibility || existing?.visibility || "Internal",
+    audience: record.audience || existing?.audience || "Internal",
+    status: record.status || existing?.status || "Draft",
+    summary: cleanString(record.summary),
+    safeContextNotes: cleanString(record.safeContextNotes),
+    internalReviewNotes: cleanString(record.internalReviewNotes),
+    sectionOrder: cleanStringArray(record.sectionOrder),
+    sections: Array.isArray(record.sections) ? record.sections : existing?.sections || [],
+    lastGeneratedAt: cleanString(record.lastGeneratedAt) || existing?.lastGeneratedAt,
+    generatedBy: cleanString(record.generatedBy) || existing?.generatedBy,
+    approvedAt: cleanString(record.approvedAt) || existing?.approvedAt,
+    approvedBy: cleanString(record.approvedBy) || existing?.approvedBy,
+    exportedAt: cleanString(record.exportedAt) || existing?.exportedAt,
+    exportedBy: cleanString(record.exportedBy) || existing?.exportedBy,
+    exportCount:
+      typeof record.exportCount === "number" && Number.isFinite(record.exportCount)
+        ? Math.max(0, Math.round(record.exportCount))
+        : existing?.exportCount || 0,
+    lastExportFormat: record.lastExportFormat || existing?.lastExportFormat,
+    auditLog: Array.isArray(record.auditLog) ? record.auditLog : existing?.auditLog || [],
+    deletedAt: existing?.deletedAt,
+    deletedBy: existing?.deletedBy,
+    deletionReason: existing?.deletionReason,
+    createdAt: existing?.createdAt || timestamp,
+    updatedAt: timestamp,
+  };
+
+  return saveLifecycleCollection(CLIENT_REPORTS_KEY, normalized, {
+    actor:
+      normalized.generatedBy ||
+      normalized.approvedBy ||
+      normalized.exportedBy ||
+      "ENCI BuildOS",
+  });
+}
+
+export function deleteClientReport(
+  recordId: string,
+  options?: { actor?: string; reason?: string }
+) {
+  return softDeleteLifecycleCollection(CLIENT_REPORTS_KEY, recordId, options);
+}
+
+export function restoreClientReport(
+  recordId: string,
+  options?: { actor?: string; reason?: string }
+) {
+  return restoreLifecycleCollection(CLIENT_REPORTS_KEY, recordId, options);
+}
+
+export function purgeClientReport(recordId: string) {
+  return purgeLifecycleCollection(CLIENT_REPORTS_KEY, recordId);
 }
 
 export function loadBuildOsPreferences(): BuildOsPreferences {
@@ -1080,6 +1967,9 @@ export function loadBuildOsFeatureFlags(): BuildOsFeatureFlags {
     clientInvoicesLive: true,
     vendorBillsLive: true,
     licenseCenterLive: true,
+    presentationsLive: true,
+    videosLive: true,
+    clientReportsLive: true,
     ganttBeta: true,
     automationBeta: true,
     mobileTasksBeta: true,
@@ -1121,6 +2011,9 @@ export function loadBuildOsTenantProfile(): BuildOsTenantProfile {
       "Automation Center",
       "Mobile Tasks",
       "License Center",
+      "Presentations",
+      "Video Library",
+      "Client Reports",
     ],
     updatedAt: nowIso(),
     ...readJson<Partial<BuildOsTenantProfile>>(TENANT_PROFILE_KEY, {}),

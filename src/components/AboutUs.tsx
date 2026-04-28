@@ -4,27 +4,27 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 const pillars = [
   {
     icon: Building2,
-    title: "Practical development focus",
+    title: "Real operating capability",
     description:
-      "Estate Nest Capital is focused on real project planning, execution coordination, and stakeholder communication rather than generic brochure language.",
+      "Estate Nest Capital Inc. is organized around real project planning, execution coordination, communication control, and delivery follow-through rather than brochure-only messaging.",
   },
   {
     icon: FileCheck,
-    title: "Documentation first",
+    title: "Scope and permit readiness",
     description:
-      "Scopes, budgets, permits, schedules, and lender/client materials need to be organized before a project can earn trust.",
+      "Scope summaries, permit pathways, schedules, cost baselines, and supporting records are expected to be orderly enough for internal, client, and lender review.",
   },
   {
     icon: Shield,
-    title: "Operational honesty",
+    title: "Cost and record discipline",
     description:
-      "If a workflow is not ready for live use, we would rather keep it offline than pretend it is already part of a finished platform.",
+      "Projects are approached with cost discipline, communication records, and plain-English visibility into what is ready, what is pending, and what still needs a decision.",
   },
   {
     icon: Award,
-    title: "Long-term improvement",
+    title: "Edmonton execution focus",
     description:
-      "The website and dashboard are being hardened around reliability, accessibility, and diligence-readiness so they can support real work over time.",
+      "The business is rooted in Edmonton construction and development coordination, with a practical emphasis on infill, multi-unit, commercial leasehold, and lender-ready documentation work.",
   },
 ];
 
@@ -38,7 +38,9 @@ export default function AboutUs() {
             <span className="text-enc-text-primary"> Estate Nest Capital</span>
           </h2>
           <p className="mx-auto mt-6 max-w-3xl text-xl leading-8 text-enc-text-secondary">
-            Estate Nest Capital Inc. is shaping a more disciplined way to present and manage construction work, with a stronger emphasis on planning, documentation, and operational clarity.
+            Estate Nest Capital Inc. organizes construction and development work
+            around scope clarity, permit readiness, cost discipline,
+            communication records, and lender or client review.
           </p>
         </div>
 
@@ -50,10 +52,17 @@ export default function AboutUs() {
           </CardHeader>
           <CardContent className="grid gap-6 md:grid-cols-2">
             <p className="text-lg leading-8 text-enc-text-secondary">
-              The public site is intended to explain Estate Nest Capital&apos;s capabilities and how projects are approached. It is not meant to overstate project history, fabricate operating metrics, or present concept visuals as completed work.
+              Estate Nest Capital Inc. is building a practical operating layer
+              for Edmonton construction and development coordination. The public
+              site is meant to show what the business does well: planning,
+              permit readiness, cost awareness, communication structure, and
+              reviewable project documentation.
             </p>
             <p className="text-lg leading-8 text-enc-text-secondary">
-              The management dashboard is being built as an internal operations tool. Visible modules stay limited to the areas that can be supported honestly with working backend paths and authenticated access.
+              The management dashboard is being built as an internal operating
+              system so project information can move with greater consistency
+              from intake through delivery, reporting, and qualified diligence
+              review.
             </p>
           </CardContent>
         </Card>

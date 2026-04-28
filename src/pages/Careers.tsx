@@ -13,6 +13,7 @@ import careersTeamImage from "@/assets/careers-team.jpg";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import PublicPageBackLink from "@/components/PublicPageBackLink";
+import Seo from "@/components/Seo";
 import Badge from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -57,11 +58,13 @@ export default function Careers() {
   const [selectedRole, setSelectedRole] = useState("General interest");
   const [humanCheck, setHumanCheck] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formAlert, setFormAlert] = useState("");
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (humanCheck.trim().toLowerCase() !== "yes") {
+      setFormAlert('Type "YES" in the verification field before submitting.');
       toast({
         title: "Human verification required",
         description: 'Type "YES" in the verification field before submitting.',
@@ -74,6 +77,7 @@ export default function Careers() {
     const formData = new FormData(form);
 
     setIsSubmitting(true);
+    setFormAlert("");
 
     try {
       const response = await fetch("https://formspree.io/f/xojpnvbz", {
@@ -91,8 +95,12 @@ export default function Careers() {
       form.reset();
       setSelectedRole("General interest");
       setHumanCheck("");
+      setFormAlert("Application submitted successfully.");
       navigate("/thank-you");
     } catch {
+      setFormAlert(
+        "Something went wrong while submitting your application. Please try again or call the team directly."
+      );
       toast({
         title: "Application not sent",
         description:
@@ -106,6 +114,11 @@ export default function Careers() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Seo
+        title="Careers | Estate Nest Capital Inc."
+        description="Careers and talent network intake for Estate Nest Capital Inc. in Edmonton, Alberta."
+        path="/careers"
+      />
       <Header />
 
       <main id="main-content" className="pt-28">
@@ -130,7 +143,9 @@ export default function Careers() {
                   Join the Estate Nest talent network
                 </h1>
                 <p className="mt-4 max-w-3xl text-lg leading-8 text-white/85">
-                  This page no longer presents unverified &quot;current openings.&quot; Instead, it offers a direct way to submit interest, resume files, and background details for the roles Estate Nest Capital expects to need as operations grow.
+                  Use this page to register interest, share your background, and
+                  submit resume or portfolio files for the kinds of roles Estate
+                  Nest Capital expects to need as operations grow.
                 </p>
               </div>
             </div>
@@ -145,7 +160,8 @@ export default function Careers() {
                     Growth-focused
                   </h2>
                   <p className="mt-3 leading-7 text-enc-text-secondary">
-                    Submit your background so Estate Nest can reach out when project needs match your experience.
+                    Submit your background so Estate Nest can reach out when
+                    project needs match your experience.
                   </p>
                 </CardContent>
               </Card>
@@ -155,10 +171,11 @@ export default function Careers() {
                     <DollarSign className="h-8 w-8" />
                   </div>
                   <h2 className="mt-4 text-xl font-semibold text-enc-text-primary">
-                    No invented salary bands
+                    Role-fit discussions
                   </h2>
                   <p className="mt-3 leading-7 text-enc-text-secondary">
-                    Compensation, scheduling, and benefits should be discussed against real responsibilities, not placeholder estimates on a website.
+                    Compensation, scheduling, and scope should be discussed
+                    against real responsibilities and project needs.
                   </p>
                 </CardContent>
               </Card>
@@ -168,10 +185,11 @@ export default function Careers() {
                     <Clock className="h-8 w-8" />
                   </div>
                   <h2 className="mt-4 text-xl font-semibold text-enc-text-primary">
-                    Honest hiring posture
+                    Direct intake path
                   </h2>
                   <p className="mt-3 leading-7 text-enc-text-secondary">
-                    Hiring demand can change with project load, so the page is framed as an intake path rather than a misleading job board.
+                    Applications can be reviewed against evolving operating
+                    demand rather than a static public job board.
                   </p>
                 </CardContent>
               </Card>
@@ -230,7 +248,8 @@ export default function Careers() {
                     Apply directly
                   </CardTitle>
                   <p className="mx-auto max-w-2xl text-enc-text-secondary">
-                    Use this form to register interest, upload your resume, and share the kind of role you want to be considered for.
+                    Use this form to register interest, upload your resume, and
+                    share the kind of role you want to be considered for.
                   </p>
                 </CardHeader>
 
@@ -240,6 +259,17 @@ export default function Careers() {
                     encType="multipart/form-data"
                     className="mx-auto max-w-3xl space-y-6"
                   >
+                    <div
+                      aria-live="assertive"
+                      role="alert"
+                      className={
+                        formAlert
+                          ? "rounded-xl border border-border bg-muted/40 px-4 py-3 text-sm text-enc-text-secondary"
+                          : "sr-only"
+                      }
+                    >
+                      {formAlert || "Application status messages appear here."}
+                    </div>
                     <input
                       type="hidden"
                       name="_subject"
@@ -256,60 +286,94 @@ export default function Careers() {
                     />
 
                     <div className="grid gap-4 md:grid-cols-2">
-                      <input
-                        name="name"
-                        type="text"
-                        placeholder="Full Name"
-                        required
-                        className="w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-enc-orange"
-                      />
+                      <div className="space-y-2">
+                        <label htmlFor="career-name" className="text-sm font-semibold text-enc-text-primary">
+                          Full Name *
+                        </label>
+                        <input
+                          id="career-name"
+                          name="name"
+                          type="text"
+                          placeholder="Full Name"
+                          required
+                          className="w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-enc-orange"
+                        />
+                      </div>
 
-                      <input
-                        name="email"
-                        type="email"
-                        placeholder="Email Address"
-                        required
-                        className="w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-enc-orange"
-                      />
+                      <div className="space-y-2">
+                        <label htmlFor="career-email" className="text-sm font-semibold text-enc-text-primary">
+                          Email Address *
+                        </label>
+                        <input
+                          id="career-email"
+                          name="email"
+                          type="email"
+                          placeholder="Email Address"
+                          required
+                          className="w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-enc-orange"
+                        />
+                      </div>
                     </div>
 
                     <div className="grid gap-4 md:grid-cols-2">
-                      <input
-                        name="phone"
-                        type="tel"
-                        placeholder="Phone Number"
-                        required
-                        className="w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-enc-orange"
-                      />
+                      <div className="space-y-2">
+                        <label htmlFor="career-phone" className="text-sm font-semibold text-enc-text-primary">
+                          Phone Number *
+                        </label>
+                        <input
+                          id="career-phone"
+                          name="phone"
+                          type="tel"
+                          placeholder="Phone Number"
+                          required
+                          className="w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-enc-orange"
+                        />
+                      </div>
 
-                      <select
-                        name="role-interest"
-                        value={selectedRole}
-                        onChange={(event) => setSelectedRole(event.target.value)}
-                        className="w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-enc-orange"
-                      >
-                        <option value="General interest">General interest</option>
-                        {talentAreas.map((role) => (
-                          <option key={role.title} value={role.title}>
-                            {role.title}
-                          </option>
-                        ))}
-                      </select>
+                      <div className="space-y-2">
+                        <label htmlFor="career-role-interest" className="text-sm font-semibold text-enc-text-primary">
+                          Role Interest
+                        </label>
+                        <select
+                          id="career-role-interest"
+                          name="role-interest"
+                          value={selectedRole}
+                          onChange={(event) => setSelectedRole(event.target.value)}
+                          className="w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-enc-orange"
+                        >
+                          <option value="General interest">General interest</option>
+                          {talentAreas.map((role) => (
+                            <option key={role.title} value={role.title}>
+                              {role.title}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
 
-                    <textarea
-                      name="message"
-                      placeholder="Tell us about your background, project experience, software tools, certifications, and the kind of work you are looking for..."
-                      rows={5}
-                      className="w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-enc-orange"
-                    />
+                    <div className="space-y-2">
+                      <label htmlFor="career-message" className="text-sm font-semibold text-enc-text-primary">
+                        Message
+                      </label>
+                      <textarea
+                        id="career-message"
+                        name="message"
+                        placeholder="Tell us about your background, project experience, software tools, certifications, and the kind of work you are looking for..."
+                        rows={5}
+                        className="w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-enc-orange"
+                      />
+                    </div>
 
                     <div className="grid gap-4 md:grid-cols-2">
                       <div className="rounded-[1.5rem] border border-border bg-muted/40 p-5">
-                        <label className="text-sm font-semibold text-enc-text-primary">
-                          Resume upload
+                        <label
+                          htmlFor="career-resume-file"
+                          className="text-sm font-semibold text-enc-text-primary"
+                        >
+                          Resume Upload
                         </label>
                         <input
+                          id="career-resume-file"
                           name="resume_file"
                           type="file"
                           accept={supportedFileTypes}
@@ -321,10 +385,14 @@ export default function Careers() {
                       </div>
 
                       <div className="rounded-[1.5rem] border border-border bg-muted/40 p-5">
-                        <label className="text-sm font-semibold text-enc-text-primary">
-                          Portfolio or work sample
+                        <label
+                          htmlFor="career-portfolio-file"
+                          className="text-sm font-semibold text-enc-text-primary"
+                        >
+                          Portfolio / Work Sample
                         </label>
                         <input
+                          id="career-portfolio-file"
                           name="portfolio_file"
                           type="file"
                           accept={supportedFileTypes}
@@ -339,14 +407,15 @@ export default function Careers() {
                     <div className="rounded-[1.5rem] border border-border bg-muted/40 p-5">
                       <div className="flex items-center gap-3">
                         <ShieldCheck className="h-5 w-5 text-enc-orange" />
-                        <p className="text-sm font-semibold text-enc-text-primary">
-                          Human verification
-                        </p>
+                        <label htmlFor="career-human-check" className="text-sm font-semibold text-enc-text-primary">
+                          Human Verification
+                        </label>
                       </div>
                       <p className="mt-3 text-sm leading-7 text-enc-text-secondary">
                         Type <strong>YES</strong> below to help reduce spam submissions.
                       </p>
                       <input
+                        id="career-human-check"
                         name="human-check"
                         type="text"
                         value={humanCheck}
@@ -365,7 +434,9 @@ export default function Careers() {
                         </p>
                       </div>
                       <p className="mt-3">
-                        You can now submit resume or portfolio files directly through this page instead of sending them separately by email.
+                        You can now submit resume or portfolio files directly
+                        through this page instead of sending them separately by
+                        email.
                       </p>
                     </div>
 
@@ -388,7 +459,8 @@ export default function Careers() {
                     Need help before applying?
                   </CardTitle>
                   <p className="mx-auto max-w-2xl text-enc-text-secondary">
-                    If you have questions about a role or prefer another way to connect before applying, use any of these options.
+                    If you have questions about a role or prefer another way to
+                    connect before applying, use any of these options.
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-6 text-center">
@@ -425,18 +497,24 @@ export default function Careers() {
                     Equal opportunity
                   </CardTitle>
                   <p className="mx-auto max-w-2xl text-enc-text-secondary">
-                    Estate Nest Capital Inc. is committed to fair consideration and inclusive hiring as the team grows.
+                    Estate Nest Capital Inc. is committed to fair consideration
+                    and inclusive hiring as the team grows.
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-4 text-sm leading-7 text-enc-text-secondary">
                   <p>
-                    We welcome applicants from diverse backgrounds and aim to review submissions based on relevant experience, role fit, and operational need.
+                    We welcome applicants from diverse backgrounds and aim to
+                    review submissions based on relevant experience, role fit,
+                    and operational need.
                   </p>
                   <p>
-                    If you need an accommodation or an alternate application path, contact the team by phone, email, or the consultation form and note that you need application support.
+                    If you need an accommodation or an alternate application
+                    path, contact the team by phone, email, or the consultation
+                    form and note that you need application support.
                   </p>
                   <p className="font-medium text-enc-text-primary">
-                    Accessibility and application support requests will be handled as part of the hiring process.
+                    Accessibility and application support requests will be
+                    handled as part of the hiring process.
                   </p>
                 </CardContent>
               </Card>
