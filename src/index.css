@@ -379,3 +379,79 @@ html.a11y-enhanced .dashboard-icon {
 html.a11y-enhanced .dashboard-panel::before {
   opacity: 0.55;
 }
+
+html.content-protection-enabled,
+html.content-protection-enabled body {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+html.content-protection-enabled input,
+html.content-protection-enabled textarea,
+html.content-protection-enabled select,
+html.content-protection-enabled [contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.content-protection-watermark {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: none;
+  place-items: center;
+  color: hsl(var(--foreground) / 0.07);
+  font-size: clamp(1.2rem, 3vw, 2rem);
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  text-align: center;
+  transform: rotate(-18deg);
+}
+
+html.content-protection-managed .content-protection-watermark {
+  display: grid;
+}
+
+html.content-protection-printing body * {
+  visibility: hidden !important;
+}
+
+html.content-protection-printing body::before {
+  content: "Printing is disabled for this website.";
+  visibility: visible !important;
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-size: clamp(1.1rem, 2vw, 1.4rem);
+  font-weight: 700;
+  text-align: center;
+  padding: 2rem;
+  z-index: 10000;
+}
+
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+
+  body::before {
+    content: "Printing is disabled for this website.";
+    visibility: visible !important;
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background: #ffffff;
+    color: #111111;
+    font-size: 18px;
+    font-weight: 700;
+    text-align: center;
+    padding: 2rem;
+  }
+}

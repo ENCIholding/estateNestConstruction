@@ -5,6 +5,7 @@ import { AccessibilityProvider } from "./components/accessibility/AccessibilityP
 import RequireManagementAuth from "./components/management/RequireManagementAuth";
 import ManagementRouteFallback from "./components/management/ManagementRouteFallback";
 import ScrollToTop from "./components/ScrollToTop";
+import ContentProtectionGuard from "./components/security/ContentProtectionGuard";
 import { Toaster } from "./components/ui/toaster";
 import { Toaster as SonnerToaster } from "./components/ui/sonner";
 
@@ -74,6 +75,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <AccessibilityProvider>
+        <ContentProtectionGuard />
         <SpeedInsights />
         <ScrollToTop />
         <Suspense fallback={<RouteFallback />}>
