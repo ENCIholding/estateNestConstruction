@@ -7,10 +7,16 @@ export default function HeroSection() {
       <div className="absolute inset-0">
         <img
           src={heroImage}
-          alt="Estate Nest Capital concept image representing residential and commercial development work in Edmonton, Alberta"
-          className="h-full w-full object-cover object-center"
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 h-full w-full object-cover object-center opacity-55"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/35 to-black/70" />
+        <img
+          src={heroImage}
+          alt="Estate Nest Capital concept image representing residential and commercial development work in Edmonton, Alberta"
+          className="absolute inset-0 h-full w-full object-contain object-center [filter:contrast(1.07)_saturate(1.04)]"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/58 via-black/38 to-black/72" />
       </div>
 
       <div className="relative container mx-auto px-6 py-24 pt-36">
