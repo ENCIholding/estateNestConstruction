@@ -6,6 +6,25 @@
     <link rel="shortcut icon" href="/favicon.ico?v=enci-buildos-green" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=enci-buildos-green" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (function () {
+        var apexHost = "estatenest.capital";
+        var canonicalHost = "www.estatenest.capital";
+
+        if (window.location.hostname === apexHost) {
+          var target =
+            "https://" +
+            canonicalHost +
+            window.location.pathname +
+            window.location.search +
+            window.location.hash;
+
+          if (window.location.href !== target) {
+            window.location.replace(target);
+          }
+        }
+      })();
+    </script>
     
     <title>Estate Nest Capital | Edmonton Residential & Commercial Construction</title>
     <meta name="description" content="Edmonton's trusted development partner for custom infills, CMHC rowhouses, commercial daycares, and restaurant fit-outs. Creating lasting value through strategic projects." />
@@ -65,6 +84,12 @@
     </script>
   </head>
   <body>
+    <noscript>
+      <meta
+        http-equiv="refresh"
+        content="0; url=https://www.estatenest.capital/"
+      />
+    </noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

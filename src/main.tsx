@@ -4,6 +4,16 @@ import "./index.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react"; // React is needed for JSX
 
+if (window.location.hostname === "estatenest.capital") {
+  const canonicalUrl =
+    "https://www.estatenest.capital" +
+    window.location.pathname +
+    window.location.search +
+    window.location.hash;
+
+  window.location.replace(canonicalUrl);
+}
+
 // Create a client for React Query
 const queryClient = new QueryClient();
 
