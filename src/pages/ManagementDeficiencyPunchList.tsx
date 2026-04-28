@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ClipboardCheck, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { ClipboardCheck, Pencil, Plus, RotateCcw, Search, Trash, Trash2 } from "lucide-react";
 import ManagementLayout from "@/components/management/ManagementLayout";
 import {
   AlertDialog,
@@ -30,9 +30,12 @@ import {
   deleteDeficiency,
   loadDeficiencies,
   loadMasterDatabaseRecords,
+  purgeDeficiency,
+  restoreDeficiency,
   saveDeficiency,
   type BuildOsDeficiency,
 } from "@/lib/buildosShared";
+import { toast } from "@/components/ui/sonner";
 
 type DeficiencyFormState = {
   projectId: string;
@@ -72,9 +75,11 @@ export default function ManagementDeficiencyPunchList() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [showArchived, setShowArchived] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingRecord, setEditingRecord] = useState<BuildOsDeficiency | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<BuildOsDeficiency | null>(null);
+  const [deleteReason, setDeleteReason] = useState("");
   const [form, setForm] = useState<DeficiencyFormState>(initialForm());
   const [error, setError] = useState("");
 
@@ -83,8 +88,8 @@ export default function ManagementDeficiencyPunchList() {
     queryFn: fetchManagementProjects,
   });
   const { data: deficiencies = [] } = useQuery({
-    queryKey: ["buildos-deficiencies"],
-    queryFn: async () => loadDeficiencies(),
+    queryKey: ["buildos-deficiencies", showArchived],
+    queryFn: async () => loadDeficiencies({ includeDeleted: showArchived }),
   });
   const { data: contacts = [] } = useQuery({
     queryKey: ["buildos-master-database"],
@@ -159,14 +164,44 @@ export default function ManagementDeficiencyPunchList() {
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
-    await deleteDeficiency(deleteTarget.id);
+    await deleteDeficiency(deleteTarget.id, {
+      actor: "ENCI BuildOS",
+      reason: deleteReason,
+    });
     setDeleteTarget(null);
+    setDeleteReason("");
     await queryClient.invalidateQueries({
       predicate: (query) =>
         Array.isArray(query.queryKey) &&
         typeof query.queryKey[0] === "string" &&
         (query.queryKey[0].startsWith("buildos") || query.queryKey[0].startsWith("management")),
     });
+    toast.success("Deficiency item archived.");
+  };
+
+  const handleRestore = async (record: BuildOsDeficiency) => {
+    await restoreDeficiency(record.id, {
+      actor: "ENCI BuildOS",
+      reason: "Deficiency item restored for active tracking.",
+    });
+    await queryClient.invalidateQueries({
+      predicate: (query) =>
+        Array.isArray(query.queryKey) &&
+        typeof query.queryKey[0] === "string" &&
+        (query.queryKey[0].startsWith("buildos") || query.queryKey[0].startsWith("management")),
+    });
+    toast.success("Deficiency item restored.");
+  };
+
+  const handlePurge = async (record: BuildOsDeficiency) => {
+    await purgeDeficiency(record.id);
+    await queryClient.invalidateQueries({
+      predicate: (query) =>
+        Array.isArray(query.queryKey) &&
+        typeof query.queryKey[0] === "string" &&
+        (query.queryKey[0].startsWith("buildos") || query.queryKey[0].startsWith("management")),
+    });
+    toast.success("Archived deficiency item purged.");
   };
 
   return (
@@ -196,7 +231,7 @@ export default function ManagementDeficiencyPunchList() {
           <CardHeader>
             <CardTitle className="text-xl text-foreground">Filter items</CardTitle>
           </CardHeader>
-          <CardContent className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px]">
+          <CardContent className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px_auto]">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -217,6 +252,13 @@ export default function ManagementDeficiencyPunchList() {
               <option value="Ready for Review">Ready for Review</option>
               <option value="Closed">Closed</option>
             </select>
+            <Button
+              variant="outline"
+              className="rounded-full"
+              onClick={() => setShowArchived((current) => !current)}
+            >
+              {showArchived ? "Hide archived" : "Show archived"}
+            </Button>
           </CardContent>
         </Card>
 
@@ -243,7 +285,9 @@ export default function ManagementDeficiencyPunchList() {
                         >
                           {record.severity}
                         </Badge>
-                        <Badge className="rounded-full bg-muted text-muted-foreground">{record.status}</Badge>
+                        <Badge className="rounded-full bg-muted text-muted-foreground">
+                          {record.deletedAt ? "Archived" : record.status}
+                        </Badge>
                       </div>
                       <p className="text-sm leading-6 text-muted-foreground">{record.description}</p>
                       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -264,6 +308,11 @@ export default function ManagementDeficiencyPunchList() {
                         <div className="dashboard-item p-3">
                           <p className="text-sm font-medium text-foreground">Warranty linked</p>
                           <p className="mt-2 text-sm text-muted-foreground">{record.warrantyLinked ? "Yes" : "No"}</p>
+                          {record.deletedAt ? (
+                            <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
+                              Archived {record.deletedAt} | {record.deletionReason || "Reason not recorded"}
+                            </p>
+                          ) : null}
                         </div>
                       </div>
                       {record.notes ? (
@@ -275,18 +324,44 @@ export default function ManagementDeficiencyPunchList() {
                     </div>
 
                     <div className="flex flex-wrap gap-2">
-                      <Button variant="outline" className="rounded-full" onClick={() => openForm(record)}>
-                        <Pencil className="mr-2 h-4 w-4" />
-                        Edit
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="rounded-full text-rose-600 hover:text-rose-700"
-                        onClick={() => setDeleteTarget(record)}
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Remove
-                      </Button>
+                      {!record.deletedAt ? (
+                        <>
+                          <Button variant="outline" className="rounded-full" onClick={() => openForm(record)}>
+                            <Pencil className="mr-2 h-4 w-4" />
+                            Edit
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="rounded-full text-rose-600 hover:text-rose-700"
+                            onClick={() => {
+                              setDeleteTarget(record);
+                              setDeleteReason("");
+                            }}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Archive
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button
+                            variant="outline"
+                            className="rounded-full"
+                            onClick={() => void handleRestore(record)}
+                          >
+                            <RotateCcw className="mr-2 h-4 w-4" />
+                            Restore
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="rounded-full text-rose-600 hover:text-rose-700"
+                            onClick={() => void handlePurge(record)}
+                          >
+                            <Trash className="mr-2 h-4 w-4" />
+                            Purge
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -406,15 +481,24 @@ export default function ManagementDeficiencyPunchList() {
       <AlertDialog open={Boolean(deleteTarget)} onOpenChange={() => setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Remove deficiency item</AlertDialogTitle>
+            <AlertDialogTitle>Archive deficiency item</AlertDialogTitle>
             <AlertDialogDescription>
-              Remove "{deleteTarget?.title}" from the punch list?
+              Archive "{deleteTarget?.title}" and store the reason in audit history.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <Input
+            value={deleteReason}
+            onChange={(event) => setDeleteReason(event.target.value)}
+            placeholder="Reason for archive (required)"
+          />
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction className="bg-rose-600 hover:bg-rose-700" onClick={() => void handleDelete()}>
-              Remove
+            <AlertDialogAction
+              className="bg-rose-600 hover:bg-rose-700"
+              disabled={!deleteReason.trim()}
+              onClick={() => void handleDelete()}
+            >
+              Archive
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
