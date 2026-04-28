@@ -5,25 +5,25 @@ const controls = [
     icon: Users,
     title: "Scope clarity and field coordination",
     description:
-      "Sequencing, accountability, and field communication need to stay visible if a project is going to hold scope and move cleanly from one milestone to the next.",
+      "Scope, sequencing, site communication, and trade responsibilities need to stay clear so the project can move cleanly from one milestone to the next.",
   },
   {
     icon: Building2,
     title: "Vendor and cost discipline",
     description:
-      "Procurement, vendor follow-up, and cost baselines need to be reviewed against actual project conditions, not assumed from template data.",
+      "Vendor coordination, procurement follow-up, and cost assumptions must be reviewed against real project conditions, availability, site requirements, and approved scope.",
   },
   {
     icon: FileCheck,
     title: "Permit and document readiness",
     description:
-      "Permit references, legal details, inspection records, and compliance notes should be tied to the live project file before they are treated as complete.",
+      "Permit references, legal descriptions, inspection records, drawings, and compliance notes should be organized and reviewed before they are treated as complete.",
   },
   {
     icon: MessageSquare,
     title: "Client and lender review",
     description:
-      "The goal is to keep updates, questions, approvals, and next steps tied to the actual project rather than scattered across inboxes and spreadsheets.",
+      "The goal is to keep updates, questions, approvals, budget changes, and next steps connected to the actual project so clients, lenders, and project partners can review current information with confidence.",
   },
 ];
 
@@ -38,9 +38,10 @@ export default function ProjectManagement() {
               <span className="text-enc-text-primary"> & Governance</span>
             </h2>
             <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-              Estate Nest Capital organizes construction work around scope
-              clarity, permit readiness, cost discipline, communication
-              records, and lender or client review.
+              Estate Nest Capital organizes construction and development work
+              around clear scope, practical scheduling, cost awareness, permit
+              readiness, communication discipline, and accountable
+              follow-through.
             </p>
           </div>
 
@@ -71,11 +72,6 @@ export default function ProjectManagement() {
             })}
           </div>
 
-          <p className="mx-auto mt-12 max-w-4xl text-center text-lg leading-8 text-muted-foreground">
-            Specific software and reporting tools may vary by project stage.
-            What matters is that project controls are real, current, and
-            reviewable by the people relying on them.
-          </p>
         </div>
       </div>
     </section>

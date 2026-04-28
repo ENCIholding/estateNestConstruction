@@ -6,25 +6,25 @@ const pillars = [
     icon: Building2,
     title: "Real operating capability",
     description:
-      "Estate Nest Capital Inc. is organized around real project planning, execution coordination, communication control, and delivery follow-through rather than brochure-only messaging.",
+      "Estate Nest Capital brings practical construction and development coordination to real project conditions, including planning, budgeting, scheduling, documentation, trade coordination, and delivery follow-through.",
   },
   {
     icon: FileCheck,
     title: "Scope and permit readiness",
     description:
-      "Scope summaries, permit pathways, schedules, cost baselines, and supporting records are expected to be orderly enough for internal, client, and lender review.",
+      "Strong projects start with clear scope, realistic permit pathways, organized schedules, and cost assumptions that can be reviewed before major decisions are made.",
   },
   {
     icon: Shield,
     title: "Cost and record discipline",
     description:
-      "Projects are approached with cost discipline, communication records, and plain-English visibility into what is ready, what is pending, and what still needs a decision.",
+      "We approach each project with cost discipline, structured communication, and clear records so clients and stakeholders can understand what is confirmed, what is pending, and what requires a decision.",
   },
   {
     icon: Award,
     title: "Edmonton execution focus",
     description:
-      "The business is rooted in Edmonton construction and development coordination, with a practical emphasis on infill, multi-unit, commercial leasehold, and lender-ready documentation work.",
+      "Estate Nest Capital is rooted in Edmonton and surrounding communities, with a practical focus on infill development, multi-unit housing, commercial leasehold improvements, renovations, and project coordination.",
   },
 ];
 
@@ -38,31 +38,30 @@ export default function AboutUs() {
             <span className="text-enc-text-primary"> Estate Nest Capital</span>
           </h2>
           <p className="mx-auto mt-6 max-w-3xl text-xl leading-8 text-enc-text-secondary">
-            Estate Nest Capital Inc. organizes construction and development work
-            around scope clarity, permit readiness, cost discipline,
-            communication records, and lender or client review.
+            Estate Nest Capital Inc. is an Edmonton-based construction and
+            development company focused on practical project planning,
+            disciplined execution, and clear communication from early concept
+            through delivery.
           </p>
         </div>
 
         <Card className="card-hover border-0 shadow-xl">
           <CardHeader>
             <CardTitle className="text-2xl text-enc-text-primary">
-              What this platform is meant to communicate
+              How Estate Nest Capital Works
             </CardTitle>
           </CardHeader>
           <CardContent className="grid gap-6 md:grid-cols-2">
             <p className="text-lg leading-8 text-enc-text-secondary">
-              Estate Nest Capital Inc. is building a practical operating layer
-              for Edmonton construction and development coordination. The public
-              site is meant to show what the business does well: planning,
-              permit readiness, cost awareness, communication structure, and
-              reviewable project documentation.
+              We work across residential, infill, multi-unit, commercial
+              leasehold, and development coordination needs, with an emphasis
+              on scope clarity, permit readiness, cost awareness, and organized
+              project records.
             </p>
             <p className="text-lg leading-8 text-enc-text-secondary">
-              The management dashboard is being built as an internal operating
-              system so project information can move with greater consistency
-              from intake through delivery, reporting, and qualified diligence
-              review.
+              Our approach is simple: projects should be planned clearly,
+              documented properly, reviewed honestly, and executed with
+              accountability.
             </p>
           </CardContent>
         </Card>

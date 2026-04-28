@@ -20,12 +20,14 @@ export default function HeroSection() {
               Edmonton construction and development
             </p>
             <h1 className="max-w-4xl text-5xl font-bold tracking-tight text-white md:text-6xl lg:text-7xl">
-              Project delivery with
-              <span className="hero-gradient-text block"> clearer controls and real accountability</span>
+              Where Capital Meets
+              <span className="hero-gradient-text block">Craftsmanship in Real Estate</span>
             </h1>
             <p className="max-w-3xl text-xl leading-8 text-white/90 md:text-2xl">
-              Estate Nest Capital Inc. is building a practical platform for pre-construction planning,
-              project execution, and stakeholder communication across residential and commercial work.
+              Estate Nest Capital Inc. coordinates construction and
+              development projects across the Edmonton region, connecting
+              disciplined project oversight with practical execution from
+              foundation to finish.
             </p>
           </div>
 
@@ -37,7 +39,10 @@ export default function HeroSection() {
                   <span className="gradient-text-alt"> Profile</span>
                 </h2>
                 <p className="mt-4 text-lg leading-7 text-white/85">
-                  Review how Estate Nest approaches planning, project controls, documentation, and lender/client communication.
+                  Estate Nest Capital approaches construction with disciplined
+                  planning, clear scope control, organized documentation, and
+                  practical communication for clients, lenders, consultants,
+                  and project stakeholders.
                 </p>
               </div>
             </Link>
@@ -49,7 +54,10 @@ export default function HeroSection() {
                   <span className="gradient-text-alt"> Relations</span>
                 </h2>
                 <p className="mt-4 text-lg leading-7 text-white/85">
-                  Understand how diligence materials, opportunity reviews, and partnership discussions are handled before capital is committed.
+                  Estate Nest Capital evaluates development opportunities with
+                  disciplined due diligence, project-specific review, and clear
+                  communication before any partnership or capital discussion
+                  moves forward.
                 </p>
               </div>
             </Link>

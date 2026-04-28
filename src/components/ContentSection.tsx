@@ -23,17 +23,17 @@ const principles = [
   {
     title: "Local context",
     description:
-      "Edmonton zoning, permitting, trades, and delivery conditions shape how practical construction decisions are made.",
+      "Edmonton zoning, permitting requirements, weather, trade availability, municipal review, and site conditions all shape how construction decisions should be planned and executed.",
   },
   {
     title: "Documentation discipline",
     description:
-      "Budgets, permits, schedules, and communication trails should be clear enough for clients, lenders, and internal teams to review confidently.",
+      "Budgets, permits, schedules, drawings, approvals, and communication records should be organized clearly enough for clients, consultants, lenders, and project partners to review with confidence.",
   },
   {
     title: "Execution visibility",
     description:
-      "Capability discussions are framed around scope, fit, and delivery approach so the project conversation stays useful and reviewable from the start.",
+      "Every serious project conversation should connect design intent, scope, budget, schedule, approvals, and execution realities before commitments are made.",
   },
 ];
 
@@ -41,7 +41,7 @@ const capabilities: CapabilityCard[] = [
   {
     title: "Single-family infill concepts",
     description:
-      "Representative design references for urban infill projects, used to discuss scope, layout, and construction approach before final drawings and pricing are issued.",
+      "Planning support for Edmonton infill homes, including early scope discussion, layout review, construction approach, site constraints, and budget expectations before drawings and pricing are finalized.",
     image: specHomeImage,
     cta: "Request scope checklist",
     altText:
@@ -50,7 +50,7 @@ const capabilities: CapabilityCard[] = [
   {
     title: "Multi-unit housing concepts",
     description:
-      "Illustrative concept visuals for row housing or multi-unit residential work. Final unit counts, budgets, and entitlement paths depend on site-specific review.",
+      "Development coordination for multi-unit residential concepts, including site review, unit planning, entitlement considerations, budgeting assumptions, permit pathways, and construction coordination.",
     image: rowHousesImage,
     cta: "Request concept package",
     altText:
@@ -59,7 +59,7 @@ const capabilities: CapabilityCard[] = [
   {
     title: "Custom home planning",
     description:
-      "Pre-construction planning support for clients who need help aligning design intent, approvals, and project expectations before a build moves forward.",
+      "Pre-construction support for clients who want to align design intent, budget expectations, approvals, scope, materials, and delivery requirements before construction begins.",
     image: customHouseImage,
     cta: "Request pre-construction review",
     altText:
@@ -68,7 +68,7 @@ const capabilities: CapabilityCard[] = [
   {
     title: "Renovation and repositioning",
     description:
-      "Renovation strategy can include layout upgrades, finish planning, and scope definition for projects that need clearer direction before work begins.",
+      "Renovation and repositioning support for projects requiring layout changes, finish planning, scope definition, trade coordination, permit review, and clearer execution planning.",
     image: renovationImage,
     cta: "Request renovation brief",
     altText:
@@ -77,7 +77,7 @@ const capabilities: CapabilityCard[] = [
   {
     title: "Commercial and mixed-use planning",
     description:
-      "Commercial planning discussions can cover tenant layout needs, municipal approvals, operational constraints, and documentation required before construction starts.",
+      "Planning and coordination support for commercial leasehold and mixed-use spaces, including tenant needs, municipal requirements, operational constraints, trade coordination, and construction readiness.",
     image: commercialPlazaImage,
     cta: "Request commercial intake",
     altText:
@@ -86,7 +86,7 @@ const capabilities: CapabilityCard[] = [
   {
     title: "Builder profile and diligence overview",
     description:
-      "A focused profile for clients, lenders, and collaborators who need to understand Estate Nest Capital's operating approach, controls, and documentation standards.",
+      "A focused overview for clients, lenders, consultants, and project partners who want to understand Estate Nest Capital's construction approach, planning discipline, documentation standards, and project delivery mindset.",
     image: builderLegacyImage,
     cta: "View builder profile",
     isBuilderProfile: true,
@@ -134,15 +134,16 @@ export default function ContentSection() {
               <span className="text-enc-text-primary"> & Concept References</span>
             </h2>
             <p className="mx-auto mt-6 max-w-3xl text-xl leading-8 text-enc-text-secondary">
-              These visuals are representative references used to discuss fit,
-              scope, and delivery approach. They are not presented as completed
-              proof-of-work unless separately identified in diligence materials.
+              Estate Nest Capital supports construction and development work
+              through early planning, scope review, permitting coordination,
+              estimating support, trade coordination, stakeholder communication,
+              and project delivery oversight.
             </p>
             <p className="mx-auto mt-4 max-w-4xl text-lg leading-8 text-enc-text-secondary">
-              Estate Nest Capital brings a real operating focus to planning,
-              permit readiness, estimating support, construction coordination,
-              stakeholder communication, and lender-facing documentation
-              discipline.
+              The visuals below are representative concept references used to
+              support conversations about fit, scope, design direction, and
+              delivery approach. Final project details depend on site-specific
+              review, drawings, permits, budget, and client requirements.
             </p>
           </div>
 
@@ -196,9 +197,9 @@ export default function ContentSection() {
               Experience basis
             </p>
             <p className="mt-4 text-lg leading-8 text-enc-text-secondary">
-              Planning, permitting, estimating support, construction
-              coordination, stakeholder communication, and lender documentation
-              readiness.
+              Planning, permitting coordination, estimating support,
+              construction coordination, vendor communication, project
+              documentation, and stakeholder review.
             </p>
           </div>
         </div>

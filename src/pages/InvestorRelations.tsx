@@ -9,31 +9,130 @@ import Seo from "@/components/Seo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-const sections = [
+const investorCards = [
   {
     icon: Handshake,
     title: "Opportunity review",
     description:
-      "Investment discussions should begin with a real opportunity, a defined role for capital, and a clear understanding of what has and has not been prepared.",
+      "Investment discussions should begin with a real project opportunity, a clear development purpose, defined capital requirements, and a practical understanding of what has already been reviewed.",
   },
   {
     icon: FileText,
     title: "Diligence materials",
     description:
-      "Project-specific scopes, budgets, schedules, permit references, and deal structures should be reviewed per opportunity rather than inferred from generic marketing claims.",
+      "Each opportunity should be supported by project-specific diligence materials such as scope summaries, budget assumptions, permit status, schedule milestones, site context, project risks, and available supporting records.",
   },
   {
     icon: Users,
     title: "Communication expectations",
     description:
-      "Investors and partners need timely updates, clear points of contact, and a disciplined record of changes, approvals, and next steps.",
+      "Investors, lenders, and project partners need clear points of contact, timely updates, documented decisions, and a practical record of changes, approvals, risks, and next steps.",
   },
   {
     icon: Shield,
     title: "Risk awareness",
     description:
-      "Construction and development carry execution risk. The goal of this page is to explain process, reporting discipline, and review posture rather than make public investment solicitations.",
+      "Construction and development involve execution, cost, schedule, market, permitting, and financing risk. Estate Nest Capital's approach is to identify risks clearly, review assumptions carefully, and avoid unsupported public claims.",
   },
+];
+
+const investorWorkflowCards = [
+  {
+    title: "Initial introduction",
+    description:
+      "Investor or partnership conversations begin with a basic introduction, including the type of project, expected role of capital, timeline, location, and the level of information currently available.",
+  },
+  {
+    title: "Opportunity screening",
+    description:
+      "Before detailed discussions continue, Estate Nest Capital reviews whether the opportunity fits its construction, development, risk, timing, and execution profile.",
+  },
+  {
+    title: "Project diligence review",
+    description:
+      "Where appropriate, project-specific information may be reviewed, including site details, scope, budget assumptions, permit status, schedule milestones, construction approach, and known risks.",
+  },
+  {
+    title: "Capital role and structure",
+    description:
+      "The role of capital must be clearly defined. This may include acquisition support, construction financing support, equity participation, project-specific partnership discussions, or other private arrangements reviewed on a case-by-case basis.",
+  },
+  {
+    title: "Risk and responsibility alignment",
+    description:
+      "Each party should understand the project risks, decision rights, reporting expectations, approval requirements, and professional review needed before moving forward.",
+  },
+  {
+    title: "Documentation and next steps",
+    description:
+      "If the opportunity progresses, the next stage may include formal documentation, professional review, lender coordination, legal review, and agreed communication expectations.",
+  },
+];
+
+const investorExpectationCards = [
+  {
+    title: "Project overview",
+    description:
+      "A clear summary of the project type, location, scope, development intent, and current stage.",
+  },
+  {
+    title: "Budget and cost assumptions",
+    description:
+      "A practical view of expected costs, known allowances, contingencies, and areas requiring further review.",
+  },
+  {
+    title: "Permit and approval status",
+    description:
+      "Available information on zoning, permits, drawings, municipal review, and project readiness.",
+  },
+  {
+    title: "Schedule and milestones",
+    description:
+      "A working view of expected timelines, dependencies, and key decision points.",
+  },
+  {
+    title: "Risk notes",
+    description:
+      "Plain-English review of known risks, assumptions, open questions, and items requiring professional confirmation.",
+  },
+  {
+    title: "Communication discipline",
+    description:
+      "A clear approach to updates, review points, approvals, and project communication.",
+  },
+];
+
+const whatEstateNestLooksFor = [
+  {
+    title: "Project fit",
+    description:
+      "The opportunity should align with Estate Nest Capital's construction and development focus, including infill, multi-unit housing, commercial leasehold, renovation, or project coordination work.",
+  },
+  {
+    title: "Realistic assumptions",
+    description:
+      "Budgets, timelines, permits, and construction assumptions must be reviewed honestly. Unsupported numbers or vague timelines create unnecessary project risk.",
+  },
+  {
+    title: "Professional review",
+    description:
+      "Legal, accounting, lending, engineering, architectural, and municipal matters should be reviewed by the appropriate professionals before final commitments are made.",
+  },
+  {
+    title: "Communication alignment",
+    description:
+      "Investors, lenders, clients, and project partners should expect clear communication, documented decisions, and practical review points throughout the project lifecycle.",
+  },
+];
+
+const privateDiligenceItems = [
+  "Project summaries and scope assumptions",
+  "Budget, cost, and contingency summaries",
+  "Permit, zoning, and municipal status notes",
+  "Schedule milestones and construction-stage review",
+  "Risk notes and open decision items",
+  "Lender, client, or partner review summaries",
+  "Supporting documents where disclosure is appropriate",
 ];
 
 export default function InvestorRelations() {
@@ -45,7 +144,7 @@ export default function InvestorRelations() {
     <div className="min-h-screen bg-background">
       <Seo
         title="Investor Relations | Estate Nest Capital Inc."
-        description="Investor relations overview for Estate Nest Capital Inc., including project documentation, diligence posture, and lender or partner communication discipline."
+        description="Investor relations overview for Estate Nest Capital Inc., including due diligence posture, project review approach, and communication standards."
         path="/investor-relations"
       />
       <Header />
@@ -59,20 +158,25 @@ export default function InvestorRelations() {
               </div>
               <h1 className="text-5xl font-bold md:text-6xl">
                 <span className="gradient-text">Investor</span>
-                <span className="text-enc-text-primary"> relations</span>
+                <span className="text-enc-text-primary"> Relations</span>
               </h1>
               <p className="mt-6 text-xl leading-8 text-enc-text-secondary">
-                Estate Nest Capital prepares project-specific documentation
-                packages that may include scope summaries, cost assumptions,
-                permit status, schedule milestones, risk notes, and lender or
-                appraiser-facing summaries.
+                Estate Nest Capital evaluates development and construction
+                opportunities through disciplined due diligence, project-specific
+                review, and clear communication before any partnership or capital
+                discussion moves forward.
+              </p>
+              <p className="mt-4 text-base leading-7 text-enc-text-secondary">
+                This page explains how investor, lender, and partnership
+                conversations are approached. It is not a public offering,
+                investment solicitation, or promise of return.
               </p>
               <div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
                 <Button asChild size="lg" className="bg-gradient-warm text-white hover:shadow-glow">
-                  <Link to="/#appointment">Request an introduction</Link>
+                  <Link to="/#appointment">Request an Introduction</Link>
                 </Button>
                 <Button asChild size="lg" variant="outline">
-                  <Link to="/builder-profile">Review builder profile</Link>
+                  <Link to="/builder-profile">Review Builder Profile</Link>
                 </Button>
               </div>
             </div>
@@ -93,18 +197,18 @@ export default function InvestorRelations() {
                 </div>
                 <div className="absolute inset-x-0 bottom-0 p-8 text-white md:p-12">
                   <h2 className="text-3xl font-bold md:text-4xl">
-                    Discussions should start with real diligence
+                    Discussions should start with disciplined review
                   </h2>
                   <p className="mt-3 max-w-3xl text-lg leading-8 text-white/85">
-                    Estate Nest Capital is building toward a more disciplined
-                    presentation of project controls, operating readiness,
-                    stakeholder communication, and meeting-ready reporting.
+                    Investor and partnership conversations are strongest when
+                    scope, risk, assumptions, documentation, and responsibilities
+                    are clear before commitments are made.
                   </p>
                 </div>
               </div>
 
               <div className="grid gap-8 md:grid-cols-2">
-                {sections.map((section) => {
+                {investorCards.map((section) => {
                   const Icon = section.icon;
 
                   return (
@@ -129,33 +233,169 @@ export default function InvestorRelations() {
                 })}
               </div>
 
-              <Card className="mt-12 card-hover border-0 shadow-xl">
+              <section className="mt-16">
+                <div className="mb-8">
+                  <h2 className="text-3xl font-bold text-enc-text-primary md:text-4xl">
+                    How Investor Relations Work
+                  </h2>
+                  <p className="mt-4 max-w-4xl text-lg leading-8 text-enc-text-secondary">
+                    Estate Nest Capital handles investor and partnership
+                    discussions through a controlled, step-by-step process. The
+                    goal is to ensure that every conversation begins with
+                    clarity, not assumptions.
+                  </p>
+                </div>
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {investorWorkflowCards.map((item) => (
+                    <Card key={item.title} className="card-hover border-0 shadow-lg">
+                      <CardHeader>
+                        <CardTitle className="text-xl text-enc-text-primary">
+                          {item.title}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="leading-7 text-muted-foreground">
+                          {item.description}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </section>
+
+              <section className="mt-16">
+                <div className="mb-8">
+                  <h2 className="text-3xl font-bold text-enc-text-primary md:text-4xl">
+                    What Investors Can Expect
+                  </h2>
+                  <p className="mt-4 max-w-4xl text-lg leading-8 text-enc-text-secondary">
+                    Investor and partnership discussions should be supported by
+                    clear, organized, and project-specific information. Estate
+                    Nest Capital does not rely on generic claims where
+                    project-level review is required.
+                  </p>
+                </div>
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {investorExpectationCards.map((item) => (
+                    <Card key={item.title} className="card-hover border-0 shadow-lg">
+                      <CardHeader>
+                        <CardTitle className="text-xl text-enc-text-primary">
+                          {item.title}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="leading-7 text-muted-foreground">
+                          {item.description}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </section>
+
+              <Card className="mt-16 card-hover border-0 shadow-xl">
                 <CardHeader>
                   <CardTitle className="text-2xl text-enc-text-primary">
-                    Credibility bridge
+                    Private Diligence Materials
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4 text-enc-text-secondary">
                   <p className="leading-7">
-                    Estate Nest Capital prepares project-specific documentation
-                    packages that may include scope summaries, cost
-                    assumptions, permit status, schedule milestones, risk
-                    notes, and lender or appraiser-facing summaries.
+                    Estate Nest Capital may prepare project-specific diligence
+                    materials for qualified discussions. These materials may
+                    include scope summaries, cost assumptions, schedule
+                    milestones, permit status, risk notes, lender-facing
+                    summaries, and project communication records.
                   </p>
-                  <div className="flex gap-3">
-                    <CheckCircle className="mt-1 h-4 w-4 shrink-0 text-enc-orange" />
-                    <p>Named opportunities or completed projects that can be disclosed publicly</p>
-                  </div>
-                  <div className="flex gap-3">
-                    <CheckCircle className="mt-1 h-4 w-4 shrink-0 text-enc-orange" />
-                    <p>Verified capital structure examples, budgets, and lender-ready case studies</p>
-                  </div>
-                  <div className="flex gap-3">
-                    <CheckCircle className="mt-1 h-4 w-4 shrink-0 text-enc-orange" />
-                    <p>Any specific credentials, insurance, warranty, or regulatory statements intended for disclosure</p>
-                  </div>
+                  <p className="leading-7">
+                    Detailed project materials are shared only where appropriate
+                    and may depend on project stage, confidentiality,
+                    professional review, and the nature of the proposed
+                    discussion.
+                  </p>
+                  {privateDiligenceItems.map((item) => (
+                    <div key={item} className="flex gap-3">
+                      <CheckCircle className="mt-1 h-4 w-4 shrink-0 text-enc-orange" />
+                      <p>{item}</p>
+                    </div>
+                  ))}
                 </CardContent>
               </Card>
+
+              <section className="mt-16">
+                <div className="mb-8">
+                  <h2 className="text-3xl font-bold text-enc-text-primary md:text-4xl">
+                    What Estate Nest Looks For
+                  </h2>
+                  <p className="mt-4 max-w-4xl text-lg leading-8 text-enc-text-secondary">
+                    Estate Nest Capital is selective about project and capital
+                    discussions. The right opportunity must align with practical
+                    execution, responsible documentation, realistic assumptions,
+                    and a clear understanding of risk.
+                  </p>
+                </div>
+                <div className="grid gap-6 md:grid-cols-2">
+                  {whatEstateNestLooksFor.map((item) => (
+                    <Card key={item.title} className="card-hover border-0 shadow-lg">
+                      <CardHeader>
+                        <CardTitle className="text-xl text-enc-text-primary">
+                          {item.title}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="leading-7 text-muted-foreground">
+                          {item.description}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </section>
+
+              <Card className="mt-16 border border-enc-orange/20 bg-enc-orange/5 shadow-lg">
+                <CardHeader>
+                  <CardTitle className="text-2xl text-enc-text-primary">
+                    Important Notice
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="leading-7 text-enc-text-secondary">
+                    Information on this page is provided for general business
+                    and project discussion purposes only. It is not a public
+                    offering, securities offering, investment recommendation,
+                    financial advice, legal advice, engineering advice,
+                    accounting advice, tax advice, or municipal approval
+                    advice.
+                  </p>
+                  <p className="mt-4 leading-7 text-enc-text-secondary">
+                    Any project, capital, lending, or partnership discussion
+                    should be reviewed with the appropriate legal, financial,
+                    tax, engineering, architectural, and municipal professionals
+                    before decisions are made.
+                  </p>
+                </CardContent>
+              </Card>
+
+              <section className="mt-16 rounded-[2rem] border border-border bg-card p-10 text-center shadow-xl">
+                <h2 className="text-3xl font-bold text-enc-text-primary md:text-4xl">
+                  Start a Private Project Discussion
+                </h2>
+                <p className="mx-auto mt-4 max-w-4xl text-lg leading-8 text-enc-text-secondary">
+                  If you are a lender, investor, project partner, landowner,
+                  realtor, or professional advisor interested in discussing a
+                  construction or development opportunity, Estate Nest Capital
+                  can begin with a private introduction and project-specific
+                  review.
+                </p>
+                <div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
+                  <Button asChild size="lg" className="bg-gradient-warm text-white hover:shadow-glow">
+                    <Link to="/#appointment">Request an Introduction</Link>
+                  </Button>
+                  <Button asChild size="lg" variant="outline">
+                    <Link to="/builder-profile">Review Builder Profile</Link>
+                  </Button>
+                </div>
+              </section>
             </div>
           </div>
         </section>

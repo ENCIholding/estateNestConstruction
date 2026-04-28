@@ -127,8 +127,9 @@ export default function AppointmentSection() {
             <span className="text-enc-text-primary"> a consultation</span>
           </h2>
           <p className="mx-auto mt-6 max-w-3xl text-xl leading-8 text-enc-text-secondary">
-            Use this form to start a conversation about a project, diligence
-            package, or construction requirement.
+            Use this form to start a conversation about a construction project,
+            development opportunity, commercial leasehold improvement,
+            renovation, or project coordination requirement.
           </p>
         </div>
 
@@ -177,9 +178,10 @@ export default function AppointmentSection() {
                 <div className="rounded-lg bg-gradient-warm p-6 text-white">
                   <h3 className="font-semibold">What this form is for</h3>
                   <ul className="mt-3 space-y-1 text-sm text-white/90">
-                    <li>- Project and construction intake discussions</li>
-                    <li>- Client or lender diligence follow-up</li>
-                    <li>- Planning, documentation, and scope clarification</li>
+                    <li>- Construction and development intake discussions</li>
+                    <li>- Project planning and scope review</li>
+                    <li>- Commercial leasehold or renovation coordination</li>
+                    <li>- Client, lender, or stakeholder follow-up</li>
                     <li>- Direct contact through a monitored business inbox</li>
                   </ul>
                 </div>
@@ -297,7 +299,7 @@ export default function AppointmentSection() {
                       id="message"
                       value={formData.message}
                       onChange={(event) => handleInputChange("message", event.target.value)}
-                      placeholder="Tell us about your project or what you need help reviewing..."
+                      placeholder="Tell us about your project, site, scope, timeline, or the construction/development support you are looking for."
                       rows={4}
                     />
                   </div>
@@ -325,8 +327,8 @@ export default function AppointmentSection() {
             </p>
             <p className="mt-3 text-lg leading-8 text-enc-text-secondary">
               Edmonton-based construction and development coordination for
-              infill, multi-unit, commercial leasehold, and lender-ready
-              project documentation.
+              infill, multi-unit housing, commercial leasehold improvements,
+              renovations, and project delivery support.
             </p>
           </div>
         </div>
