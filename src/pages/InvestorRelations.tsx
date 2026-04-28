@@ -1,6 +1,25 @@
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { CheckCircle, FileText, Handshake, Shield, Users } from "lucide-react";
+import {
+  BriefcaseBusiness,
+  Building2,
+  Calculator,
+  CalendarDays,
+  CheckCircle,
+  ClipboardCheck,
+  FileCheck,
+  FileText,
+  Handshake,
+  Landmark,
+  MessageSquare,
+  Search,
+  Shield,
+  ShieldCheck,
+  Target,
+  TriangleAlert,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 import investorCollaborationImage from "@/assets/investor-collaboration.jpg";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
@@ -36,94 +55,116 @@ const investorCards = [
   },
 ];
 
+type IconCardItem = {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+};
+
 const investorWorkflowCards = [
   {
+    icon: Handshake,
     title: "Initial introduction",
     description:
       "Investor or partnership conversations begin with a basic introduction, including the type of project, expected role of capital, timeline, location, and the level of information currently available.",
   },
   {
+    icon: Search,
     title: "Opportunity screening",
     description:
       "Before detailed discussions continue, Estate Nest Capital reviews whether the opportunity fits its construction, development, risk, timing, and execution profile.",
   },
   {
+    icon: ClipboardCheck,
     title: "Project diligence review",
     description:
       "Where appropriate, project-specific information may be reviewed, including site details, scope, budget assumptions, permit status, schedule milestones, construction approach, and known risks.",
   },
   {
+    icon: Landmark,
     title: "Capital role and structure",
     description:
       "The role of capital must be clearly defined. This may include acquisition support, construction financing support, equity participation, project-specific partnership discussions, or other private arrangements reviewed on a case-by-case basis.",
   },
   {
+    icon: ShieldCheck,
     title: "Risk and responsibility alignment",
     description:
       "Each party should understand the project risks, decision rights, reporting expectations, approval requirements, and professional review needed before moving forward.",
   },
   {
+    icon: FileText,
     title: "Documentation and next steps",
     description:
       "If the opportunity progresses, the next stage may include formal documentation, professional review, lender coordination, legal review, and agreed communication expectations.",
   },
-];
+] satisfies IconCardItem[];
 
 const investorExpectationCards = [
   {
+    icon: Building2,
     title: "Project overview",
     description:
       "A clear summary of the project type, location, scope, development intent, and current stage.",
   },
   {
+    icon: Calculator,
     title: "Budget and cost assumptions",
     description:
       "A practical view of expected costs, known allowances, contingencies, and areas requiring further review.",
   },
   {
+    icon: FileCheck,
     title: "Permit and approval status",
     description:
       "Available information on zoning, permits, drawings, municipal review, and project readiness.",
   },
   {
+    icon: CalendarDays,
     title: "Schedule and milestones",
     description:
       "A working view of expected timelines, dependencies, and key decision points.",
   },
   {
+    icon: TriangleAlert,
     title: "Risk notes",
     description:
       "Plain-English review of known risks, assumptions, open questions, and items requiring professional confirmation.",
   },
   {
+    icon: MessageSquare,
     title: "Communication discipline",
     description:
       "A clear approach to updates, review points, approvals, and project communication.",
   },
-];
+] satisfies IconCardItem[];
 
 const whatEstateNestLooksFor = [
   {
+    icon: Target,
     title: "Project fit",
     description:
       "The opportunity should align with Estate Nest Capital's construction and development focus, including infill, multi-unit housing, commercial leasehold, renovation, or project coordination work.",
   },
   {
+    icon: Calculator,
     title: "Realistic assumptions",
     description:
       "Budgets, timelines, permits, and construction assumptions must be reviewed honestly. Unsupported numbers or vague timelines create unnecessary project risk.",
   },
   {
+    icon: BriefcaseBusiness,
     title: "Professional review",
     description:
       "Legal, accounting, lending, engineering, architectural, and municipal matters should be reviewed by the appropriate professionals before final commitments are made.",
   },
   {
+    icon: Users,
     title: "Communication alignment",
     description:
       "Investors, lenders, clients, and project partners should expect clear communication, documented decisions, and practical review points throughout the project lifecycle.",
   },
-];
+] satisfies IconCardItem[];
 
 const privateDiligenceItems = [
   "Project summaries and scope assumptions",
@@ -134,6 +175,31 @@ const privateDiligenceItems = [
   "Lender, client, or partner review summaries",
   "Supporting documents where disclosure is appropriate",
 ];
+
+type InvestorIconCardProps = {
+  item: IconCardItem;
+  titleClassName?: string;
+};
+
+function InvestorIconCard({ item, titleClassName = "text-xl text-enc-text-primary" }: InvestorIconCardProps) {
+  const Icon = item.icon;
+
+  return (
+    <Card className="card-hover border-0 shadow-lg">
+      <CardHeader>
+        <div className="flex items-start gap-4">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-hero text-white shadow-glow">
+            <Icon className="h-6 w-6" />
+          </div>
+          <CardTitle className={titleClassName}>{item.title}</CardTitle>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <p className="leading-7 text-muted-foreground">{item.description}</p>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function InvestorRelations() {
   useEffect(() => {
@@ -209,26 +275,12 @@ export default function InvestorRelations() {
 
               <div className="grid gap-8 md:grid-cols-2">
                 {investorCards.map((section) => {
-                  const Icon = section.icon;
-
                   return (
-                    <Card key={section.title} className="card-hover border-0 shadow-lg">
-                      <CardHeader>
-                        <div className="flex items-start gap-4">
-                          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-hero text-white shadow-glow">
-                            <Icon className="h-6 w-6" />
-                          </div>
-                          <CardTitle className="text-2xl text-foreground">
-                            {section.title}
-                          </CardTitle>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="leading-7 text-muted-foreground">
-                          {section.description}
-                        </p>
-                      </CardContent>
-                    </Card>
+                    <InvestorIconCard
+                      key={section.title}
+                      item={section}
+                      titleClassName="text-2xl text-foreground"
+                    />
                   );
                 })}
               </div>
@@ -247,18 +299,7 @@ export default function InvestorRelations() {
                 </div>
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                   {investorWorkflowCards.map((item) => (
-                    <Card key={item.title} className="card-hover border-0 shadow-lg">
-                      <CardHeader>
-                        <CardTitle className="text-xl text-enc-text-primary">
-                          {item.title}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="leading-7 text-muted-foreground">
-                          {item.description}
-                        </p>
-                      </CardContent>
-                    </Card>
+                    <InvestorIconCard key={item.title} item={item} />
                   ))}
                 </div>
               </section>
@@ -277,18 +318,7 @@ export default function InvestorRelations() {
                 </div>
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                   {investorExpectationCards.map((item) => (
-                    <Card key={item.title} className="card-hover border-0 shadow-lg">
-                      <CardHeader>
-                        <CardTitle className="text-xl text-enc-text-primary">
-                          {item.title}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="leading-7 text-muted-foreground">
-                          {item.description}
-                        </p>
-                      </CardContent>
-                    </Card>
+                    <InvestorIconCard key={item.title} item={item} />
                   ))}
                 </div>
               </section>
@@ -336,18 +366,7 @@ export default function InvestorRelations() {
                 </div>
                 <div className="grid gap-6 md:grid-cols-2">
                   {whatEstateNestLooksFor.map((item) => (
-                    <Card key={item.title} className="card-hover border-0 shadow-lg">
-                      <CardHeader>
-                        <CardTitle className="text-xl text-enc-text-primary">
-                          {item.title}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="leading-7 text-muted-foreground">
-                          {item.description}
-                        </p>
-                      </CardContent>
-                    </Card>
+                    <InvestorIconCard key={item.title} item={item} />
                   ))}
                 </div>
               </section>
