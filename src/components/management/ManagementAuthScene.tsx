@@ -24,14 +24,36 @@ export default function ManagementAuthScene({
           aria-hidden="true"
           className="absolute inset-y-0 right-0 h-full w-[48%] object-cover opacity-[0.06] mix-blend-multiply"
         />
+        <div
+          className="absolute inset-y-0 left-0 w-[28%] opacity-[0.11] mix-blend-multiply md:w-[24%]"
+          aria-hidden="true"
+          style={{
+            backgroundImage: "url('/brand/enci-buildos-logo.jpeg')",
+            backgroundPosition: "center 16%",
+            backgroundRepeat: "repeat-y",
+            backgroundSize: "180px",
+            maskImage: "linear-gradient(180deg, transparent 0%, black 12%, black 88%, transparent 100%)",
+          }}
+        />
+        <div
+          className="absolute inset-y-0 right-0 w-[28%] opacity-[0.11] mix-blend-multiply md:w-[24%]"
+          aria-hidden="true"
+          style={{
+            backgroundImage: "url('/brand/enci-buildos-logo.jpeg')",
+            backgroundPosition: "center 24%",
+            backgroundRepeat: "repeat-y",
+            backgroundSize: "180px",
+            maskImage: "linear-gradient(180deg, transparent 0%, black 12%, black 88%, transparent 100%)",
+          }}
+        />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(41,122,34,0.14),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(255,199,0,0.13),transparent_26%),linear-gradient(180deg,rgba(255,255,255,0.92),rgba(247,250,245,0.98))]" />
         <div
-          className="absolute inset-0 opacity-[0.08] mix-blend-multiply"
+          className="absolute inset-0 opacity-[0.06] mix-blend-multiply"
           style={{
             backgroundImage: "url('/brand/enci-buildos-logo.jpeg')",
             backgroundPosition: "center",
             backgroundRepeat: "no-repeat",
-            backgroundSize: "360px",
+            backgroundSize: "340px",
           }}
         />
       </div>
