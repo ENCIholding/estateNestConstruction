@@ -12,13 +12,13 @@ Internal setup note captured during local BuildOS work. This is not a production
 - The mailer now supports Google OAuth-style credentials at runtime, but it expects those credentials to already exist in environment variables.
 - That means Google callback URLs are still important for obtaining or rotating a refresh token, but today they are **configuration notes**, not proof that an in-app callback flow exists.
 
-## App callback URLs captured from working setup
+## App callback URL policy
 
-Use these only if we later add an app-owned Google callback flow under `/api/google/callback`.
+Until ENCI BuildOS ships a real app-owned Google callback handler under `/api/google/callback`, do not store or rely on preview deployment callback URLs in Google OAuth settings.
+
+If we later build that route, the only callback URL that should be treated as canonical is:
 
 - `https://www.estatenest.capital/api/google/callback`
-- `https://dashenciprojectenci-git-main-estate-nest-capital-s-projects.vercel.app/api/google/callback`
-- `https://dashenciprojectenci-nqpyn0xwa-estate-nest-capital-s-projects.vercel.app/api/google/callback`
 
 ## Supabase auth redirect URL
 
@@ -26,14 +26,10 @@ This is the callback that matters if Google auth is being handled by Supabase Au
 
 - `https://tugwibtwyjhrzjyobzrw.supabase.co/auth/v1/callback`
 
-## What most likely needs maintenance
+## What should be kept
 
 - `https://www.estatenest.capital/api/google/callback`
   - keep only if we actually build the ENCI-owned callback route
-- `https://dashenciprojectenci-git-main-estate-nest-capital-s-projects.vercel.app/api/google/callback`
-  - reasonable to keep as the stable main-branch preview callback if you want preview testing
-- `https://dashenciprojectenci-nqpyn0xwa-estate-nest-capital-s-projects.vercel.app/api/google/callback`
-  - this is deployment-specific and will become stale as preview deployments change
 - `https://tugwibtwyjhrzjyobzrw.supabase.co/auth/v1/callback`
   - keep if Supabase-managed Google auth remains part of the setup
 
