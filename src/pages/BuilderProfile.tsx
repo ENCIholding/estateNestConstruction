@@ -85,7 +85,7 @@ export default function BuilderProfile() {
                 <div className="aspect-[21/9] w-full">
                   <img
                     src={builderExcellenceImage}
-                    alt="Representative concept image showing professionals reviewing construction plans and project controls."
+                    alt="Estate Nest Capital builder profile and construction coordination image"
                     className="h-full w-full object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />

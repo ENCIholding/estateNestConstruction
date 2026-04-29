@@ -7,9 +7,10 @@ type BrandLockupProps = {
   className?: string;
   wordmarkClassName?: string;
   subtitleClassName?: string;
+  logoAlt?: string;
 };
 
-function BrandMark({ compact = false }: { compact?: boolean }) {
+function BrandMark({ compact = false, logoAlt }: { compact?: boolean; logoAlt: string }) {
   return (
     <div
       className={`relative flex shrink-0 items-center justify-center overflow-hidden rounded-[1.35rem] bg-white shadow-[0_14px_32px_rgba(15,23,42,0.22)] ring-1 ring-white/30 ${
@@ -20,7 +21,7 @@ function BrandMark({ compact = false }: { compact?: boolean }) {
       <div className="relative flex h-full w-full items-center justify-center rounded-[1rem] bg-white">
         <img
           src="/brand/enci-buildos-logo.jpeg"
-          alt="Estate Nest Capital logo"
+          alt={logoAlt}
           className="h-full w-full object-contain"
         />
       </div>
@@ -66,13 +67,17 @@ export default function BrandLockup({
   className = "",
   wordmarkClassName = "",
   subtitleClassName = "",
+  logoAlt,
 }: BrandLockupProps) {
+  const resolvedLogoAlt =
+    logoAlt ?? (to === "/" ? "Estate Nest Capital Inc. home" : "Estate Nest Capital Inc. logo");
+
   const content = (
     <div
       className={`flex items-center gap-3 ${className}`.trim()}
       aria-label="Estate Nest Capital"
     >
-      <BrandMark compact={compact} />
+      <BrandMark compact={compact} logoAlt={resolvedLogoAlt} />
       <BrandCopy
         subtitle={subtitle}
         compact={compact}

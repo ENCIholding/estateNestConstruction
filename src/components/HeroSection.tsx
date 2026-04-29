@@ -7,7 +7,7 @@ export default function HeroSection() {
       <div className="absolute inset-0">
         <img
           src={heroImage}
-          alt="Estate Nest Capital concept image representing residential and commercial development work in Edmonton, Alberta"
+          alt="Estate Nest Capital construction and development hero image"
           className="absolute inset-0 h-full w-full object-cover object-center"
         />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_22%,rgba(11,28,46,0.48),transparent_52%),radial-gradient(circle_at_82%_18%,rgba(8,20,33,0.34),transparent_48%)]" />

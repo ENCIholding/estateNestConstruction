@@ -20,7 +20,7 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
-import investorCollaborationImage from "@/assets/investor-collaboration.jpg";
+import investorCollaborationImage from "@/assets/investor-relations-bg.png";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import PublicPageBackLink from "@/components/PublicPageBackLink";
@@ -222,10 +222,10 @@ export default function InvestorRelations() {
               <PublicPageBackLink />
 
               <div className="relative mb-16 overflow-hidden rounded-[2rem] shadow-2xl">
-                <div className="aspect-[21/9] w-full">
+                <div className="aspect-video w-full">
                   <img
                     src={investorCollaborationImage}
-                    alt="Representative concept image of a project diligence discussion between collaborators."
+                    alt="Investor relations meeting with construction development projections and city skyline"
                     className="h-full w-full object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/32 to-transparent" />
@@ -258,7 +258,11 @@ export default function InvestorRelations() {
                     <Button asChild size="lg" className="bg-gradient-warm text-white hover:shadow-glow">
                       <Link to="/#appointment">Request an Introduction</Link>
                     </Button>
-                    <Button asChild size="lg" variant="outline">
+                    <Button
+                      asChild
+                      size="lg"
+                      className="bg-gradient-to-r from-enc-red via-enc-orange to-enc-yellow text-center font-bold text-white transition-all duration-300 ease-in-out hover:from-enc-red hover:via-enc-orange hover:to-enc-yellow hover:text-white"
+                    >
                       <Link to="/builder-profile">Review Builder Profile</Link>
                     </Button>
                   </div>

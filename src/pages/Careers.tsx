@@ -130,7 +130,7 @@ export default function Careers() {
               <div className="aspect-[21/9] w-full">
                 <img
                   src={careersTeamImage}
-                  alt="Representative concept image of a professional team discussing construction work."
+                  alt="Estate Nest Capital careers and talent network image"
                   className="h-full w-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
