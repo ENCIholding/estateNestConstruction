@@ -3,29 +3,20 @@ import heroImage from "@/assets/hero-enci-home.png";
 
 export default function HeroSection() {
   return (
-    <section id="home" className="relative min-h-screen scroll-mt-28 overflow-hidden">
+    <section id="home" className="relative min-h-screen scroll-mt-28 overflow-hidden bg-[#071831]">
       <div className="absolute inset-0">
-        <img
-          src={heroImage}
-          alt=""
-          aria-hidden="true"
-          className="absolute inset-0 h-full w-full object-cover object-center opacity-55"
-        />
         <img
           src={heroImage}
           alt="Estate Nest Capital concept image representing residential and commercial development work in Edmonton, Alberta"
           className="absolute inset-0 h-full w-full object-contain object-center"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#061a38]/78 via-[#0c2f5a]/48 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/28 via-black/16 to-black/52" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#071831]/94 via-[#071831]/76 to-[#071831]/44" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/18 to-black/46" />
       </div>
 
       <div className="relative container mx-auto px-6 py-24 pt-36">
-        <div className="max-w-5xl">
+        <div className="max-w-5xl rounded-[2rem] border border-white/15 bg-[#071831]/52 p-6 shadow-[0_20px_50px_rgba(0,0,0,0.35)] backdrop-blur-[1.5px] md:p-8">
           <div className="space-y-8">
-            <p className="text-sm font-semibold uppercase tracking-[0.35em] text-white/90 [text-shadow:0_2px_12px_rgba(0,0,0,0.65)]">
-              Edmonton construction and development
-            </p>
             <h1 className="max-w-4xl text-5xl font-bold tracking-tight text-white [text-shadow:0_4px_24px_rgba(0,0,0,0.75)] md:text-6xl lg:text-7xl">
               Where Capital Meets
               <span className="block text-white">Craftsmanship in Real Estate</span>
@@ -40,7 +31,7 @@ export default function HeroSection() {
 
           <div className="mt-12 grid gap-6 md:grid-cols-2">
             <Link to="/builder-profile" className="block">
-              <div className="rounded-[1.75rem] border border-white/20 bg-slate-900/38 p-8 backdrop-blur-sm transition-transform duration-300 hover:scale-[1.02] hover:bg-slate-900/44">
+              <div className="rounded-[1.75rem] border border-white/25 bg-[#081a34]/72 p-8 backdrop-blur-sm transition-transform duration-300 hover:scale-[1.02] hover:bg-[#081a34]/78">
                 <h2 className="text-3xl font-bold text-white">
                   Builder
                   <span className="gradient-text-alt"> Profile</span>
@@ -55,7 +46,7 @@ export default function HeroSection() {
             </Link>
 
             <Link to="/investor-relations" className="block">
-              <div className="rounded-[1.75rem] border border-white/20 bg-slate-900/38 p-8 backdrop-blur-sm transition-transform duration-300 hover:scale-[1.02] hover:bg-slate-900/44">
+              <div className="rounded-[1.75rem] border border-white/25 bg-[#081a34]/72 p-8 backdrop-blur-sm transition-transform duration-300 hover:scale-[1.02] hover:bg-[#081a34]/78">
                 <h2 className="text-3xl font-bold text-white">
                   Investor
                   <span className="gradient-text-alt"> Relations</span>
@@ -71,8 +62,6 @@ export default function HeroSection() {
           </div>
         </div>
       </div>
-
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-b from-transparent to-background" />
     </section>
   );
 }

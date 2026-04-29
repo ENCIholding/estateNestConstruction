@@ -33,9 +33,9 @@ const Header = () => {
           {/* Logo */}
           <BrandLockup
             to="/"
-            subtitle="Edmonton Construction"
-            className="max-w-[270px]"
-            subtitleClassName="text-white/70"
+            subtitle="Edmonton Construction and Development"
+            className="max-w-[360px]"
+            subtitleClassName="text-white/70 tracking-[0.12em]"
           />
 
           {/* Desktop Navigation */}
@@ -67,8 +67,8 @@ const Header = () => {
                   <BrandLockup
                     to="/"
                     compact
-                    subtitle="Edmonton Construction"
-                    subtitleClassName="text-white/70"
+                    subtitle="Edmonton Construction and Development"
+                    subtitleClassName="text-white/70 tracking-[0.12em]"
                   />
                 </div>
                 <nav className="flex flex-col gap-4 mt-8">
