@@ -17,6 +17,9 @@ const Accessibility = lazy(() => import("./pages/Accessibility"));
 const TermsAndConditions = lazy(() => import("./pages/TermsAndConditions"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Cookies = lazy(() => import("./pages/Cookies"));
+const RegulatorySafetyStandards = lazy(
+  () => import("./pages/RegulatorySafetyStandards")
+);
 const ThankYou = lazy(() => import("./pages/ThankYou"));
 const ManagementLogin = lazy(() => import("./pages/ManagementLogin"));
 const ManagementDashboard = lazy(() => import("./pages/ManagementDashboard"));
@@ -88,6 +91,10 @@ export default function App() {
             <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/cookies" element={<Cookies />} />
+            <Route
+              path="/regulatory-safety-standards"
+              element={<RegulatorySafetyStandards />}
+            />
             <Route path="/thank-you" element={<ThankYou />} />
             <Route path="/management" element={<Navigate to="/management/login" replace />} />
 

@@ -2,28 +2,52 @@ import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import PublicPageBackLink from "@/components/PublicPageBackLink";
 import Seo from "@/components/Seo";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 
-const sections = [
+type PolicySection = {
+  number: string;
+  title: string;
+  paragraphs?: string[];
+  bullets?: string[];
+};
+
+const sections: PolicySection[] = [
   {
-    title: "How cookies and similar tools may be used",
-    body: [
-      "Estate Nest Capital Inc. may use cookies or similar browser storage technologies to support website functionality, analytics, accessibility preferences, and management-session behavior.",
-      "Examples can include remembering accessibility settings, supporting authenticated dashboard sessions, and understanding how visitors interact with the site at a general level.",
+    number: "1.",
+    title: "Purpose of Cookies and Browser Storage",
+    paragraphs: ["ENCI may use cookies, local storage, or similar browser-side technologies to support:"],
+    bullets: [
+      "Functional website behavior",
+      "Accessibility preferences",
+      "Secure session management",
+      "Basic analytics to understand general usage patterns",
+      "Security controls and fraud prevention",
     ],
   },
   {
-    title: "What is currently expected on this site",
-    body: [
-      "The public site may store functional preferences such as accessibility choices in the browser. The management environment may also rely on session cookies for authenticated access control.",
-      "Third-party services may set their own cookies or storage entries where they are used for analytics, email workflows, hosted assets, or security-related functions.",
+    number: "2.",
+    title: "Security and IP-Protection Measures",
+    paragraphs: ["To protect proprietary materials and confidential workflows, the Site may implement:"],
+    bullets: [
+      "Restrictions on right-click, copy, print, and save",
+      "Restrictions on screenshots, screen-recording, and snipping tools",
+      "Disabled developer tools and inspection functions",
+      "Anti-scraping and anti-automation measures",
+      "Session-based access controls",
     ],
   },
   {
-    title: "Managing cookies",
-    body: [
-      "Most browsers allow you to review, block, or clear cookies and site data. Doing so may affect how some parts of the site or management dashboard behave.",
-      "If you disable cookies entirely, some authentication and preference-based features may no longer function as intended.",
+    number: "3.",
+    title: "Third-Party Tools",
+    paragraphs: [
+      "Analytics, email workflows, hosted assets, or security services may set their own cookies or storage entries. Their use is limited to operational and security purposes.",
+    ],
+  },
+  {
+    number: "4.",
+    title: "Managing Cookies",
+    paragraphs: [
+      "Most browsers allow users to review, block, or delete cookies. Disabling cookies may affect site functionality, including authentication and preference-based features.",
     ],
   },
 ];
@@ -33,55 +57,56 @@ export default function Cookies() {
     <div className="min-h-screen bg-background">
       <Seo
         title="Cookies | Estate Nest Capital Inc."
-        description="Cookie and browser-storage notice for Estate Nest Capital Inc.'s website and ENCI BuildOS-related functionality."
+        description="Cookies and Browser Storage Notice for Estate Nest Capital Inc."
         path="/cookies"
       />
       <Header />
 
       <main id="main-content" className="pt-28">
         <div className="container mx-auto px-6 py-16">
-          <div className="mx-auto max-w-4xl">
+          <div className="mx-auto max-w-5xl">
             <PublicPageBackLink />
+
             <div className="mb-12 text-center">
-              <h1 className="text-4xl font-bold md:text-5xl">
-                <span className="gradient-text">Cookies</span>
-                <span className="text-enc-text-primary">
-                  {" "}
-                  and browser storage
-                </span>
-              </h1>
-              <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-enc-text-secondary">
-                This page explains, in plain language, how browser-side storage
-                may be used to support accessibility, analytics, and secure
-                management access.
-              </p>
+              <h1 className="text-4xl font-bold text-enc-text-primary md:text-5xl">COOKIES &amp; BROWSER STORAGE NOTICE</h1>
+              <p className="mt-4 text-lg text-enc-text-secondary">Estate Nest Capital Inc.</p>
+              <p className="mt-2 text-sm uppercase tracking-[0.16em] text-muted-foreground">Last Updated: April 2026</p>
             </div>
 
-            <Card className="card-hover border-0 shadow-xl">
-              <CardHeader>
-                <CardTitle className="text-2xl text-enc-text-primary">
-                  Cookie and storage notice
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-8 text-sm leading-7 text-enc-text-secondary">
+            <Card className="border-0 shadow-xl">
+              <CardContent className="space-y-8 p-8 text-sm leading-7 text-enc-text-secondary md:p-10">
                 {sections.map((section) => (
-                  <div key={section.title}>
+                  <section key={section.number + section.title}>
                     <h2 className="text-lg font-semibold text-enc-text-primary">
-                      {section.title}
+                      {section.number} {section.title}
                     </h2>
-                    <div className="mt-3 space-y-3">
-                      {section.body.map((paragraph) => (
-                        <p key={paragraph}>{paragraph}</p>
-                      ))}
-                    </div>
-                  </div>
+                    {section.paragraphs?.map((paragraph) => (
+                      <p key={paragraph} className="mt-3">
+                        {paragraph}
+                      </p>
+                    ))}
+                    {section.bullets ? (
+                      <ul className="mt-3 list-disc space-y-2 pl-6">
+                        {section.bullets.map((bullet) => (
+                          <li key={bullet}>{bullet}</li>
+                        ))}
+                      </ul>
+                    ) : null}
+                  </section>
                 ))}
-                <p className="border-t border-border pt-6 text-xs leading-6 text-muted-foreground">
-                  This cookie notice is intended for public website clarity. If
-                  analytics, advertising, or third-party tooling changes
-                  materially, this page should be reviewed and updated before
-                  public rollout.
+
+                <p className="border-t border-border pt-6 font-medium text-enc-text-secondary">
+                  Certain security features may rely on browser storage to detect or block screenshotting, screen-recording, or developer-tool access attempts.
                 </p>
+
+                <div className="rounded-2xl border border-border bg-muted/35 p-5">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                    FOOTER DISCLAIMER (Cookies Page)
+                  </p>
+                  <p className="mt-3 text-sm leading-7 text-enc-text-secondary">
+                    This notice is intended for public clarity and may be updated if analytics, security, or third-party tooling changes. Unauthorized copying, screenshotting, or reproduction of any content is strictly prohibited.
+                  </p>
+                </div>
               </CardContent>
             </Card>
           </div>

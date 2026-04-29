@@ -32,12 +32,18 @@ const footerSections: FooterSection[] = [
     ],
   },
   {
-    title: "Governance",
+    title: "Compliance",
     links: [
-      { label: "Accessibility Statement", path: "/accessibility" },
       { label: "Terms and Conditions", path: "/terms-and-conditions", newTab: true },
       { label: "Privacy", path: "/privacy", newTab: true },
       { label: "Cookies", path: "/cookies", newTab: true },
+      { label: "Regulatory Safety Standards", path: "/regulatory-safety-standards", newTab: true },
+    ],
+  },
+  {
+    title: "Governance",
+    links: [
+      { label: "Accessibility Statement", path: "/accessibility" },
       { label: "Management Login (Internal)", path: "/management/login" },
     ],
   },
@@ -89,7 +95,7 @@ export default function Footer() {
   return (
     <footer className="bg-enc-text-primary text-white">
       <div className="container mx-auto px-6 py-20">
-        <div className="grid gap-12 border-b border-white/10 pb-12 xl:grid-cols-[minmax(0,1.2fr)_repeat(3,minmax(0,0.8fr))_minmax(0,1fr)]">
+        <div className="grid gap-12 border-b border-white/10 pb-12 xl:grid-cols-[minmax(0,1.2fr)_repeat(4,minmax(0,0.76fr))_minmax(0,1fr)]">
           <div className="space-y-5">
             <BrandLockup
               to="/"

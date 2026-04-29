@@ -2,49 +2,83 @@ import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import PublicPageBackLink from "@/components/PublicPageBackLink";
 import Seo from "@/components/Seo";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 
-const sections = [
+type PolicySection = {
+  number: string;
+  title: string;
+  paragraphs?: string[];
+  bullets?: string[];
+};
+
+const sections: PolicySection[] = [
   {
-    title: "Privacy framework",
-    body: [
-      "Estate Nest Capital Inc. handles personal information in the course of business communications, project intake, hiring intake, and client or lender coordination.",
-      "For Alberta private-sector organizations, the Personal Information Protection Act (PIPA) is the core provincial privacy law. Estate Nest Capital Inc. aims to collect, use, and disclose personal information only for reasonable business purposes and only to the extent needed for those purposes.",
+    number: "1.",
+    title: "Privacy Framework",
+    paragraphs: [
+      "ENCI handles personal information in accordance with the Personal Information Protection Act (PIPA) of Alberta. Information is collected, used, and disclosed only for reasonable business purposes.",
     ],
   },
   {
-    title: "What information may be collected",
-    body: [
-      "Depending on how you interact with the site, Estate Nest Capital Inc. may collect contact details, appointment requests, project inquiry information, resume or portfolio files, and correspondence records.",
-      "Management dashboard records may also contain project, document, stakeholder, vendor, schedule, and reporting information used for internal operations.",
+    number: "2.",
+    title: "Information Collected",
+    paragraphs: ["Depending on your interaction with the Site, ENCI may collect:"],
+    bullets: [
+      "Contact details and inquiry information",
+      "Appointment or project intake submissions",
+      "Resume, portfolio, or hiring materials",
+      "Communication records",
+      "Operational data within management systems (project, vendor, schedule, reporting)",
     ],
   },
   {
-    title: "How information may be used",
-    body: [
-      "Information may be used to respond to inquiries, assess project fit, coordinate construction and development work, prepare diligence materials, evaluate hiring interest, maintain communication records, and improve business operations.",
-      "If commercial electronic messages are sent for marketing or promotional purposes, Estate Nest Capital Inc. should do so in a manner consistent with Canada's Anti-Spam Legislation (CASL), including identification and unsubscribe requirements where applicable.",
+    number: "3.",
+    title: "How Information Is Used",
+    paragraphs: ["Information may be used to:"],
+    bullets: [
+      "Respond to inquiries and assess project fit",
+      "Coordinate construction and development activities",
+      "Prepare diligence or lender materials",
+      "Evaluate hiring interest",
+      "Maintain communication records",
+      "Improve business operations",
+      "Support fraud prevention and system security",
     ],
   },
   {
-    title: "Disclosure and qualified sharing",
-    body: [
-      "Information may be shared internally or with project participants, consultants, lenders, or service providers where reasonably necessary to support project review, operations, or compliance.",
-      "Detailed project references, permit records, and lender-facing materials are available only to qualified parties under an appropriate context.",
+    number: "4.",
+    title: "Disclosure and Qualified Sharing",
+    paragraphs: [
+      "Information may be shared internally or with project participants, consultants, lenders, or service providers where necessary for operations or compliance.",
+      "Detailed project materials are shared only with qualified parties under contract.",
     ],
   },
   {
-    title: "Protection and retention",
-    body: [
-      "Estate Nest Capital Inc. is expected to take reasonable measures to protect the personal information it holds, including access controls, system permissions, and controlled disclosure practices.",
-      "Records are retained for business, operational, legal, or evidentiary purposes only as long as reasonably required for the underlying purpose or applicable obligations.",
+    number: "5.",
+    title: "Protection, Retention, and Data Residency",
+    paragraphs: [
+      "ENCI uses reasonable security measures including access controls, permissions, encryption where applicable, and controlled disclosure.",
+      "Records are retained only as long as required for business, legal, or evidentiary purposes.",
+      "Some operational data may be processed or stored in secure Canadian cloud environments consistent with Alberta PIPA requirements.",
     ],
   },
   {
-    title: "Access and correction requests",
-    body: [
-      "Under Alberta PIPA, individuals may request access to their personal information held by an organization and may request correction of an error or omission. Such requests should be made in writing.",
-      "Questions or concerns about privacy handling may be directed to Estate Nest Capital Inc. through hello@estatenest.capital.",
+    number: "6.",
+    title: "Screenshot, Copying, and Extraction Restrictions",
+    paragraphs: ["To protect confidential information and proprietary workflows, ENCI may implement measures to restrict:"],
+    bullets: [
+      "Screenshots and screen-recording",
+      "Snipping tools",
+      "Copying, printing, and saving",
+      "Developer-tool inspection",
+      "Automated extraction or scraping",
+    ],
+  },
+  {
+    number: "7.",
+    title: "Access and Correction Requests",
+    paragraphs: [
+      "Under Alberta PIPA, individuals may request access to or correction of their personal information. Requests must be made in writing to hello@estatenest.capital.",
     ],
   },
 ];
@@ -54,51 +88,62 @@ export default function Privacy() {
     <div className="min-h-screen bg-background">
       <Seo
         title="Privacy | Estate Nest Capital Inc."
-        description="Privacy notice for Estate Nest Capital Inc., including public forms, communication records, and ENCI BuildOS-related business data handling."
+        description="Privacy Policy for Estate Nest Capital Inc. Alberta PIPA compliance."
         path="/privacy"
       />
       <Header />
 
       <main id="main-content" className="pt-28">
         <div className="container mx-auto px-6 py-16">
-          <div className="mx-auto max-w-4xl">
+          <div className="mx-auto max-w-5xl">
             <PublicPageBackLink />
+
             <div className="mb-12 text-center">
-              <h1 className="text-4xl font-bold md:text-5xl">
-                <span className="gradient-text">Privacy</span>
-              </h1>
-              <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-enc-text-secondary">
-                This page explains, at a business level, how Estate Nest Capital
-                Inc. may handle personal information collected through its public
-                website and related operating systems.
-              </p>
+              <h1 className="text-4xl font-bold text-enc-text-primary md:text-5xl">PRIVACY POLICY</h1>
+              <p className="mt-4 text-lg text-enc-text-secondary">Estate Nest Capital Inc. — Alberta PIPA Compliance</p>
+              <p className="mt-2 text-sm uppercase tracking-[0.16em] text-muted-foreground">Last Updated: April 2026</p>
             </div>
 
-            <Card className="card-hover border-0 shadow-xl">
-              <CardHeader>
-                <CardTitle className="text-2xl text-enc-text-primary">
-                  Information handling overview
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-8 text-sm leading-7 text-enc-text-secondary">
+            <Card className="border-0 shadow-xl">
+              <CardContent className="space-y-8 p-8 text-sm leading-7 text-enc-text-secondary md:p-10">
                 {sections.map((section) => (
-                  <div key={section.title}>
+                  <section key={section.number + section.title}>
                     <h2 className="text-lg font-semibold text-enc-text-primary">
-                      {section.title}
+                      {section.number} {section.title}
                     </h2>
-                    <div className="mt-3 space-y-3">
-                      {section.body.map((paragraph) => (
-                        <p key={paragraph}>{paragraph}</p>
-                      ))}
-                    </div>
-                  </div>
+                    {section.paragraphs?.map((paragraph) => (
+                      <p key={paragraph} className="mt-3">
+                        {paragraph}
+                      </p>
+                    ))}
+                    {section.bullets ? (
+                      <ul className="mt-3 list-disc space-y-2 pl-6">
+                        {section.bullets.map((bullet) => (
+                          <li key={bullet}>{bullet}</li>
+                        ))}
+                      </ul>
+                    ) : null}
+                  </section>
                 ))}
-                <p className="border-t border-border pt-6 text-xs leading-6 text-muted-foreground">
-                  This privacy page is intended as a practical website notice for
-                  Alberta and Canadian operations. It does not replace
-                  project-specific confidentiality obligations, professional
-                  privilege, or formal legal advice.
+
+                <p className="border-t border-border pt-6 font-medium text-enc-text-secondary">
+                  System-level security logs may also record IP addresses, device identifiers, and access behavior for fraud prevention and operational integrity.
                 </p>
+                <p className="font-medium text-enc-text-secondary">
+                  If commercial electronic messages are sent, ENCI will comply with CASL requirements.
+                </p>
+                <p className="font-medium text-enc-text-secondary">
+                  Users must not attempt to bypass these protections.
+                </p>
+
+                <div className="rounded-2xl border border-border bg-muted/35 p-5">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                    FOOTER DISCLAIMER (Privacy Page)
+                  </p>
+                  <p className="mt-3 text-sm leading-7 text-enc-text-secondary">
+                    This privacy notice supports Alberta operations and does not replace legal advice or project-specific confidentiality obligations. Unauthorized copying, screenshotting, or reproduction of any content is strictly prohibited.
+                  </p>
+                </div>
               </CardContent>
             </Card>
           </div>
