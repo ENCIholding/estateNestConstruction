@@ -174,34 +174,57 @@ export default function Footer() {
 
         <div className="space-y-3 pt-8 text-sm text-white/60">
           <p>
-            Estate Nest Capital Inc. continues to refine its public
-            information, accessibility practices, and project communication
-            standards as the business grows.
-          </p>
-          <p>
-            Estate Nest Capital Inc. is working toward accessible, clear, and
-            user-friendly public information. If you experience difficulty
-            using the website or need information in another format, please
-            contact us at hello@estatenest.capital.
+            Estate Nest Capital Inc. continues to refine its public information,
+            accessibility practices, and project communication standards as the
+            business grows. If you require information in another format or
+            experience difficulty using this website, contact us at
+            hello@estatenest.capital.
           </p>
           <p>© 2026 Estate Nest Capital Inc. All rights reserved.</p>
-          <p>
-            The content, designs, materials, templates, reports, visual assets,
-            written copy, and proprietary business materials presented by
-            Estate Nest Capital Inc. are protected. Unauthorized copying,
-            reproduction, modification, redistribution, resale, reverse
-            engineering, or derivative commercial use is prohibited except
-            under written license from Estate Nest Capital Inc.
-          </p>
-          <p className="text-xs leading-6 text-white/50">
-            Client Reports: Requested client reports are prepared for project
-            communication and review purposes only. These materials are based
-            on information available at the time of preparation and are not
-            legal, financial, engineering, accounting, tax, insurance, or
-            municipal approval advice. Clients and stakeholders should verify
-            final decisions against contracts, permits, drawings, professional
-            advice, and applicable law.
-          </p>
+
+          <div className="space-y-2">
+            <h3 className="font-semibold text-white/80 transition-colors duration-300 ease-in-out hover:text-enc-yellow-light">
+              Intellectual Property &amp; Ownership:
+            </h3>
+            <p>
+              All content, designs, materials, templates, reports, written copy,
+              visual assets, and proprietary business materials on this website
+              and within ENCI BuildOS are the exclusive intellectual property of
+              Estate Nest Capital Inc. This includes all AI-assisted images
+              created under the direction, vision, and instruction of Estate
+              Nest Capital Inc. These images are considered original creative
+              works and are protected accordingly.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="font-semibold text-white/80 transition-colors duration-300 ease-in-out hover:text-enc-yellow-light">
+              Prohibited Use &amp; Unauthorized Access:
+            </h3>
+            <p>
+              Unauthorized copying, reproduction, modification, redistribution,
+              resale, reverse engineering, data scraping, automated extraction,
+              or derivative commercial use of any materials is strictly
+              prohibited. This includes attempts to capture content through
+              screenshots, screen recording, snipping tools, browser developer
+              tools, or similar methods.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="font-semibold text-white/80 transition-colors duration-300 ease-in-out hover:text-enc-yellow-light">
+              Client Report Disclaimer:
+            </h3>
+            <p className="text-xs leading-6 text-white/50">
+              Client Reports are prepared solely for project communication and
+              review. These materials reflect information available at the time
+              of preparation and do not constitute legal, financial,
+              engineering, accounting, tax, insurance, or municipal approval
+              advice. Clients and stakeholders must verify decisions against
+              contracts, permits, drawings, professional guidance, and
+              applicable law.
+            </p>
+          </div>
         </div>
       </div>
     </footer>
