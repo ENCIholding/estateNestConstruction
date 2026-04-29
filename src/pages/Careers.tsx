@@ -136,11 +136,12 @@ export default function Careers() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
               </div>
               <div className="absolute inset-x-0 bottom-0 p-8 text-white md:p-12">
-                <p className="text-xs font-semibold uppercase tracking-[0.32em] text-white/70">
+                <p className="text-sm font-semibold uppercase tracking-[0.26em] text-white/92">
                   Careers
                 </p>
                 <h1 className="mt-3 text-4xl font-bold md:text-5xl">
-                  Join the Estate Nest talent network
+                  Join the <span className="gradient-text-alt">Estate Nest</span>{" "}
+                  <span className="gradient-text-alt">talent network</span>
                 </h1>
                 <p className="mt-4 max-w-3xl text-lg leading-8 text-white/85">
                   Use this page to register interest, share your background, and

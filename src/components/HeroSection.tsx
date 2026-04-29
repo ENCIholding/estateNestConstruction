@@ -3,23 +3,26 @@ import heroImage from "@/assets/hero-enci-home.png";
 
 export default function HeroSection() {
   return (
-    <section id="home" className="relative min-h-screen scroll-mt-28 overflow-hidden bg-[#071831]">
+    <section id="home" className="relative min-h-screen scroll-mt-28 overflow-hidden bg-[#040b15]">
       <div className="absolute inset-0">
         <img
           src={heroImage}
           alt="Estate Nest Capital concept image representing residential and commercial development work in Edmonton, Alberta"
-          className="absolute inset-0 h-full w-full object-contain object-center"
+          className="absolute inset-0 h-full w-full object-cover object-center"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#071831]/94 via-[#071831]/76 to-[#071831]/44" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/18 to-black/46" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_22%,rgba(11,28,46,0.48),transparent_52%),radial-gradient(circle_at_82%_18%,rgba(8,20,33,0.34),transparent_48%)]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/38 via-black/24 to-black/44" />
       </div>
 
       <div className="relative container mx-auto px-6 py-24 pt-36">
-        <div className="max-w-5xl rounded-[2rem] border border-white/15 bg-[#071831]/52 p-6 shadow-[0_20px_50px_rgba(0,0,0,0.35)] backdrop-blur-[1.5px] md:p-8">
+        <div className="max-w-5xl">
           <div className="space-y-8">
             <h1 className="max-w-4xl text-5xl font-bold tracking-tight text-white [text-shadow:0_4px_24px_rgba(0,0,0,0.75)] md:text-6xl lg:text-7xl">
-              Where Capital Meets
-              <span className="block text-white">Craftsmanship in Real Estate</span>
+              Where <span className="gradient-text-alt">Capital</span> Meets
+              <span className="block text-white">
+                <span className="gradient-text-alt">Craftsmanship</span> in{" "}
+                <span className="gradient-text-alt">Real Estate</span>
+              </span>
             </h1>
             <p className="max-w-3xl text-xl leading-8 text-white [text-shadow:0_2px_16px_rgba(0,0,0,0.7)] md:text-2xl">
               Estate Nest Capital Inc. coordinates construction and
@@ -31,7 +34,7 @@ export default function HeroSection() {
 
           <div className="mt-12 grid gap-6 md:grid-cols-2">
             <Link to="/builder-profile" className="block">
-              <div className="rounded-[1.75rem] border border-white/25 bg-[#081a34]/72 p-8 backdrop-blur-sm transition-transform duration-300 hover:scale-[1.02] hover:bg-[#081a34]/78">
+              <div className="rounded-[1.75rem] border border-white/30 bg-white/14 p-8 backdrop-blur-lg transition-transform duration-300 hover:scale-[1.02] hover:bg-white/20">
                 <h2 className="text-3xl font-bold text-white">
                   Builder
                   <span className="gradient-text-alt"> Profile</span>
@@ -46,7 +49,7 @@ export default function HeroSection() {
             </Link>
 
             <Link to="/investor-relations" className="block">
-              <div className="rounded-[1.75rem] border border-white/25 bg-[#081a34]/72 p-8 backdrop-blur-sm transition-transform duration-300 hover:scale-[1.02] hover:bg-[#081a34]/78">
+              <div className="rounded-[1.75rem] border border-white/30 bg-white/14 p-8 backdrop-blur-lg transition-transform duration-300 hover:scale-[1.02] hover:bg-white/20">
                 <h2 className="text-3xl font-bold text-white">
                   Investor
                   <span className="gradient-text-alt"> Relations</span>

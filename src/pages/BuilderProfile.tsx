@@ -91,11 +91,13 @@ export default function BuilderProfile() {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
                 </div>
                 <div className="absolute inset-x-0 bottom-0 p-8 text-white md:p-12">
-                  <p className="text-xs font-semibold uppercase tracking-[0.32em] text-white/70">
+                  <p className="text-sm font-semibold uppercase tracking-[0.26em] text-white/92">
                     Builder profile
                   </p>
                   <h1 className="mt-3 text-4xl font-bold md:text-5xl">
-                    Real construction coordination, cleaner diligence, and reviewable project controls
+                    Real <span className="gradient-text-alt">construction coordination</span>, cleaner{" "}
+                    <span className="gradient-text-alt">diligence</span>, and reviewable{" "}
+                    <span className="gradient-text-alt">project controls</span>
                   </h1>
                   <p className="mt-4 max-w-3xl text-lg leading-8 text-white/85">
                     Estate Nest Capital presents builder information around real

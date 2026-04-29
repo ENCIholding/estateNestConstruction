@@ -13,6 +13,8 @@ const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   const sharedNavClasses =
     "rounded-full border border-white/15 bg-white/6 px-5 text-sm font-medium tracking-wide text-white backdrop-blur-sm transition-all hover:border-enc-yellow-light/45 hover:bg-white/14 hover:text-enc-yellow-light";
+  const sharedMobileNavClasses =
+    "w-full justify-start rounded-full border border-white/15 bg-white/5 px-5 text-base font-medium text-white transition-all hover:border-enc-yellow-light/40 hover:bg-white/10 hover:text-enc-yellow-light";
 
   const navigationItems = [
     { label: "Home", path: "/" },
@@ -34,7 +36,7 @@ const Header = () => {
           <BrandLockup
             to="/"
             subtitle="Edmonton Construction and Development"
-            className="max-w-[360px]"
+            className="max-w-[460px]"
             subtitleClassName="text-white/70 tracking-[0.12em]"
           />
 
@@ -78,7 +80,7 @@ const Header = () => {
                         key={item.label}
                         variant="ghost"
                         asChild
-                        className="w-full justify-start rounded-full border border-white/15 bg-white/5 px-5 text-base font-medium text-white hover:bg-white/10 hover:text-enc-orange-light"
+                        className={sharedMobileNavClasses}
                       >
                         <Link to={item.path} onClick={() => setIsOpen(false)}>
                           {item.label}

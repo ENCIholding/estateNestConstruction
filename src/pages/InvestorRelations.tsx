@@ -215,43 +215,12 @@ export default function InvestorRelations() {
       />
       <Header />
 
-      <main id="main-content" className="pt-24">
-        <section className="bg-gradient-to-br from-enc-orange/10 via-enc-yellow/10 to-background py-20">
-          <div className="container mx-auto px-6">
-            <div className="mx-auto max-w-4xl text-center">
-              <div className="text-left">
-                <PublicPageBackLink />
-              </div>
-              <h1 className="text-5xl font-bold md:text-6xl">
-                <span className="gradient-text">Investor</span>
-                <span className="text-enc-text-primary"> Relations</span>
-              </h1>
-              <p className="mt-6 text-xl leading-8 text-enc-text-secondary">
-                Estate Nest Capital evaluates development and construction
-                opportunities through disciplined due diligence, project-specific
-                review, and clear communication before any partnership or capital
-                discussion moves forward.
-              </p>
-              <p className="mt-4 text-base leading-7 text-enc-text-secondary">
-                This page explains how investor, lender, and partnership
-                conversations are approached. It is not a public offering,
-                investment solicitation, or promise of return.
-              </p>
-              <div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
-                <Button asChild size="lg" className="bg-gradient-warm text-white hover:shadow-glow">
-                  <Link to="/#appointment">Request an Introduction</Link>
-                </Button>
-                <Button asChild size="lg" variant="outline">
-                  <Link to="/builder-profile">Review Builder Profile</Link>
-                </Button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="py-20">
+      <main id="main-content" className="pt-28">
+        <section className="pb-20 pt-8">
           <div className="container mx-auto px-6">
             <div className="mx-auto max-w-6xl">
+              <PublicPageBackLink />
+
               <div className="relative mb-16 overflow-hidden rounded-[2rem] shadow-2xl">
                 <div className="aspect-[21/9] w-full">
                   <img
@@ -259,17 +228,40 @@ export default function InvestorRelations() {
                     alt="Representative concept image of a project diligence discussion between collaborators."
                     className="h-full w-full object-cover"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/32 to-transparent" />
                 </div>
                 <div className="absolute inset-x-0 bottom-0 p-8 text-white md:p-12">
-                  <h2 className="text-3xl font-bold md:text-4xl">
-                    Discussions should start with disciplined review
-                  </h2>
+                  <p className="text-sm font-semibold uppercase tracking-[0.26em] text-white/92">
+                    Investor Relations
+                  </p>
+                  <h1 className="mt-3 text-4xl font-bold md:text-5xl">
+                    <span className="gradient-text-alt">Discussions</span> should start with{" "}
+                    <span className="gradient-text-alt">disciplined review</span>
+                  </h1>
                   <p className="mt-3 max-w-3xl text-lg leading-8 text-white/85">
+                    Estate Nest Capital evaluates development and construction
+                    opportunities through disciplined due diligence, project-specific
+                    review, and clear communication before any partnership or capital
+                    discussion moves forward.
+                  </p>
+                  <p className="mt-4 max-w-3xl text-base leading-7 text-white/80">
+                    This page explains how investor, lender, and partnership
+                    conversations are approached. It is not a public offering,
+                    investment solicitation, or promise of return.
+                  </p>
+                  <p className="mt-4 max-w-3xl text-base leading-7 text-white/82">
                     Investor and partnership conversations are strongest when
                     scope, risk, assumptions, documentation, and responsibilities
                     are clear before commitments are made.
                   </p>
+                  <div className="mt-8 flex flex-col gap-4 sm:flex-row">
+                    <Button asChild size="lg" className="bg-gradient-warm text-white hover:shadow-glow">
+                      <Link to="/#appointment">Request an Introduction</Link>
+                    </Button>
+                    <Button asChild size="lg" variant="outline">
+                      <Link to="/builder-profile">Review Builder Profile</Link>
+                    </Button>
+                  </div>
                 </div>
               </div>
 

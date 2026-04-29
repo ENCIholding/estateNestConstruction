@@ -40,12 +40,11 @@ function BrandCopy({
   return (
     <div className="min-w-0">
       <div
-        className={`font-black uppercase leading-[0.9] tracking-[0.14em] ${
-          compact ? "text-base" : "text-lg"
+        className={`font-black uppercase leading-[0.95] tracking-[0.1em] ${
+          compact ? "text-[0.86rem]" : "text-[1.28rem]"
         } ${wordmarkClassName}`}
       >
-        <span className="block gradient-text">Estate Nest</span>
-        <span className="mt-1 block gradient-text">Capital</span>
+        <span className="block whitespace-nowrap gradient-text">Estate Nest Capital</span>
       </div>
       {subtitle ? (
         <p
