@@ -1,46 +1,40 @@
-# ENCI App
+# Estate Nest Capital Inc.
 
-Management and business operations dashboard for Estate Nest Capital Inc. built with React, TypeScript, Vite, Tailwind CSS, and Vercel.
+This repository supports Estate Nest Capital Inc.’s public digital presence and related internal business systems.
 
-## Tech Stack
+Estate Nest Capital Inc. is an Edmonton-based construction and development company focused on practical planning, disciplined execution, construction coordination, documentation, and clear communication across residential, infill, multi-unit, commercial leasehold, renovation, and development-related work.
 
-- React
-- TypeScript
-- Vite
-- Tailwind CSS
-- React Router
-- TanStack React Query
-- Vercel
+## Proprietary Notice
 
-## Current Status
+This repository and its contents are proprietary to Estate Nest Capital Inc.
 
-This project is being migrated away from Base44.
+All source code, interface materials, written content, templates, reports, designs, workflows, documentation, visual assets, and related materials are protected. Unauthorized copying, reproduction, modification, redistribution, resale, reverse engineering, scraping, or derivative commercial use is prohibited without prior written authorization from Estate Nest Capital Inc.
 
-Completed so far:
-- Frontend pages renamed and migrated to `Management...` structure
-- Forms migrated to local Vercel app structure
-- Authentication utilities created
-- Vite config cleaned up
-- Tailwind and TypeScript configs cleaned up
+## Internal Systems
 
-Still in progress:
-- Replacing Base44-backed API routes
-- Building or wiring the real backend data layer
-- Final deployment cleanup and testing
+Certain private management, reporting, project coordination, and operational tools may be included in this repository for internal use by Estate Nest Capital Inc. only.
 
-## Project Structure
+These materials are not open-source software, are not offered as a public product through this repository, and are not intended for third-party use, copying, access, or deployment.
 
-```text
-src/
-  components/
-  pages/
-  assets/
-  hooks/
-  lib/
+## No License Granted
 
-api/
-  _lib/
-  management/
-  login.ts
-  logout.ts
-  session.ts
+No license is granted by this repository.
+
+Viewing this repository, cloning it, forking it, or accessing any portion of it does not grant any right to use, reproduce, distribute, modify, commercialize, or create derivative works from the contents.
+
+## Security and Access
+
+Do not attempt to access, test, bypass, scrape, copy, or interfere with any private or internal systems connected to this repository.
+
+If you believe you have identified a legitimate security concern, contact:
+
+hello@estatenest.capital
+
+## Contact
+
+Estate Nest Capital Inc.  
+Edmonton, Alberta, Canada  
+Website: https://www.estatenest.capital  
+Email: hello@estatenest.capital
+
+© 2026 Estate Nest Capital Inc. All rights reserved.

@@ -222,7 +222,7 @@ export default function InvestorRelations() {
               <PublicPageBackLink />
 
               <div className="relative mb-16 overflow-hidden rounded-[2rem] shadow-2xl">
-                <div className="aspect-video w-full">
+                <div className="aspect-[3/4] w-full sm:aspect-video">
                   <img
                     src={investorCollaborationImage}
                     alt="Investor relations meeting with construction development projections and city skyline"
@@ -230,26 +230,26 @@ export default function InvestorRelations() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/32 to-transparent" />
                 </div>
-                <div className="absolute inset-x-0 bottom-0 p-8 text-white md:p-12">
-                  <p className="text-sm font-semibold uppercase tracking-[0.26em] text-white/92">
+                <div className="absolute inset-x-0 bottom-0 p-5 text-white sm:p-8 md:p-12">
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/92 sm:text-sm sm:tracking-[0.26em]">
                     Investor Relations
                   </p>
-                  <h1 className="mt-3 text-4xl font-bold md:text-5xl">
+                  <h1 className="mt-2 text-[1.72rem] font-bold leading-tight sm:mt-3 sm:text-4xl md:text-5xl">
                     <span className="gradient-text-alt">Discussions</span> should start with{" "}
                     <span className="gradient-text-alt">disciplined review</span>
                   </h1>
-                  <p className="mt-3 max-w-3xl text-lg leading-8 text-white/85">
+                  <p className="mt-3 max-w-3xl text-sm leading-6 text-white/90 sm:text-lg sm:leading-8 sm:text-white/85">
                     Estate Nest Capital evaluates development and construction
                     opportunities through disciplined due diligence, project-specific
                     review, and clear communication before any partnership or capital
                     discussion moves forward.
                   </p>
-                  <p className="mt-4 max-w-3xl text-base leading-7 text-white/80">
+                  <p className="mt-3 max-w-3xl text-sm leading-6 text-white/86 sm:mt-4 sm:text-base sm:leading-7 sm:text-white/80">
                     This page explains how investor, lender, and partnership
                     conversations are approached. It is not a public offering,
                     investment solicitation, or promise of return.
                   </p>
-                  <p className="mt-4 max-w-3xl text-base leading-7 text-white/82">
+                  <p className="mt-3 max-w-3xl text-sm leading-6 text-white/86 sm:mt-4 sm:text-base sm:leading-7 sm:text-white/82">
                     Investor and partnership conversations are strongest when
                     scope, risk, assumptions, documentation, and responsibilities
                     are clear before commitments are made.

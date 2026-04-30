@@ -127,7 +127,7 @@ export default function Careers() {
             <PublicPageBackLink />
 
             <div className="relative mb-16 overflow-hidden rounded-[2rem] shadow-2xl">
-              <div className="aspect-[21/9] w-full">
+              <div className="aspect-[3/4] w-full sm:aspect-[16/9] lg:aspect-[21/9]">
                 <img
                   src={careersTeamImage}
                   alt="Estate Nest Capital careers and talent network image"
@@ -135,15 +135,15 @@ export default function Careers() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
               </div>
-              <div className="absolute inset-x-0 bottom-0 p-8 text-white md:p-12">
-                <p className="text-sm font-semibold uppercase tracking-[0.26em] text-white/92">
+              <div className="absolute inset-x-0 bottom-0 p-5 text-white sm:p-8 md:p-12">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/92 sm:text-sm sm:tracking-[0.26em]">
                   Careers
                 </p>
-                <h1 className="mt-3 text-4xl font-bold md:text-5xl">
+                <h1 className="mt-2 text-[1.72rem] font-bold leading-tight sm:mt-3 sm:text-4xl md:text-5xl">
                   Join the <span className="gradient-text-alt">Estate Nest</span>{" "}
                   <span className="gradient-text-alt">talent network</span>
                 </h1>
-                <p className="mt-4 max-w-3xl text-lg leading-8 text-white/85">
+                <p className="mt-3 max-w-3xl text-[0.95rem] leading-7 text-white/90 sm:mt-4 sm:text-lg sm:leading-8 sm:text-white/85">
                   Use this page to register interest, share your background, and
                   submit resume or portfolio files for the kinds of roles Estate
                   Nest Capital expects to need as operations grow.
