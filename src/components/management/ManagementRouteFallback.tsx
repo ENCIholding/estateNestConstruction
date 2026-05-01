@@ -16,7 +16,7 @@ export default function ManagementRouteFallback({
       <ManagementAuthScene>
         <div className="mx-auto w-full max-w-md rounded-[2rem] border border-white/80 bg-white/92 p-8 text-center shadow-[0_24px_60px_rgba(15,23,42,0.18)] backdrop-blur-xl">
           <div className="mb-6 flex justify-center">
-            <BrandLockup subtitle="Management Login" />
+            <BrandLockup subtitle="ENCI Build OS" />
           </div>
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-r from-enc-red via-enc-orange to-enc-yellow text-white shadow-glow">
             <Loader2 className="h-5 w-5 animate-spin" />

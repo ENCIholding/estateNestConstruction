@@ -99,7 +99,7 @@ const ManagementLogin = () => {
         <Card className="mx-auto w-full max-w-md border-white/80 bg-white/92 shadow-[0_24px_60px_rgba(15,23,42,0.18)] backdrop-blur-xl">
           <CardHeader>
             <div className="mb-4 flex justify-center">
-              <BrandLockup subtitle="Management Login" />
+              <BrandLockup subtitle="ENCI Build OS" />
             </div>
             <CardTitle className="text-center text-2xl">
               Estate Nest Capital Inc.

@@ -44,7 +44,7 @@ const footerSections: FooterSection[] = [
     title: "Governance",
     links: [
       { label: "Accessibility Statement", path: "/accessibility" },
-      { label: "Management Login (Internal)", path: "/management/login" },
+      { label: "ENCI Build OS (Internal)", path: "/management/login" },
     ],
   },
 ];
@@ -216,13 +216,18 @@ export default function Footer() {
               Client Report Disclaimer:
             </h3>
             <p className="text-xs leading-6 text-white/50">
-              Client Reports are prepared solely for project communication and
-              review. These materials reflect information available at the time
-              of preparation and do not constitute legal, financial,
-              engineering, accounting, tax, insurance, or municipal approval
-              advice. Clients and stakeholders must verify decisions against
-              contracts, permits, drawings, professional guidance, and
-              applicable law.
+              Reports generated via the ENCI Build OS are for project
+              communication and review only. Estate Nest Capital and its
+              directors assume no liability for the accuracy of these materials
+              or for technical issues arising from electronic transmission.
+              These materials do not constitute professional advice; final
+              decisions should be verified against official contracts and
+              permits. All electronic communications from the estatenest.capital
+              domain are conducted in compliance with Canada's Anti-Spam
+              Legislation (CASL) and the Electronic Commerce Act, 2000
+              (Ontario). By engaging with our services, you acknowledge
+              acceptance of these terms and consent to receive electronic
+              correspondence in accordance with applicable laws.
             </p>
           </div>
         </div>
