@@ -71,6 +71,7 @@ const allNavItems: NavItem[] = [
         "client-invoices": FileText,
         "vendor-bills": FileText,
         documents: FileText,
+        revisions: FileWarning,
         compliance: ClipboardCheck,
         "change-orders": FileWarning,
         reports: FileText,
@@ -429,7 +430,7 @@ export default function ManagementLayout({
                   return item.enabled ? (
                     <Link
                       key={item.page}
-                      to={`/management/${item.page}`}
+                      to={item.page === "revisions" ? "/dashboard/revisions" : `/management/${item.page}`}
                       onClick={() => setSidebarOpen(false)}
                       className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
                         isActive

@@ -15,6 +15,7 @@ export const managementModules: ManagementModule[] = [
   { name: "Client Invoices", page: "client-invoices", enabled: true },
   { name: "Vendor Bills", page: "vendor-bills", enabled: true },
   { name: "Documents", page: "documents", enabled: true },
+  { name: "Revisions", page: "revisions", enabled: true },
   { name: "Compliance", page: "compliance", enabled: true },
   { name: "Change Orders", page: "change-orders", enabled: true },
   { name: "Reports", page: "reports", enabled: true },

@@ -33,6 +33,7 @@ const ManagementBudgetCosts = lazy(() => import("./pages/ManagementBudgetCosts")
 const ManagementChangeOrders = lazy(() => import("./pages/ManagementChangeOrders"));
 const ManagementClientInvoices = lazy(() => import("./pages/ManagementClientInvoices"));
 const ManagementDocuments = lazy(() => import("./pages/ManagementDocuments"));
+const ManagementRevisions = lazy(() => import("./pages/ManagementRevisions"));
 const ManagementPresentations = lazy(() => import("./pages/ManagementPresentations"));
 const ManagementVideos = lazy(() => import("./pages/ManagementVideos"));
 const ManagementClientReports = lazy(() => import("./pages/ManagementClientReports"));
@@ -144,6 +145,22 @@ export default function App() {
               element={
                 <RequireManagementAuth>
                   <ManagementDocuments />
+                </RequireManagementAuth>
+              }
+            />
+            <Route
+              path="/management/revisions"
+              element={
+                <RequireManagementAuth>
+                  <ManagementRevisions />
+                </RequireManagementAuth>
+              }
+            />
+            <Route
+              path="/dashboard/revisions"
+              element={
+                <RequireManagementAuth>
+                  <ManagementRevisions />
                 </RequireManagementAuth>
               }
             />

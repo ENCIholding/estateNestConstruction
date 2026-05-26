@@ -15,6 +15,7 @@ export function preloadManagementRoutes() {
       import("@/pages/ManagementChangeOrders"),
       import("@/pages/ManagementClientInvoices"),
       import("@/pages/ManagementDocuments"),
+      import("@/pages/ManagementRevisions"),
       import("@/pages/ManagementPresentations"),
       import("@/pages/ManagementVideos"),
       import("@/pages/ManagementClientReports"),
